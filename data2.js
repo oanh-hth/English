@@ -38,7 +38,7 @@ TOPICS.push(
     [`I'm a fast learner.`, `I learn new things quickly.`, `Showing flexibility when you lack some experience.`, `We use a new system. | No problem, I'm a fast learner.`, `neutral`, `"I'm a FAST LUR-ner"`],
     [`Where do you see yourself in five years?`, `Interview question about your goals.`, `Be positive and specific about growth.`, `Where do you see yourself in five years? | Leading a small team.`, `polite`, `"WHERE do-ya SEE yer-SELF"`],
     [`I'd love the opportunity to ___.`, `I really want a chance to do this.`, `Ending an interview or application email.`, `I'd love the opportunity to join your team. | We'll be in touch.`, `polite`, `"I'd LUV thee..."`],
-    [`I'm on my way.`, `I'm traveling there now.`, `Telling someone you're coming; also "I'm on my way out."`, `Where are you? | I'm on my way!`, `casual`, `"I'm on my WAY"`],
+    [`I'm on my way.`, `I'm traveling there now.`, `Telling someone you're coming (not only for work).`, `Where are you? | I'm on my way!`, `casual`, `"I'm on my WAY"`],
   ]},
   { key: "health", icon: "🩺", name: "Health & doctor", blurb: "Describe how you feel", phrases: [
     [`I'm not feeling well.`, `I feel sick.`, `Explaining you're ill, or leaving early.`, `You look pale. | I'm not feeling well.`, `neutral`, `"not FEEL-ing WELL"`],
@@ -118,14 +118,14 @@ TOPICS.push(
     [`It's not working.`, `It's broken or failing.`, `Technology and appliances.`, `It's not working. | Have you tried restarting it?`, `casual`, `"its not WORK-ing"`],
     [`I've been waiting for ___ minutes.`, `I've waited a long time.`, `Complaining about delays politely.`, `I've been waiting for forty minutes. | I'm sorry for the wait.`, `neutral`, `"I've-been-WAIT-ing"`],
     [`That's not fair.`, `That isn't just or equal.`, `Complaining to friends or coworkers.`, `You get a bonus and I don't? | That's not fair.`, `casual`, `"thats not FAIR"`],
-    [`I'm fed up with ___.`, `I'm tired of this problem.`, `Strong frustration.`, `I'm fed up with the noise! | Me too.`, `casual`, `"I'm FED UP with"`],
+    [`I'm fed up with ___.`, `I'm tired of this problem.`, `Strong frustration. Americans also say "I'm sick of ___", which is a bit more common than "fed up" (more British).`, `I'm fed up with the noise! | Me too.`, `casual`, `"I'm FED UP with"`],
   ]},
   { key: "slang", icon: "🗣️", name: "Casual speech", blurb: "Gonna, gotta & everyday slang", phrases: [
     [`I'm gonna ___.`, `I'm going to ___. (Spoken form.)`, `Fast, relaxed speech. Don't write it in formal emails.`, `What are you doing? | I'm gonna grab a coffee.`, `casual`, `gonna = "GUH-nuh"`],
     [`I gotta go.`, `I have to leave.`, `"Gotta" = got to. Very common when ending a call.`, `I gotta go. Talk later! | Bye!`, `casual`, `gotta = "GAH-duh"`],
     [`I kinda like it.`, `I sort of like it.`, `"Kinda" = kind of; softens an opinion.`, `Do you like it? | I kinda like it.`, `casual`, `kinda = "KIN-duh"`],
     [`Let's hit the road.`, `Let's leave / start the trip.`, `Starting a drive or leaving a place.`, `Ready? | Yep, let's hit the road.`, `casual`, `"HIT the ROAD"`],
-    [`I'm beat.`, `I'm very tired.`, `After a long day.`, `You okay? | I'm beat. Long day.`, `casual`, `"I'm BEET"`],
+    [`I'm beat.`, `I'm very tired.`, `After a long day. Slightly old-fashioned; "I'm wiped" and "I'm exhausted" are also common.`, `You okay? | I'm beat. Long day.`, `casual`, `"I'm BEET"`],
     [`That's legit.`, `That's real / really good.`, `Modern casual praise.`, `Check out this app. | Whoa, that's legit.`, `casual`, `"luh-JIT"`],
     [`I'm down for that.`, `I'm happy to do that.`, `Agreeing to plans.`, `Tacos tonight? | I'm down for that.`, `casual`, `"DOWN fer that"`],
     [`No big deal.`, `It's not important.`, `Downplaying a problem or favor.`, `Sorry I'm late. | No big deal.`, `casual`, `"no BIG DEAL"`],
@@ -158,7 +158,7 @@ TOPICS.push(
     [`I had a rough day.`, `My day was difficult.`, `Sharing bad days.`, `You okay? | I had a rough day.`, `casual`, `"a RUFF day"`],
     [`I'm a little worried about ___.`, `I'm concerned about this.`, `Soften worries.`, `I'm a little worried about the exam. | You'll do fine.`, `neutral`, `"WUR-eed"`],
     [`It's driving me crazy.`, `It's annoying me a lot.`, `Annoying noises, delays, etc.`, `Why do you look upset? | This noise is driving me crazy.`, `casual`, `"DRIV-ing me CRAY-zee"`],
-    [`I'm over the moon.`, `I'm extremely happy.`, `Great news.`, `I got the job! | Congrats! You must be over the moon.`, `casual`, `"over the MOON"`],
+    [`I'm over the moon.`, `I'm extremely happy.`, `Great news. Note: more common in British English; Americans often say "I'm thrilled" or "I'm so happy."`, `I got the job! | Congrats! You must be over the moon.`, `casual`, `"over the MOON"`],
   ]},
 );
 

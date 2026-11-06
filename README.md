@@ -2,9 +2,9 @@
 
 A mobile-first web app (installable on iPhone as a PWA) for learning the phrases native American speakers really use.
 
-- **Learn**: 313 phrases in 39 topics, each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
+- **Learn**: 409 phrases in 51 topics, each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
 - **Review**: spaced repetition (SM-2 style: Again / Hard / Good / Easy). Cards alternate between speaking and listening.
-- **Practice**: 15 role-play conversations. You see the context and a goal, then build the sentence from a word bank (or type it), then hear it and repeat it out loud.
+- **Practice**: 20 role-play conversations. You see the context and a goal, then build the sentence from a word bank (or type it), then hear it and repeat it out loud.
 - Works offline, no build step, no backend. Progress is stored in `localStorage`.
 
 ## Run
@@ -21,3 +21,6 @@ Edit `data.js`: phrases are rows `[phrase, meaning, context, "A | B" example, to
 
 ## Hosting on GitHub Pages
 Repo → **Settings → Pages → Build and deployment → Source: Deploy from a branch**, choose the branch and folder `/ (root)`, then Save. The site appears at `https://<user>.github.io/<repo>/` after a minute. All paths are relative, so it works from the sub-path.
+
+## Content accuracy
+Phrases were written by an AI from its knowledge of American English and have **not** been reviewed by a native speaker. Verify doubtful ones with YouGlish (real video clips), COCA/Google Ngram frequencies, or a tutor, and edit `data*.js`.

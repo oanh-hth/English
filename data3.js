@@ -71,7 +71,7 @@ TOPICS.push(
     [`I'd like to extend my stay.`, `I want to stay more nights.`, `Hotels or rentals.`, `I'd like to extend my stay. | How many nights?`, `polite`, `"ex-TEND"`],
   ]},
   { key: "grocery", icon: "🛒", name: "Groceries & cooking", blurb: "Supermarket and kitchen talk", phrases: [
-    [`Paper or plastic?`, `Which bag do you want?`, `A classic US checkout question.`, `Paper or plastic? | Paper, please.`, `casual`, `"PAY-per or PLAS-tik"`],
+    [`Paper or plastic?`, `Which bag do you want?`, `A classic US checkout question, though many stores now just ask "Do you need a bag?" because plastic bags are being banned.`, `Paper or plastic? | Paper, please.`, `casual`, `"PAY-per or PLAS-tik"`],
     [`Do you have a rewards card?`, `Do you have a loyalty card?`, `Cashier question for discounts.`, `Do you have a rewards card? | No, I don't.`, `neutral`, `"ri-WORDZ card"`],
     [`Where's the produce section?`, `Where are fruits and vegetables?`, `Looking for sections: dairy, frozen, bakery.`, `Where's the produce section? | Back left.`, `polite`, `"PRO-doos"`],
     [`I'm out of ___.`, `I've run out of this.`, `Pantry shortages: "I'm out of milk."`, `Want eggs? | I'm out of eggs, yes.`, `casual`, `"I'm OUT-uv"`],
