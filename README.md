@@ -37,5 +37,5 @@ Content is organised into **22 topics (units)** in `units.js`. Each topic combin
 ## Resources tab
 Edit `resources.js` to add external links (YouTube channels, podcasts…).
 
-## YouGlish search
-Every phrase and word has a **Hear it in real videos** box that embeds YouGlish (needs internet). The panel shows the required "Powered by YouGlish.com" attribution and links to the YouTube Terms of Service and Google Privacy Policy. YouGlish asks for permission for commercial or native-app use; personal use of this web app is not commercial.
+## Ask Claude
+Every phrase and word has an **✨ Ask Claude about this** box that calls the Claude API directly from the browser with **your own API key** (Me → Claude help), stored only in that browser. The official Anthropic SDK is bundled in `vendor/anthropic-sdk.js`.

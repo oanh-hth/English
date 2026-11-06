@@ -148,11 +148,10 @@ function toast(msg) {
 
 /* ---------- shared UI bits ---------- */
 const speakBtn = (text, slow, sm) => `<button class="speak ${sm ? 'sm' : ''}" data-say="${esc(text)}" data-slow="${slow ? 1 : 0}" aria-label="${slow ? 'Play slowly' : 'Play audio'}">${slow ? '🐢' : '🔊'}</button>`;
-const ygQuery = c => { const base = c.v ? c.p.split(' (')[0] : c.p; const parts = base.split('___').map(x => x.replace(/[.,!?…"]/g, '').trim()).filter(Boolean).sort((a, b) => b.length - a.length); return parts[0] || base; };
-const ygPanel = c => `<details class="ygbox"><summary>🔎 Hear it in real videos <span class="muted small">(YouGlish)</span></summary>
-  <div class="row" style="margin-top:8px"><input class="type yg-q" style="margin:0" value="${esc(ygQuery(c))}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><button class="btn sm" style="flex:none" data-a="ygsearch">Search</button></div>
-  <p class="yg-status small muted" style="margin:6px 0"></p><div class="yg-out"></div>
-  <p class="muted small" style="margin:6px 0 0">Powered by <a href="https://youglish.com" target="_blank" rel="noopener noreferrer">YouGlish.com</a> · <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube Terms of Service</a> · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a></p></details>`;
+const aiPanel = c => `<details class="aibox" data-id="${c.id}"><summary>✨ Ask Claude about this</summary>
+  <div class="chips"><button class="chip" data-a="aiq" data-q="Is this natural American English? Do native speakers really say it?">Is it natural?</button><button class="chip" data-a="aiq" data-q="Give me 3 more natural example sentences.">More examples</button><button class="chip" data-a="aiq" data-q="When should I NOT use this? Any tone or politeness traps?">When not to use</button><button class="chip" data-a="aiq" data-q="What are common alternatives, from casual to formal?">Alternatives</button><button class="chip" data-a="aiq" data-q="How is this pronounced in fast American speech?">Pronunciation</button></div>
+  <div class="row" style="margin-top:8px"><input class="type ai-q" style="margin:0" placeholder="Ask anything about it…" autocomplete="off" autocorrect="off" enterkeyhint="send"><button class="btn sm" style="flex:none" data-a="aiask">Ask</button></div>
+  <div class="ai-out small" style="margin-top:8px"></div></details>`;
 const dialog = ex => ex.split(' | ').map((l, i, arr) => `<div class="dlg"><span class="who">${arr.length > 1 ? 'AB'[i] || '' : ''}</span><span class="txt">${esc(l)}</span>${speakBtn(l, false, true)}</div>`).join('');
 const statusOf = id => { const c = S.cards[id]; if (!c) return ['New', '']; if (c.int >= 21) return ['Mastered', 'good']; return ['In deck', 'warn']; };
 
@@ -165,7 +164,7 @@ function phraseDetail(c, opts = {}) {
     ${c.c ? `<div class="label">${c.custom ? 'Where you heard it' : 'When to use it'}</div><p>${esc(c.c)}</p>` : ''}
     ${c.ex ? `<div class="label">${c.v ? 'Example' : 'Example conversation'}</div>${dialog(c.ex)}` : ''}
     ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
-    ${ygPanel(c)}
+    ${aiPanel(c)}
     ${opts.footer || ''}`;
 }
 
@@ -235,7 +234,7 @@ const VIEWS = {
         ${c.c ? `<div class="label">${c.custom ? 'Where you heard it' : 'When to use it'}</div><p>${esc(c.c)}</p>` : ''}
         ${c.ex ? `<div class="label">Example</div>${dialog(c.ex)}` : ''}
         ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
-        ${ygPanel(c)}
+        ${aiPanel(c)}
         <button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button></div>
       <p class="muted small" style="text-align:center">${listen ? 'Did you get the meaning?' : 'Did you say it right? Repeat it out loud once more.'}</p>
       <div class="rates">${rates.map(([l, q]) => `<button class="r${q}" data-a="rate" data-q="${q}">${l}<small>${fmtIvl(st, q)}</small></button>`).join('')}</div>`;
@@ -282,6 +281,7 @@ const VIEWS = {
       </div>
       <h2>On your iPhone</h2>
       <div class="card small"><p>Open this page in <b>Safari</b>, tap <b>Share → Add to Home Screen</b>. It then opens full screen like an app and works offline.</p><p class="muted" style="margin:0">Tip: for the best voice, go to Settings → Accessibility → Spoken Content → Voices → English (US) and download an Enhanced voice (e.g. Samantha).</p></div>
+      ${window.SN && SN.aiSettingsHtml ? SN.aiSettingsHtml() : ''}
       <h2>Quality check</h2>
       <div class="card small"><p>Tap <b>🏳️ Sounds odd?</b> on any phrase that doesn't sound natural to you or a native speaker. You have <b>${Object.keys(S.flags).filter(id => BY_ID[id]).length}</b> flagged.</p><button class="btn ghost sm" data-a="copyFlags">Copy flagged list</button></div>
       <h2>Data</h2>

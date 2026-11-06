@@ -134,10 +134,9 @@ input.type.bad { border-color: var(--bad); }
 a.item { text-decoration: none; color: inherit; }
 #tabs button { font-size: 10.5px; }
 
-.ygbox { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: var(--card); }
-.ygbox summary { cursor: pointer; font-weight: 600; min-height: 32px; display: flex; align-items: center; gap: 6px; list-style: none; }
-.ygbox summary::-webkit-details-marker { display: none; }
-.ygbox[open] summary { margin-bottom: 2px; }
-.yg-out { max-width: 100%; overflow: hidden; border-radius: 12px; }
-.yg-out iframe { max-width: 100% !important; }
-.ygbox a { color: var(--accent); }
+.aibox { margin-top: 14px; border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; background: var(--card); }
+.aibox summary { cursor: pointer; font-weight: 600; min-height: 32px; display: flex; align-items: center; list-style: none; }
+.aibox summary::-webkit-details-marker { display: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { padding: 6px 12px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 14px; min-height: 34px; }
+.ai-out { line-height: 1.5; }
