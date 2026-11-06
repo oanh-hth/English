@@ -23,7 +23,7 @@ TOPICS.forEach(t => t.phrases.forEach((r, i) => {
 
 /* ---------- storage ---------- */
 const KEY = 'speakNatural.v1';
-const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, rate: 0.9, voice: '' }, flags: {}, custom: [] });
+const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, rate: 0.9, voice: '' }, flags: {}, custom: [], edits: {}, deleted: {} });
 let S = (() => {
   try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) { const d = defaults(); return { ...d, ...o, settings: { ...d.settings, ...(o.settings || {}) } }; } } catch (e) { /* ignore */ }
   return defaults();
@@ -31,12 +31,23 @@ let S = (() => {
 const UNIT_OF = {};
 (window.UNITS || []).forEach(u => { u.p.forEach(k => { UNIT_OF[k] = u.key; }); u.v.forEach(k => { UNIT_OF['v:' + k] = u.key; }); });
 ALL.forEach(c => { c.unit = UNIT_OF[c.topic] || null; });
+const ORIG = ALL.slice(), CUSTOM = [];
+let PHRASE_COUNT = 0, WORD_COUNT = 0;
+function rebuildALL() { // ALL is mutated in place so other modules keep their reference
+  ALL.length = 0;
+  ORIG.forEach(c => { if (!S.deleted[c.id]) ALL.push(c); });
+  CUSTOM.forEach(c => ALL.push(c));
+  PHRASE_COUNT = ALL.filter(c => !c.v).length; WORD_COUNT = ALL.filter(c => c.v).length;
+}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
 function registerCustom(w) {
   const c = { id: w.id, topic: 'v:my', topicName: 'My words', unit: 'my', p: w.word, m: `(${w.pos || 'word'}) ${w.meaning}`, c: w.note || '', ex: w.example || '', tone: w.pos || 'word', s: '', v: true, custom: true };
-  ALL.push(c); BY_ID[c.id] = c; return c;
+  CUSTOM.push(c); ALL.push(c); BY_ID[c.id] = c; return c;
 }
 (S.custom || []).forEach(registerCustom);
+const FIELDS = ['p', 'm', 'c', 'ex', 'tone', 's'];
+Object.entries(S.edits).forEach(([id, e]) => { const c = BY_ID[id]; if (c && !c.custom) { c._orig = Object.fromEntries(FIELDS.map(f => [f, c[f]])); Object.assign(c, e); } });
+rebuildALL();
 const today = () => (S.log[dayKey()] ||= { rev: 0, learned: 0, roles: 0, lw: 0, ex: 0 });
 const bump = (f, n = 1) => { const t = today(); t[f] = (t[f] || 0) + n; save(); };
 
@@ -243,7 +254,7 @@ const VIEWS = {
         ${c.ex ? `<div class="label">Example</div>${dialog(c.ex)}` : ''}
         ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
         ${extPanel(c)}
-        <button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button></div>
+        <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn plain sm" data-a="flag" data-id="${c.id}">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button><button class="btn plain sm" data-a="edit" data-id="${c.id}">✏️ Edit</button><button class="btn plain sm" data-a="del" data-id="${c.id}" style="color:var(--bad)">🗑 Delete</button></div></div>
       <p class="muted small" style="text-align:center">${listen ? 'Did you get the meaning?' : 'Did you say it right? Repeat it out loud once more.'}</p>
       <div class="rates">${rates.map(([l, q]) => `<button class="r${q}" data-a="rate" data-q="${q}">${l}<small>${fmtIvl(st, q)}</small></button>`).join('')}</div>`;
   },
@@ -292,12 +303,13 @@ const VIEWS = {
       ${FEATURES.claude && window.SN && SN.aiSettingsHtml ? SN.aiSettingsHtml() : ''}
       <h2>Quality check</h2>
       <div class="card small"><p>Tap <b>🏳️ Sounds odd?</b> on any phrase that doesn't sound natural to you or a native speaker. You have <b>${Object.keys(S.flags).filter(id => BY_ID[id]).length}</b> flagged.</p><button class="btn ghost sm" data-a="copyFlags">Copy flagged list</button></div>
+      <h2>Your changes</h2>
+      <div class="card small"><p>You edited <b>${Object.keys(S.edits).length}</b> and deleted <b>${Object.keys(S.deleted).length}</b> built-in items. Edit or delete from any phrase or word.</p><div class="row" style="flex-wrap:wrap"><button class="btn ghost sm" data-a="restoreDeleted" ${Object.keys(S.deleted).length ? '' : 'disabled'}>Restore deleted</button><button class="btn ghost sm" data-a="undoEdits" ${Object.keys(S.edits).length ? '' : 'disabled'}>Undo my edits</button></div></div>
       <h2>Data</h2>
       <button class="btn plain" data-a="reset" style="color:var(--bad)">Reset all progress</button>`;
   },
 };
 
-const PHRASE_COUNT = ALL.filter(c => !c.v).length, WORD_COUNT = ALL.filter(c => c.v).length;
 function phraseList(list) {
   if (!list.length) return '<div class="empty">No phrases found.</div>';
   return list.map(c => { const [st, cls] = statusOf(c.id); return `<button class="item" data-a="phrase" data-id="${c.id}"><span class="grow"><h3>${esc(c.p)}</h3><span class="muted small">${esc(c.m)}</span></span><span class="pill ${cls}">${st}</span></button>`; }).join('');
@@ -432,7 +444,7 @@ const A = {
     const c = BY_ID[el.dataset.id];
     const footer = (S.cards[c.id] ? '' : `<button class="btn" data-a="sheetAdd" data-id="${c.id}" style="margin-top:16px">Add to my deck</button>`)
       + `<button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button>`
-      + (c.custom ? ` <button class="btn plain sm" data-a="delcustom" data-id="${c.id}" style="margin-top:12px;color:var(--bad)">Delete word</button>` : '');
+      + `<div class="row" style="margin-top:8px"><button class="btn plain sm" data-a="edit" data-id="${c.id}">✏️ Edit</button><button class="btn plain sm" data-a="del" data-id="${c.id}" style="color:var(--bad)">🗑 Delete</button></div>`;
     openSheet(phraseDetail(c, { footer }) + `<button class="btn plain" data-a="closeSheet" style="margin-top:10px">Close</button>`);
   },
   sheetAdd: el => { addToDeck(el.dataset.id); save(); bump(BY_ID[el.dataset.id].v ? 'lw' : 'learned'); closeSheet(); render(true); toast('Added to your deck'); },
@@ -468,6 +480,74 @@ const A = {
   playall: () => TTS.seq(rp.hist.map(h => h.text)),
   reset: () => { if (confirm('Delete all your progress? This cannot be undone.')) { S = defaults(); save(); go('me'); toast('Progress reset'); } },
 };
+
+/* ---------- edit / delete ---------- */
+const TONES = ['casual', 'neutral', 'polite', 'warm', 'urgent', 'formal'];
+const val = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+function openEdit(id) {
+  const c = BY_ID[id]; if (!c) return;
+  const field = (lab, fid, v, ph = '') => `<div class="label">${lab}</div><input class="type" id="${fid}" value="${esc(v)}" placeholder="${esc(ph)}" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin:4px 0 8px">`;
+  let form;
+  if (c.v) {
+    const mm = /^\((.*?)\)\s*(.*)$/.exec(c.m) || [0, c.tone || 'word', c.m];
+    form = field('Word or phrase', 'ed-p', c.p) + field('Part of speech', 'ed-pos', mm[1], 'n, v, adj…') + field('Meaning', 'ed-m', mm[2])
+      + field(c.custom ? 'Where you heard it' : 'Note (optional)', 'ed-c', c.c) + field('Example sentence', 'ed-ex', c.ex);
+  } else {
+    form = field('Phrase', 'ed-p', c.p) + field('Meaning', 'ed-m', c.m) + field('When to use it', 'ed-c', c.c)
+      + field('Example conversation (A | B)', 'ed-ex', c.ex, 'Line A | Line B')
+      + `<div class="label">Tone</div><select id="ed-tone" style="margin:4px 0 8px">${TONES.map(t => `<option ${t === c.tone ? 'selected' : ''}>${t}</option>`).join('')}</select>`
+      + field('How to say it (optional)', 'ed-s', c.s);
+  }
+  openSheet(`<h2 style="margin-top:0">Edit ${c.v ? 'word' : 'phrase'}</h2>${form}
+    <div class="stack" style="margin-top:8px"><button class="btn" data-a="saveEdit" data-id="${id}">Save changes</button>
+    ${c._orig ? `<button class="btn ghost" data-a="resetEdit" data-id="${id}">Reset to original</button>` : ''}
+    <button class="btn plain" data-a="closeSheet">Cancel</button></div>`);
+}
+function removeFromSession(id) {
+  if (!ses || !ses.queue) return;
+  let before = 0;
+  ses.queue = ses.queue.filter((q, i) => { if (q === id) { if (i < ses.i) before++; return false; } return true; });
+  ses.i -= before; ses.flipped = false;
+}
+Object.assign(A, {
+  edit: el => openEdit(el.dataset.id),
+  saveEdit: el => {
+    const id = el.dataset.id, c = BY_ID[id];
+    const p = val('ed-p'), m = val('ed-m'), ex = val('ed-ex');
+    if (!p || !m) { toast('Phrase and meaning are required.'); return; }
+    if (!c.v && ex && ex.split(' | ').length !== 2) { toast('Example needs two lines separated by " | ".'); return; }
+    if (c.v) {
+      const pos = val('ed-pos') || 'word', note = val('ed-c');
+      if (c.custom) {
+        const w = S.custom.find(x => x.id === id);
+        if (w) Object.assign(w, { word: p, pos, meaning: m, example: ex, note });
+        Object.assign(c, { p, m: `(${pos}) ${m}`, c: note, ex, tone: pos });
+      } else {
+        c._orig ||= Object.fromEntries(FIELDS.map(f => [f, c[f]]));
+        const e = { p, m: `(${pos}) ${m}`, c: note, ex, tone: pos, s: '' };
+        Object.assign(c, e); S.edits[id] = e;
+      }
+    } else {
+      c._orig ||= Object.fromEntries(FIELDS.map(f => [f, c[f]]));
+      const e = { p, m, c: val('ed-c'), ex, tone: document.getElementById('ed-tone').value, s: val('ed-s') };
+      Object.assign(c, e); S.edits[id] = e;
+    }
+    save(); closeSheet(); render(true); toast('Saved.');
+  },
+  resetEdit: el => { const id = el.dataset.id, c = BY_ID[id]; if (c && c._orig) { Object.assign(c, c._orig); delete c._orig; } delete S.edits[id]; save(); closeSheet(); render(true); toast('Reset to original.'); },
+  del: el => {
+    const id = el.dataset.id, c = BY_ID[id];
+    if (!c || !confirm(`Delete "${c.p}"? You can restore built-in items later in Me.`)) return;
+    if (c.custom) {
+      S.custom = S.custom.filter(w => w.id !== id);
+      const i = CUSTOM.indexOf(c); if (i >= 0) CUSTOM.splice(i, 1); delete BY_ID[id];
+    } else S.deleted[id] = Date.now();
+    delete S.cards[id]; delete S.flags[id];
+    rebuildALL(); removeFromSession(id); save(); closeSheet(); render(true); toast('Deleted.');
+  },
+  restoreDeleted: () => { S.deleted = {}; rebuildALL(); save(); render(true); toast('Deleted items restored.'); },
+  undoEdits: () => { Object.keys(S.edits).forEach(id => { const c = BY_ID[id]; if (c && c._orig) { Object.assign(c, c._orig); delete c._orig; } }); S.edits = {}; save(); render(true); toast('Edits undone.'); },
+});
 
 document.addEventListener('click', e => {
   const say = e.target.closest('[data-say]');
@@ -506,7 +586,7 @@ document.addEventListener('keydown', e => {
 window.SN = {
   get S() { return S; }, get V() { return V; }, ALL, BY_ID, TTS, esc, shuffle, speakBtn, dialog, toast, save, bump, addToDeck, today,
   go, render, VIEWS, A, newIds, newLeftToday, startLearn, statusOf, phraseList, phraseDetail, openSheet, closeSheet, tokens, norm,
-  registerCustom, PHRASE_COUNT, WORD_COUNT, FEATURES, ygUrl,
+  registerCustom, get PHRASE_COUNT() { return PHRASE_COUNT; }, get WORD_COUNT() { return WORD_COUNT; }, FEATURES, ygUrl,
 };
 
 /* ---------- boot ---------- */

@@ -290,14 +290,6 @@ A.saveWord = () => {
   S().custom.push(w); SN.registerCustom(w); SN.addToDeck(w.id); SN.bump('lw'); SN.save();
   SN.closeSheet(); SN.toast('Saved to your deck!'); SN.render(true);
 };
-A.delcustom = el => {
-  const id = el.dataset.id;
-  if (!confirm('Delete this word?')) return;
-  S().custom = S().custom.filter(w => w.id !== id); delete S().cards[id];
-  const i = ALL.findIndex(c => c.id === id); if (i >= 0) ALL.splice(i, 1); delete BY_ID[id];
-  SN.save(); SN.closeSheet(); SN.render(true);
-};
-
 /* Open the add-word sheet from a link, e.g. a Home Screen bookmark: index.html?add=word */
 try { const p = new URLSearchParams(location.search); if (p.has('add')) openAdd({ word: p.get('add') || '' }); } catch (e) { /* ignore */ }
 SN.render();

@@ -42,3 +42,6 @@ Every phrase and word has a **🔎 Hear it in real videos** box that opens YouGl
 
 ## Secrets
 No API keys or `.env` files belong in this repo (see `.gitignore`). The Claude key is typed into the app on your own device and kept only in that browser.
+
+## Editing and deleting
+Open any phrase or word and tap **✏️ Edit** or **🗑 Delete** (also on the review answer card). Changes to built-in items are saved on your device as overrides (not in the repo); **Me → Your changes** can restore deleted items or undo edits. Your own saved words are edited or deleted for real.
