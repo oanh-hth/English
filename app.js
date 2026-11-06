@@ -12,13 +12,13 @@ const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { c
 const ALL = [];
 const BY_ID = {};
 TOPICS.forEach(t => t.phrases.forEach((r, i) => {
-  const c = { id: `${t.key}-${i}`, topic: t.key, topicName: t.name, p: r[0], m: r[1], c: r[2], ex: r[3], tone: r[4], s: r[5] };
+  const c = { id: `${t.key}-${i}`, topic: t.key, topicName: t.name, p: r[0], m: r[1], c: r[2], ex: r[3], tone: r[4], s: r[5] || '' };
   ALL.push(c); BY_ID[c.id] = c;
 }));
 
 /* ---------- storage ---------- */
 const KEY = 'speakNatural.v1';
-const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, rate: 0.9, voice: '' } });
+const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, rate: 0.9, voice: '' }, flags: {} });
 let S = (() => {
   try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) { const d = defaults(); return { ...d, ...o, settings: { ...d.settings, ...(o.settings || {}) } }; } } catch (e) { /* ignore */ }
   return defaults();
@@ -145,7 +145,7 @@ function phraseDetail(c, opts = {}) {
     <div class="label">Meaning</div><p>${esc(c.m)}</p>
     <div class="label">When to use it</div><p>${esc(c.c)}</p>
     <div class="label">Example conversation</div>${dialog(c.ex)}
-    <div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>
+    ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
     ${opts.footer || ''}`;
 }
 
@@ -231,7 +231,8 @@ const VIEWS = {
         <div class="label">Meaning</div><p>${esc(c.m)}</p>
         <div class="label">When to use it</div><p>${esc(c.c)}</p>
         <div class="label">Example</div>${dialog(c.ex)}
-        <div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div></div>
+        ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
+        <button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button></div>
       <p class="muted small" style="text-align:center">${listen ? 'Did you get the meaning?' : 'Did you say it right? Repeat it out loud once more.'}</p>
       <div class="rates">${rates.map(([l, q]) => `<button class="r${q}" data-a="rate" data-q="${q}">${l}<small>${fmtIvl(st, q)}</small></button>`).join('')}</div>`;
   },
@@ -274,13 +275,22 @@ const VIEWS = {
       </div>
       <h2>On your iPhone</h2>
       <div class="card small"><p>Open this page in <b>Safari</b>, tap <b>Share → Add to Home Screen</b>. It then opens full screen like an app and works offline.</p><p class="muted" style="margin:0">Tip: for the best voice, go to Settings → Accessibility → Spoken Content → Voices → English (US) and download an Enhanced voice (e.g. Samantha).</p></div>
+      <h2>Quality check</h2>
+      <div class="card small"><p>Tap <b>🏳️ Sounds odd?</b> on any phrase that doesn't sound natural to you or a native speaker. You have <b>${Object.keys(S.flags).filter(id => BY_ID[id]).length}</b> flagged.</p><button class="btn ghost sm" data-a="copyFlags">Copy flagged list</button></div>
       <h2>Data</h2>
       <button class="btn plain" data-a="reset" style="color:var(--bad)">Reset all progress</button>`;
   },
 };
 
+const GROUP_ORDER = ['Everyday conversation', 'Work & school', 'Going out & services', 'Travel', 'Home & relationships', 'Feelings & opinions', 'Expressions & grammar in use', 'More'];
 function topicList() {
-  return TOPICS.map(t => {
+  return GROUP_ORDER.map(g => {
+    const ts = TOPICS.filter(t => (t.group || 'More') === g);
+    return ts.length ? `<h2>${esc(g)}</h2>${topicItems(ts)}` : '';
+  }).join('');
+}
+function topicItems(list) {
+  return list.map(t => {
     const total = t.phrases.length, n = t.phrases.filter((_, i) => S.cards[`${t.key}-${i}`]).length;
     return `<button class="item" data-a="topic" data-key="${t.key}"><span class="ico">${t.icon}</span><span class="grow"><h3>${esc(t.name)}</h3><span class="muted small">${esc(t.blurb)}</span><div class="bar"><i style="width:${n / total * 100}%"></i></div></span><span class="muted small">${n}/${total}</span></button>`;
   }).join('');
@@ -416,11 +426,17 @@ const A = {
   topic: el => go('topic', { key: el.dataset.key }),
   phrase: el => {
     const c = BY_ID[el.dataset.id];
-    const footer = S.cards[c.id] ? '' : `<button class="btn" data-a="sheetAdd" data-id="${c.id}" style="margin-top:16px">Add to my deck</button>`;
+    const footer = (S.cards[c.id] ? '' : `<button class="btn" data-a="sheetAdd" data-id="${c.id}" style="margin-top:16px">Add to my deck</button>`)
+      + `<button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button>`;
     openSheet(phraseDetail(c, { footer }) + `<button class="btn plain" data-a="closeSheet" style="margin-top:10px">Close</button>`);
   },
   sheetAdd: el => { addToDeck(el.dataset.id); save(); bump('learned'); closeSheet(); render(true); toast('Added to your deck'); },
   closeSheet,
+  flag: el => { const id = el.dataset.id; if (S.flags[id]) delete S.flags[id]; else S.flags[id] = Date.now(); save(); el.textContent = S.flags[id] ? '🚩 Flagged' : '🏳️ Sounds odd?'; toast(S.flags[id] ? 'Flagged for review' : 'Flag removed'); },
+  copyFlags: () => {
+    const text = Object.keys(S.flags).filter(id => BY_ID[id]).map(id => `${BY_ID[id].p}  [${BY_ID[id].topicName}]`).join('\n');
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard'), () => toast('Could not copy')); else toast('Copy not supported here');
+  },
   learn: el => startLearn(el.dataset.topic),
   review: startReview,
   add: () => { addToDeck(ses.queue[ses.i]); bump('learned'); ses.done++; ses.i++; render(); window.scrollTo(0, 0); },
