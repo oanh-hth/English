@@ -16,16 +16,21 @@ TOPICS.forEach(t => t.phrases.forEach((r, i) => {
   ALL.push(c); BY_ID[c.id] = c;
 }));
 
+(window.VOCAB || []).forEach(t => t.words.forEach((r, i) => {
+  const c = { id: `v:${t.key}-${i}`, topic: 'v:' + t.key, topicName: t.name, p: r[0], m: `(${r[1]}) ${r[2]}`, c: '', ex: r[3], tone: r[1], s: '', v: true };
+  ALL.push(c); BY_ID[c.id] = c;
+}));
+
 /* ---------- storage ---------- */
 const KEY = 'speakNatural.v1';
-const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, rate: 0.9, voice: '' }, flags: {} });
+const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, rate: 0.9, voice: '' }, flags: {} });
 let S = (() => {
   try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) { const d = defaults(); return { ...d, ...o, settings: { ...d.settings, ...(o.settings || {}) } }; } } catch (e) { /* ignore */ }
   return defaults();
 })();
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
-const today = () => (S.log[dayKey()] ||= { rev: 0, learned: 0, roles: 0 });
-const bump = (f, n = 1) => { today()[f] += n; save(); };
+const today = () => (S.log[dayKey()] ||= { rev: 0, learned: 0, roles: 0, lw: 0 });
+const bump = (f, n = 1) => { const t = today(); t[f] = (t[f] || 0) + n; save(); };
 
 /* ---------- text to speech ---------- */
 const TTS = {
@@ -80,8 +85,8 @@ function nextState(c, q) { // q: 0 again, 1 hard, 2 good, 3 easy
 }
 const fmtIvl = (c, q) => { if (q === 0) return '10 min'; const d = nextState(c, q).int; return d < 30 ? `${d}d` : d < 365 ? `${Math.round(d / 30)}mo` : `${(d / 365).toFixed(1)}y`; };
 const dueIds = () => Object.keys(S.cards).filter(id => BY_ID[id] && S.cards[id].due <= Date.now()).sort((a, b) => S.cards[a].due - S.cards[b].due);
-const newIds = () => ALL.filter(c => !S.cards[c.id]).map(c => c.id);
-const newLeftToday = () => Math.max(0, S.settings.newPerDay - today().learned);
+const newIds = kind => ALL.filter(c => !S.cards[c.id] && !!c.v === (kind === 'word')).map(c => c.id);
+const newLeftToday = kind => kind === 'word' ? Math.max(0, S.settings.newWordsPerDay - (today().lw || 0)) : Math.max(0, S.settings.newPerDay - today().learned);
 const addToDeck = id => { if (!S.cards[id]) S.cards[id] = { ease: 2.5, int: 0, reps: 0, due: Date.now(), lapses: 0 }; };
 
 function streak() {
@@ -134,7 +139,7 @@ function toast(msg) {
 
 /* ---------- shared UI bits ---------- */
 const speakBtn = (text, slow, sm) => `<button class="speak ${sm ? 'sm' : ''}" data-say="${esc(text)}" data-slow="${slow ? 1 : 0}" aria-label="${slow ? 'Play slowly' : 'Play audio'}">${slow ? '🐢' : '🔊'}</button>`;
-const dialog = ex => ex.split(' | ').map((l, i) => `<div class="dlg"><span class="who">${'AB'[i] || ''}</span><span class="txt">${esc(l)}</span>${speakBtn(l, false, true)}</div>`).join('');
+const dialog = ex => ex.split(' | ').map((l, i, arr) => `<div class="dlg"><span class="who">${arr.length > 1 ? 'AB'[i] || '' : ''}</span><span class="txt">${esc(l)}</span>${speakBtn(l, false, true)}</div>`).join('');
 const statusOf = id => { const c = S.cards[id]; if (!c) return ['New', '']; if (c.int >= 21) return ['Mastered', 'good']; return ['In deck', 'warn']; };
 
 function phraseDetail(c, opts = {}) {
@@ -143,8 +148,8 @@ function phraseDetail(c, opts = {}) {
     <div class="row"><div class="grow"><span class="pill">${esc(c.tone)}</span> <span class="pill ${stCls}">${stText}</span></div></div>
     <div class="row" style="margin-top:10px"><div class="phrase grow">${esc(c.p)}</div>${speakBtn(c.p)}${speakBtn(c.p, true)}</div>
     <div class="label">Meaning</div><p>${esc(c.m)}</p>
-    <div class="label">When to use it</div><p>${esc(c.c)}</p>
-    <div class="label">Example conversation</div>${dialog(c.ex)}
+    ${c.c ? `<div class="label">When to use it</div><p>${esc(c.c)}</p>` : ''}
+    <div class="label">${c.v ? 'Example' : 'Example conversation'}</div>${dialog(c.ex)}
     ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
     ${opts.footer || ''}`;
 }
@@ -156,6 +161,7 @@ function closeSheet() { const s = $('#sheet'); s.hidden = true; s.innerHTML = ''
 const VIEWS = {
   home() {
     const due = dueIds().length, left = Math.min(newLeftToday(), newIds().length), t = today();
+    const wLeft = Math.min(newLeftToday('word'), newIds('word').length);
     const inDeck = Object.keys(S.cards).length, st = streak();
     const nextSc = SCENARIOS.find(s => !S.roles[s.id]) || SCENARIOS[0];
     return `
@@ -172,28 +178,32 @@ const VIEWS = {
         <div class="card stat"><b>${t.rev + t.learned}</b><span>studied today</span></div>
       </div>
       <button class="item" data-a="learn" ${left ? '' : 'disabled style="opacity:.55"'}><span class="ico">✨</span><span class="grow"><h3>Learn new phrases</h3><span class="muted small">${left ? `${left} left for today` : newIds().length ? 'Daily goal reached' : 'You\'ve seen everything!'}</span></span><span class="chev">›</span></button>
+      <button class="item" data-a="learn" data-kind="word" ${wLeft ? '' : 'disabled style="opacity:.55"'}><span class="ico">📚</span><span class="grow"><h3>Learn new words</h3><span class="muted small">${wLeft ? `${wLeft} left for today` : newIds('word').length ? 'Daily goal reached' : 'You\'ve seen every word!'}</span></span><span class="chev">›</span></button>
       <button class="item" data-a="scenario" data-id="${nextSc.id}"><span class="ico">${nextSc.icon}</span><span class="grow"><h3>Role-play: ${esc(nextSc.title)}</h3><span class="muted small">${S.roles[nextSc.id] ? 'Practice again' : 'Recommended next'} · ${nextSc.level}</span></span><span class="chev">›</span></button>
       <h2>How it works</h2>
       <div class="card small"><p><b>1. Learn</b> phrases with audio, meaning, and real situations.</p><p><b>2. Review</b> them with spaced repetition — right before you'd forget.</p><p><b>3. Practice</b> in role-plays: read the situation, build the sentence, and say it out loud.</p><p class="muted" style="margin:0">You have ${inDeck} of ${ALL.length} phrases in your deck.</p></div>`;
   },
 
   library() {
-    const q = (V.q || '').trim().toLowerCase();
-    const hits = q ? ALL.filter(c => (c.p + ' ' + c.m + ' ' + c.topicName).toLowerCase().includes(q)) : null;
+    const words = V.mode === 'words';
     return `
       <h1>Learn</h1>
-      <input class="search" id="search" type="search" placeholder="Search phrases…" value="${esc(V.q || '')}" autocomplete="off" autocapitalize="off">
-      <div id="results">${hits ? phraseList(hits) : topicList()}</div>`;
+      <div class="seg" style="width:100%;display:flex"><button style="flex:1" class="${words ? '' : 'on'}" data-a="mode2" data-m="phrases">Phrases · ${PHRASE_COUNT}</button><button style="flex:1" class="${words ? 'on' : ''}" data-a="mode2" data-m="words">Words · ${WORD_COUNT}</button></div>
+      <input class="search" id="search" type="search" placeholder="${words ? 'Search words…' : 'Search phrases…'}" value="${esc(V.q || '')}" autocomplete="off" autocapitalize="off">
+      <div id="results">${libraryResults()}</div>`;
   },
 
   topic() {
-    const t = TOPICS.find(x => x.key === V.key);
-    const ids = t.phrases.map((_, i) => `${t.key}-${i}`);
+    const word = !!V.word;
+    const t = word ? VOCAB.find(x => x.key === V.key) : TOPICS.find(x => x.key === V.key);
+    const items = word ? t.words : t.phrases, pre = word ? `v:${t.key}` : t.key;
+    const ids = items.map((_, i) => `${word ? 'v:' : ''}${word ? t.key : t.key}-${i}`);
     const fresh = ids.filter(id => !S.cards[id]);
+    const noun = word ? 'word' : 'phrase';
     return `
-      <div class="topbar"><button class="back" data-a="tab" data-v="library">‹ Back</button></div>
-      <h1>${t.icon} ${esc(t.name)}</h1><p class="muted">${esc(t.blurb)}</p>
-      ${fresh.length ? `<button class="btn" data-a="learn" data-topic="${t.key}" style="margin:8px 0 14px">Learn ${fresh.length} new phrase${fresh.length > 1 ? 's' : ''}</button>` : ''}
+      <div class="topbar"><button class="back" data-a="backlib">‹ Back</button></div>
+      <h1>${t.icon} ${esc(t.name)}</h1><p class="muted">${esc(word ? `${items.length} words you'll hear in daily life, shows and videos` : t.blurb)}</p>
+      ${fresh.length ? `<button class="btn" data-a="learn" data-topic="${pre}" style="margin:8px 0 14px">Learn ${fresh.length} new ${noun}${fresh.length > 1 ? 's' : ''}</button>` : ''}
       ${phraseList(ids.map(id => BY_ID[id]))}`;
   },
 
@@ -222,14 +232,14 @@ const VIEWS = {
       return `${top}<div class="card flash">
         ${listen
           ? `<p class="muted">🎧 Listen. What does it mean? When would you say it?</p><div style="margin:14px 0"><button class="speak" style="width:84px;height:84px;font-size:36px;border-radius:42px" data-say="${esc(c.p)}" data-slow="0" id="listenBtn">🔊</button></div><div><button class="btn sm ghost" data-say="${esc(c.p)}" data-slow="1">🐢 Slow</button></div>`
-          : `<p class="muted">🗣️ Say it out loud in English:</p><div class="phrase" style="font-size:24px;margin:10px 0">${esc(c.m)}</div><p class="muted small">${esc(c.topicName)}</p>`}
+          : `<p class="muted">${c.v ? '🗣️ What is the word?' : '🗣️ Say it out loud in English:'}</p><div class="phrase" style="font-size:24px;margin:10px 0">${esc(c.m)}</div><p class="muted small">${esc(c.topicName)}</p>`}
         </div><button class="btn" data-a="flip">Show answer</button>`;
     }
     const rates = [['Again', 0], ['Hard', 1], ['Good', 2], ['Easy', 3]];
     return `${top}<div class="card">
         <div class="row"><div class="phrase grow">${esc(c.p)}</div>${speakBtn(c.p)}${speakBtn(c.p, true)}</div>
         <div class="label">Meaning</div><p>${esc(c.m)}</p>
-        <div class="label">When to use it</div><p>${esc(c.c)}</p>
+        ${c.c ? `<div class="label">When to use it</div><p>${esc(c.c)}</p>` : ''}
         <div class="label">Example</div>${dialog(c.ex)}
         ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
         <button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button></div>
@@ -253,6 +263,7 @@ const VIEWS = {
     const cards = Object.values(S.cards), mastered = cards.filter(c => c.int >= 21).length;
     const total = Object.values(S.log).reduce((a, l) => a + l.rev, 0);
     const voices = TTS.voices;
+    const phrasesIn = Object.keys(S.cards).filter(id => BY_ID[id] && !BY_ID[id].v).length, wordsIn = Object.keys(S.cards).filter(id => BY_ID[id] && BY_ID[id].v).length;
     const cur = (TTS.pick() || {}).name || '';
     return `
       <h1>Me</h1>
@@ -262,12 +273,14 @@ const VIEWS = {
       <h2>Your roadmap to fluency</h2>
       <div class="card small">
         <p>Research (Nation 2006) suggests about <b>3,000 word families</b> cover ~95% of everyday spoken English, and <b>6,000–7,000</b> reach ~98%, which is comfortable, native-like listening. Fluent speakers also rely on ready-made chunks, which is what this app trains.</p>
-        ${[[0, 'Survival', 100], [100, 'Everyday', 300], [300, 'Confident', 600], [600, 'Fluent chunks', 1000]].map(([lo, name, hi]) => `<p style="margin:6px 0"><b>${name}</b> <span class="muted">· ${hi} phrases</span>${cards.length >= hi ? ' ✅' : cards.length >= lo ? ' ← you are here' : ''}</p>`).join('')}
-        <p class="muted" style="margin:6px 0 0">This app has ${ALL.length} phrases so far. Pair it with daily listening (podcasts, shows) and speaking out loud.</p>
+        ${[[0, 'Survival', 100], [100, 'Everyday', 300], [300, 'Confident', 600], [600, 'Fluent chunks', 1000]].map(([lo, name, hi]) => `<p style="margin:6px 0"><b>${name}</b> <span class="muted">· ${hi} phrases</span>${phrasesIn >= hi ? ' ✅' : phrasesIn >= lo ? ' ← you are here' : ''}</p>`).join('')}
+        <p class="muted" style="margin:6px 0 0">Phrases in your deck: <b>${phrasesIn}</b> of ${PHRASE_COUNT}. Words in your deck: <b>${wordsIn}</b> of ${WORD_COUNT}.</p>
+        <p class="muted" style="margin:6px 0 0">For movies, Webb &amp; Rodgers (2009) found about <b>3,000 word families</b> give ~95% coverage and <b>~6,000</b> give ~98% (American films). The Words list is a high-frequency daily-life core, not all 3,000, so keep adding words from what you watch.</p>
         <p class="muted" style="margin:6px 0 0">Heads-up: phrases were written by an AI and haven't been reviewed by a native speaker. If one sounds odd to people around you, trust them and check it on <b>YouGlish</b> or with a tutor.</p>
       </div>
       <h2>Settings</h2>
       <div class="card stack">
+        <label class="row"><span class="grow">New words per day</span><select data-s="newWordsPerDay">${[5, 10, 15, 20, 30].map(n => `<option ${n === S.settings.newWordsPerDay ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
         <label class="row"><span class="grow">New phrases per day</span><select data-s="newPerDay">${[3, 5, 8, 12, 20].map(n => `<option ${n === S.settings.newPerDay ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
         <div><div class="row"><span class="grow">Speaking speed</span><span class="muted">${S.settings.rate.toFixed(2)}×</span></div><input type="range" min="0.6" max="1.1" step="0.05" value="${S.settings.rate}" data-s="rate"></div>
         ${voices.length ? `<label class="row"><span class="grow">Voice</span><select data-s="voice">${voices.map(v => `<option value="${esc(v.name)}" ${v.name === cur ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></label>` : '<p class="muted small">Voice options appear once your device loads its voices.</p>'}
@@ -288,6 +301,19 @@ function topicList() {
     const ts = TOPICS.filter(t => (t.group || 'More') === g);
     return ts.length ? `<h2>${esc(g)}</h2>${topicItems(ts)}` : '';
   }).join('');
+}
+const PHRASE_COUNT = ALL.filter(c => !c.v).length, WORD_COUNT = ALL.filter(c => c.v).length;
+function vocabList() {
+  const groups = [...new Set(VOCAB.map(t => t.group))];
+  return groups.map(g => `<h2>${esc(g)}</h2>` + VOCAB.filter(t => t.group === g).map(t => {
+    const n = t.words.filter((_, i) => S.cards[`v:${t.key}-${i}`]).length;
+    return `<button class="item" data-a="topic" data-key="${t.key}" data-word="1"><span class="ico">${t.icon}</span><span class="grow"><h3>${esc(t.name)}</h3><span class="muted small">${t.words.length} words</span><div class="bar"><i style="width:${n / t.words.length * 100}%"></i></div></span><span class="muted small">${n}/${t.words.length}</span></button>`;
+  }).join('')).join('');
+}
+function libraryResults() {
+  const words = V.mode === 'words', q = (V.q || '').trim().toLowerCase();
+  if (!q) return words ? vocabList() : topicList();
+  return phraseList(ALL.filter(c => !!c.v === words && (c.p + ' ' + c.m + ' ' + c.topicName).toLowerCase().includes(q)));
 }
 function topicItems(list) {
   return list.map(t => {
@@ -410,11 +436,12 @@ function startReview() {
   ses = { kind: 'review', queue, i: 0, flipped: false, done: 0 };
   go('session');
 }
-function startLearn(topic) {
-  let ids = newIds();
+function startLearn(topic, kind) {
+  if (topic && topic.startsWith('v:')) kind = 'word';
+  let ids = newIds(kind);
   if (topic) ids = ids.filter(id => BY_ID[id].topic === topic);
-  else ids = ids.slice(0, newLeftToday());
-  if (!ids.length) { toast('No new phrases available right now.'); return; }
+  else ids = ids.slice(0, newLeftToday(kind));
+  if (!ids.length) { toast(`No new ${kind === 'word' ? 'words' : 'phrases'} available right now.`); return; }
   ses = { kind: 'learn', queue: ids, i: 0, flipped: false, done: 0 };
   go('session');
 }
@@ -423,23 +450,25 @@ function startLearn(topic) {
 const A = {
   tab: el => { if (el.dataset.v === 'library') V.q = ''; go(el.dataset.v); },
   exit: () => { const back = V.name === 'roleplay' ? 'practice' : 'home'; go(back); },
-  topic: el => go('topic', { key: el.dataset.key }),
+  topic: el => go('topic', { key: el.dataset.key, word: !!el.dataset.word }),
+  backlib: () => go('library', { mode: V.word ? 'words' : 'phrases' }),
+  mode2: el => { V.mode = el.dataset.m; V.q = ''; render(); },
   phrase: el => {
     const c = BY_ID[el.dataset.id];
     const footer = (S.cards[c.id] ? '' : `<button class="btn" data-a="sheetAdd" data-id="${c.id}" style="margin-top:16px">Add to my deck</button>`)
       + `<button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button>`;
     openSheet(phraseDetail(c, { footer }) + `<button class="btn plain" data-a="closeSheet" style="margin-top:10px">Close</button>`);
   },
-  sheetAdd: el => { addToDeck(el.dataset.id); save(); bump('learned'); closeSheet(); render(true); toast('Added to your deck'); },
+  sheetAdd: el => { addToDeck(el.dataset.id); save(); bump(BY_ID[el.dataset.id].v ? 'lw' : 'learned'); closeSheet(); render(true); toast('Added to your deck'); },
   closeSheet,
   flag: el => { const id = el.dataset.id; if (S.flags[id]) delete S.flags[id]; else S.flags[id] = Date.now(); save(); el.textContent = S.flags[id] ? '🚩 Flagged' : '🏳️ Sounds odd?'; toast(S.flags[id] ? 'Flagged for review' : 'Flag removed'); },
   copyFlags: () => {
     const text = Object.keys(S.flags).filter(id => BY_ID[id]).map(id => `${BY_ID[id].p}  [${BY_ID[id].topicName}]`).join('\n');
     if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast('Copied to clipboard'), () => toast('Could not copy')); else toast('Copy not supported here');
   },
-  learn: el => startLearn(el.dataset.topic),
+  learn: el => startLearn(el.dataset.topic, el.dataset.kind),
   review: startReview,
-  add: () => { addToDeck(ses.queue[ses.i]); bump('learned'); ses.done++; ses.i++; render(); window.scrollTo(0, 0); },
+  add: () => { addToDeck(ses.queue[ses.i]); bump(BY_ID[ses.queue[ses.i]].v ? 'lw' : 'learned'); ses.done++; ses.i++; render(); window.scrollTo(0, 0); },
   skip: () => { ses.i++; render(); window.scrollTo(0, 0); },
   flip: () => {
     ses.flipped = true; render(); window.scrollTo(0, 0);
@@ -476,7 +505,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'search') {
     V.q = e.target.value;
     const q = V.q.trim().toLowerCase();
-    $('#results').innerHTML = q ? phraseList(ALL.filter(c => (c.p + ' ' + c.m + ' ' + c.topicName).toLowerCase().includes(q))) : topicList();
+    $('#results').innerHTML = libraryResults();
   } else if (e.target.id === 'typed') {
     rp.typed = e.target.value;
   } else if (e.target.dataset && e.target.dataset.s === 'rate') {
@@ -486,6 +515,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const k = e.target.dataset && e.target.dataset.s; if (!k) return;
   if (k === 'newPerDay') S.settings.newPerDay = +e.target.value;
+  else if (k === 'newWordsPerDay') S.settings.newWordsPerDay = +e.target.value;
   else if (k === 'voice') S.settings.voice = e.target.value;
   else if (k === 'rate') { S.settings.rate = +e.target.value; }
   save(); if (k === 'rate') render(true);

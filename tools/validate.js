@@ -2,9 +2,9 @@
 const vm = require('vm'), fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const files = [...html.matchAll(/src="(data\d*\.js)"/g)].map(m => m[1]);
+const files = [...html.matchAll(/src="((?:data|vocab)\d*\.js)"/g)].map(m => m[1]);
 const w = {}; vm.createContext(w); w.window = w;
-vm.runInContext(files.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join(';') + ';this.T=TOPICS;this.S=SCENARIOS', w);
+vm.runInContext(files.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join(';') + ';this.T=TOPICS;this.S=SCENARIOS;this.V=window.VOCAB||[]', w);
 const TONES = new Set(['casual', 'neutral', 'polite', 'warm', 'urgent', 'formal']);
 const err = [], warn = [], seen = new Map(), keys = new Set();
 let n = 0;
@@ -35,6 +35,9 @@ for (const s of w.S) {
     if (tok(t.a).length > 14) warn.push(`${s.id}#${i}: answer very long`);
   });
 }
+let wn = 0; const wseen = new Set();
+for (const t of w.V) for (const r of t.words) { wn++; if (!r[0] || !r[2] || !r[3]) err.push('vocab empty field in ' + t.key); const k = r[0].toLowerCase(); if (wseen.has(k)) warn.push('duplicate word ' + k); wseen.add(k); if (!new RegExp(r[0].split(' (')[0].split(' ')[0].slice(0, 4), 'i').test(r[3])) warn.push(`word "${r[0]}": example may not contain it`); }
+console.log(`${w.V.length} vocab topics, ${wn} words`);
 console.log(`${w.T.length} topics, ${n} phrases, ${w.S.length} scenarios`);
 warn.forEach(x => console.log('WARN', x)); err.forEach(x => console.log('ERROR', x));
 process.exit(err.length ? 1 : 0);

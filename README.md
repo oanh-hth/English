@@ -2,7 +2,7 @@
 
 A mobile-first web app (installable on iPhone as a PWA) for learning the phrases native American speakers really use.
 
-- **Learn**: 1,024 phrases in 92 topics, each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
+- **Learn**: 1,024 phrases in 92 topics, plus 953 daily-life words in 30 topics (Learn → Words), each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
 - **Review**: spaced repetition (SM-2 style: Again / Hard / Good / Easy). Cards alternate between speaking and listening.
 - **Practice**: 20 role-play conversations. You see the context and a goal, then build the sentence from a word bank (or type it), then hear it and repeat it out loud.
 - Works offline, no build step, no backend. Progress is stored in `localStorage`.
