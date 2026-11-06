@@ -38,7 +38,6 @@ TOPICS.push(
     [`I'm a fast learner.`, `I learn new things quickly.`, `Showing flexibility when you lack some experience.`, `We use a new system. | No problem, I'm a fast learner.`, `neutral`, `"I'm a FAST LUR-ner"`],
     [`Where do you see yourself in five years?`, `Interview question about your goals.`, `Be positive and specific about growth.`, `Where do you see yourself in five years? | Leading a small team.`, `polite`, `"WHERE do-ya SEE yer-SELF"`],
     [`I'd love the opportunity to ___.`, `I really want a chance to do this.`, `Ending an interview or application email.`, `I'd love the opportunity to join your team. | We'll be in touch.`, `polite`, `"I'd LUV thee..."`],
-    [`I'm on my way.`, `I'm traveling there now.`, `Telling someone you're coming (not only for work).`, `Where are you? | I'm on my way!`, `casual`, `"I'm on my WAY"`],
   ]},
   { key: "health", icon: "🩺", name: "Health & doctor", blurb: "Describe how you feel", phrases: [
     [`I'm not feeling well.`, `I feel sick.`, `Explaining you're ill, or leaving early.`, `You look pale. | I'm not feeling well.`, `neutral`, `"not FEEL-ing WELL"`],
@@ -62,7 +61,7 @@ TOPICS.push(
   ]},
   { key: "travel", icon: "✈️", name: "Travel & transport", blurb: "Airports, taxis, getting around", phrases: [
     [`Where's the nearest subway station?`, `Where is the closest metro stop?`, `Finding transport in cities.`, `Where's the nearest subway station? | Two blocks that way.`, `polite`, `"NEER-ist SUB-way"`],
-    [`Does this bus go to ___?`, `Does this bus stop at that place?`, `Checking you're on the right bus.`, `Does this bus go to downtown? | Yes, hop on.`, `polite`, `"does-this-BUS-go-ta"`],
+    [`Does this bus go to ___?`, `Does this bus stop at that place?`, `Checking you're on the right bus.`, `Does this bus go to the airport? | Yes, hop on.`, `polite`, `"does-this-BUS-go-ta"`],
     [`How long does it take to get to ___?`, `What's the travel time?`, `Planning routes and time.`, `How long does it take to get to the airport? | About 30 minutes.`, `neutral`, `"how LONG duz-it TAKE"`],
     [`I'd like a window seat, please.`, `Requesting a seat by the window.`, `Checking in for a flight.`, `I'd like a window seat, please. | Let me see what's available.`, `polite`, `"WIN-doe seat"`],
     [`My flight got delayed.`, `My plane will leave later than planned.`, `Explaining travel problems. "Canceled" = flight won't go.`, `Why are you late? | My flight got delayed.`, `neutral`, `"dee-LAYED"`],
@@ -133,7 +132,7 @@ TOPICS.push(
   { key: "idioms", icon: "🎭", name: "Everyday idioms", blurb: "Figurative phrases you'll hear a lot", phrases: [
     [`Piece of cake.`, `Very easy.`, `Describing an easy task.`, `How was the test? | Piece of cake!`, `casual`, `"PEESS uv CAKE"`],
     [`It's up to you.`, `You decide.`, `Giving someone the choice.`, `Pizza or sushi? | It's up to you.`, `neutral`, `"its UP ta YOU"`],
-    [`Cost an arm and a leg.`, `Be very expensive.`, `Complaining about prices.`, `That car cost an arm and a leg. | I bet.`, `casual`, `"an ARM and a LEG"`],
+    [`It cost an arm and a leg.`, `It was extremely expensive.`, `Complaining about prices.`, `That car cost an arm and a leg. | I bet.`, `casual`, `"an ARM and a LEG"`],
     [`Hang in there.`, `Don't give up; stay strong.`, `Encouraging someone in a tough time.`, `Work has been crazy. | Hang in there!`, `casual`, `"HANG in there"`],
     [`Break a leg!`, `Good luck! (Performances.)`, `Before a presentation or show. It means "good luck."`, `My presentation is at 2. | Break a leg!`, `casual`, `"BRAKE a LEG"`],
     [`Better late than never.`, `Arriving late is better than not at all.`, `When someone arrives or does something late.`, `Sorry, I'm late. | Better late than never!`, `casual`, `"BET-er LATE than NEV-er"`],
@@ -196,3 +195,5 @@ SCENARIOS.push(
       { npc: "You don't have to do that!", n: "Insist: say it's no big deal.", a: "No, no, it's no big deal.", alts: ["It's no big deal.", "No big deal."], x: ["problem", "small"], tip: "\"No big deal\" downplays your effort." },
     ]},
 );
+
+TOPICS.find(t => t.key === 'plans').phrases.push([`I'm on my way.`, `I'm traveling there now.`, `Telling someone you're coming (not only for work).`, `Where are you? | I'm on my way!`, `casual`, `"I'm on my WAY"`]);
