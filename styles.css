@@ -131,3 +131,5 @@ input[type=range] { width: 100%; }
 .tip.bad-tip { background: var(--bad-soft); }
 input.type.bad { border-color: var(--bad); }
 .label + input.type { margin-top: 4px; }
+a.item { text-decoration: none; color: inherit; }
+#tabs button { font-size: 10.5px; }

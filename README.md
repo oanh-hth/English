@@ -33,3 +33,6 @@ Content is organised into **22 topics (units)** in `units.js`. Each topic combin
 
 ## Saving words you look up
 **Home → Save a word I looked up** (or Topics → My words). Type the word, optionally tap *Look up meaning online* (uses the free dictionaryapi.dev service), add the meaning, and it joins your review deck. A bookmark to `index.html?add=word` opens the form directly.
+
+## Resources tab
+Edit `resources.js` to add external links (YouTube channels, podcasts…).
