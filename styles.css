@@ -123,3 +123,11 @@ input[type=range] { width: 100%; }
 @keyframes up { from { transform: translateY(40px); opacity: .6; } }
 @media (min-width: 700px) { #view { padding-top: 32px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+.opt { min-height: 54px; font-weight: 500; }
+.opt.ok { border-color: var(--good); background: var(--good-soft); }
+.opt.bad { border-color: var(--bad); background: var(--bad-soft); }
+.opt.locked { pointer-events: none; }
+.tip.bad-tip { background: var(--bad-soft); }
+input.type.bad { border-color: var(--bad); }
+.label + input.type { margin-top: 4px; }

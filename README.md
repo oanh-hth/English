@@ -27,3 +27,9 @@ Phrases were written by an AI from its knowledge of American English and have **
 
 ## Validating content
 `node tools/validate.js` checks every phrase and role-play (field counts, "A | B" examples, tones, duplicates, whether examples contain the phrase). In the app, **🏳️ Sounds odd?** flags a phrase and **Me → Copy flagged list** exports your flags so they can be corrected.
+
+## Structure
+Content is organised into **22 topics (units)** in `units.js`. Each topic combines phrase topics, vocabulary topics and role-plays. Exercises are generated automatically from every phrase and word in a topic: meaning, find-the-word, listening, fill-the-blank / finish-the-chat, build-the-phrase and dictation, plus a mixed round. Missed items are added to the spaced-repetition deck.
+
+## Saving words you look up
+**Home → Save a word I looked up** (or Topics → My words). Type the word, optionally tap *Look up meaning online* (uses the free dictionaryapi.dev service), add the meaning, and it joins your review deck. A bookmark to `index.html?add=word` opens the form directly.

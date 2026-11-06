@@ -23,13 +23,21 @@ TOPICS.forEach(t => t.phrases.forEach((r, i) => {
 
 /* ---------- storage ---------- */
 const KEY = 'speakNatural.v1';
-const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, rate: 0.9, voice: '' }, flags: {} });
+const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, rate: 0.9, voice: '' }, flags: {}, custom: [] });
 let S = (() => {
   try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) { const d = defaults(); return { ...d, ...o, settings: { ...d.settings, ...(o.settings || {}) } }; } } catch (e) { /* ignore */ }
   return defaults();
 })();
+const UNIT_OF = {};
+(window.UNITS || []).forEach(u => { u.p.forEach(k => { UNIT_OF[k] = u.key; }); u.v.forEach(k => { UNIT_OF['v:' + k] = u.key; }); });
+ALL.forEach(c => { c.unit = UNIT_OF[c.topic] || null; });
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
-const today = () => (S.log[dayKey()] ||= { rev: 0, learned: 0, roles: 0, lw: 0 });
+function registerCustom(w) {
+  const c = { id: w.id, topic: 'v:my', topicName: 'My words', unit: 'my', p: w.word, m: `(${w.pos || 'word'}) ${w.meaning}`, c: w.note || '', ex: w.example || '', tone: w.pos || 'word', s: '', v: true, custom: true };
+  ALL.push(c); BY_ID[c.id] = c; return c;
+}
+(S.custom || []).forEach(registerCustom);
+const today = () => (S.log[dayKey()] ||= { rev: 0, learned: 0, roles: 0, lw: 0, ex: 0 });
 const bump = (f, n = 1) => { const t = today(); t[f] = (t[f] || 0) + n; save(); };
 
 /* ---------- text to speech ---------- */
@@ -91,7 +99,7 @@ const addToDeck = id => { if (!S.cards[id]) S.cards[id] = { ease: 2.5, int: 0, r
 
 function streak() {
   let n = 0; const d = new Date();
-  const active = k => { const l = S.log[k]; return l && (l.rev + l.learned + l.roles) > 0; };
+  const active = k => { const l = S.log[k]; return l && (l.rev + l.learned + l.roles + (l.lw || 0) + (l.ex || 0)) > 0; };
   if (!active(dayKey(d))) d.setDate(d.getDate() - 1);
   while (active(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
@@ -103,12 +111,12 @@ let ses = null;                  // review/learn session
 let rp = null;                   // role-play state
 const TABS = [
   ['home', 'Home', '<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'],
-  ['library', 'Learn', '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>'],
+  ['library', 'Topics', '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/>'],
   ['review', 'Review', '<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M21 8v10a2 2 0 0 1-2 2H8"/>'],
   ['practice', 'Practice', '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'],
   ['me', 'Me', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'],
 ];
-const IMMERSIVE = new Set(['session', 'roleplay']);
+const IMMERSIVE = new Set(['session', 'roleplay', 'xs']);
 
 function go(name, extra = {}) { TTS.stop(); V = { name, ...extra }; render(); window.scrollTo(0, 0); }
 
@@ -125,7 +133,7 @@ function render(keepScroll) {
 function renderTabs() {
   const t = $('#tabs');
   t.className = IMMERSIVE.has(V.name) ? 'hidden' : '';
-  const cur = V.name === 'topic' ? 'library' : V.name;
+  const cur = V.name === 'unit' ? 'library' : V.name;
   const due = dueIds().length;
   t.innerHTML = TABS.map(([k, label, svg]) =>
     `<button data-a="tab" data-v="${k}" class="${cur === k ? 'on' : ''}" aria-label="${label}"><svg viewBox="0 0 24 24">${svg}</svg>${label}${k === 'review' && due ? `<span class="badge">${due > 99 ? '99+' : due}</span>` : ''}</button>`).join('');
@@ -148,8 +156,8 @@ function phraseDetail(c, opts = {}) {
     <div class="row"><div class="grow"><span class="pill">${esc(c.tone)}</span> <span class="pill ${stCls}">${stText}</span></div></div>
     <div class="row" style="margin-top:10px"><div class="phrase grow">${esc(c.p)}</div>${speakBtn(c.p)}${speakBtn(c.p, true)}</div>
     <div class="label">Meaning</div><p>${esc(c.m)}</p>
-    ${c.c ? `<div class="label">When to use it</div><p>${esc(c.c)}</p>` : ''}
-    <div class="label">${c.v ? 'Example' : 'Example conversation'}</div>${dialog(c.ex)}
+    ${c.c ? `<div class="label">${c.custom ? 'Where you heard it' : 'When to use it'}</div><p>${esc(c.c)}</p>` : ''}
+    ${c.ex ? `<div class="label">${c.v ? 'Example' : 'Example conversation'}</div>${dialog(c.ex)}` : ''}
     ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
     ${opts.footer || ''}`;
 }
@@ -175,36 +183,14 @@ const VIEWS = {
       </div>
       <div class="grid2">
         <div class="card stat"><b>🔥 ${st}</b><span>day streak</span></div>
-        <div class="card stat"><b>${t.rev + t.learned}</b><span>studied today</span></div>
+        <div class="card stat"><b>${t.rev + t.learned + (t.lw || 0) + (t.ex || 0)}</b><span>studied today</span></div>
       </div>
       <button class="item" data-a="learn" ${left ? '' : 'disabled style="opacity:.55"'}><span class="ico">✨</span><span class="grow"><h3>Learn new phrases</h3><span class="muted small">${left ? `${left} left for today` : newIds().length ? 'Daily goal reached' : 'You\'ve seen everything!'}</span></span><span class="chev">›</span></button>
       <button class="item" data-a="learn" data-kind="word" ${wLeft ? '' : 'disabled style="opacity:.55"'}><span class="ico">📚</span><span class="grow"><h3>Learn new words</h3><span class="muted small">${wLeft ? `${wLeft} left for today` : newIds('word').length ? 'Daily goal reached' : 'You\'ve seen every word!'}</span></span><span class="chev">›</span></button>
+      <button class="item" data-a="addWord"><span class="ico">✍️</span><span class="grow"><h3>Save a word I looked up</h3><span class="muted small">From a movie, video or podcast</span></span><span class="chev">＋</span></button>
       <button class="item" data-a="scenario" data-id="${nextSc.id}"><span class="ico">${nextSc.icon}</span><span class="grow"><h3>Role-play: ${esc(nextSc.title)}</h3><span class="muted small">${S.roles[nextSc.id] ? 'Practice again' : 'Recommended next'} · ${nextSc.level}</span></span><span class="chev">›</span></button>
       <h2>How it works</h2>
       <div class="card small"><p><b>1. Learn</b> phrases with audio, meaning, and real situations.</p><p><b>2. Review</b> them with spaced repetition — right before you'd forget.</p><p><b>3. Practice</b> in role-plays: read the situation, build the sentence, and say it out loud.</p><p class="muted" style="margin:0">You have ${inDeck} of ${ALL.length} phrases in your deck.</p></div>`;
-  },
-
-  library() {
-    const words = V.mode === 'words';
-    return `
-      <h1>Learn</h1>
-      <div class="seg" style="width:100%;display:flex"><button style="flex:1" class="${words ? '' : 'on'}" data-a="mode2" data-m="phrases">Phrases · ${PHRASE_COUNT}</button><button style="flex:1" class="${words ? 'on' : ''}" data-a="mode2" data-m="words">Words · ${WORD_COUNT}</button></div>
-      <input class="search" id="search" type="search" placeholder="${words ? 'Search words…' : 'Search phrases…'}" value="${esc(V.q || '')}" autocomplete="off" autocapitalize="off">
-      <div id="results">${libraryResults()}</div>`;
-  },
-
-  topic() {
-    const word = !!V.word;
-    const t = word ? VOCAB.find(x => x.key === V.key) : TOPICS.find(x => x.key === V.key);
-    const items = word ? t.words : t.phrases, pre = word ? `v:${t.key}` : t.key;
-    const ids = items.map((_, i) => `${word ? 'v:' : ''}${word ? t.key : t.key}-${i}`);
-    const fresh = ids.filter(id => !S.cards[id]);
-    const noun = word ? 'word' : 'phrase';
-    return `
-      <div class="topbar"><button class="back" data-a="backlib">‹ Back</button></div>
-      <h1>${t.icon} ${esc(t.name)}</h1><p class="muted">${esc(word ? `${items.length} words you'll hear in daily life, shows and videos` : t.blurb)}</p>
-      ${fresh.length ? `<button class="btn" data-a="learn" data-topic="${pre}" style="margin:8px 0 14px">Learn ${fresh.length} new ${noun}${fresh.length > 1 ? 's' : ''}</button>` : ''}
-      ${phraseList(ids.map(id => BY_ID[id]))}`;
   },
 
   review() {
@@ -239,8 +225,8 @@ const VIEWS = {
     return `${top}<div class="card">
         <div class="row"><div class="phrase grow">${esc(c.p)}</div>${speakBtn(c.p)}${speakBtn(c.p, true)}</div>
         <div class="label">Meaning</div><p>${esc(c.m)}</p>
-        ${c.c ? `<div class="label">When to use it</div><p>${esc(c.c)}</p>` : ''}
-        <div class="label">Example</div>${dialog(c.ex)}
+        ${c.c ? `<div class="label">${c.custom ? 'Where you heard it' : 'When to use it'}</div><p>${esc(c.c)}</p>` : ''}
+        ${c.ex ? `<div class="label">Example</div>${dialog(c.ex)}` : ''}
         ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
         <button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button></div>
       <p class="muted small" style="text-align:center">${listen ? 'Did you get the meaning?' : 'Did you say it right? Repeat it out loud once more.'}</p>
@@ -295,32 +281,7 @@ const VIEWS = {
   },
 };
 
-const GROUP_ORDER = ['Everyday conversation', 'Work & school', 'Going out & services', 'Travel', 'Home & relationships', 'Feelings & opinions', 'Expressions & grammar in use', 'More'];
-function topicList() {
-  return GROUP_ORDER.map(g => {
-    const ts = TOPICS.filter(t => (t.group || 'More') === g);
-    return ts.length ? `<h2>${esc(g)}</h2>${topicItems(ts)}` : '';
-  }).join('');
-}
 const PHRASE_COUNT = ALL.filter(c => !c.v).length, WORD_COUNT = ALL.filter(c => c.v).length;
-function vocabList() {
-  const groups = [...new Set(VOCAB.map(t => t.group))];
-  return groups.map(g => `<h2>${esc(g)}</h2>` + VOCAB.filter(t => t.group === g).map(t => {
-    const n = t.words.filter((_, i) => S.cards[`v:${t.key}-${i}`]).length;
-    return `<button class="item" data-a="topic" data-key="${t.key}" data-word="1"><span class="ico">${t.icon}</span><span class="grow"><h3>${esc(t.name)}</h3><span class="muted small">${t.words.length} words</span><div class="bar"><i style="width:${n / t.words.length * 100}%"></i></div></span><span class="muted small">${n}/${t.words.length}</span></button>`;
-  }).join('')).join('');
-}
-function libraryResults() {
-  const words = V.mode === 'words', q = (V.q || '').trim().toLowerCase();
-  if (!q) return words ? vocabList() : topicList();
-  return phraseList(ALL.filter(c => !!c.v === words && (c.p + ' ' + c.m + ' ' + c.topicName).toLowerCase().includes(q)));
-}
-function topicItems(list) {
-  return list.map(t => {
-    const total = t.phrases.length, n = t.phrases.filter((_, i) => S.cards[`${t.key}-${i}`]).length;
-    return `<button class="item" data-a="topic" data-key="${t.key}"><span class="ico">${t.icon}</span><span class="grow"><h3>${esc(t.name)}</h3><span class="muted small">${esc(t.blurb)}</span><div class="bar"><i style="width:${n / total * 100}%"></i></div></span><span class="muted small">${n}/${total}</span></button>`;
-  }).join('');
-}
 function phraseList(list) {
   if (!list.length) return '<div class="empty">No phrases found.</div>';
   return list.map(c => { const [st, cls] = statusOf(c.id); return `<button class="item" data-a="phrase" data-id="${c.id}"><span class="grow"><h3>${esc(c.p)}</h3><span class="muted small">${esc(c.m)}</span></span><span class="pill ${cls}">${st}</span></button>`; }).join('');
@@ -439,7 +400,8 @@ function startReview() {
 function startLearn(topic, kind) {
   if (topic && topic.startsWith('v:')) kind = 'word';
   let ids = newIds(kind);
-  if (topic) ids = ids.filter(id => BY_ID[id].topic === topic);
+  if (topic && topic.startsWith('u:')) ids = ids.filter(id => BY_ID[id].unit === topic.slice(2));
+  else if (topic) ids = ids.filter(id => BY_ID[id].topic === topic);
   else ids = ids.slice(0, newLeftToday(kind));
   if (!ids.length) { toast(`No new ${kind === 'word' ? 'words' : 'phrases'} available right now.`); return; }
   ses = { kind: 'learn', queue: ids, i: 0, flipped: false, done: 0 };
@@ -450,13 +412,11 @@ function startLearn(topic, kind) {
 const A = {
   tab: el => { if (el.dataset.v === 'library') V.q = ''; go(el.dataset.v); },
   exit: () => { const back = V.name === 'roleplay' ? 'practice' : 'home'; go(back); },
-  topic: el => go('topic', { key: el.dataset.key, word: !!el.dataset.word }),
-  backlib: () => go('library', { mode: V.word ? 'words' : 'phrases' }),
-  mode2: el => { V.mode = el.dataset.m; V.q = ''; render(); },
   phrase: el => {
     const c = BY_ID[el.dataset.id];
     const footer = (S.cards[c.id] ? '' : `<button class="btn" data-a="sheetAdd" data-id="${c.id}" style="margin-top:16px">Add to my deck</button>`)
-      + `<button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button>`;
+      + `<button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button>`
+      + (c.custom ? ` <button class="btn plain sm" data-a="delcustom" data-id="${c.id}" style="margin-top:12px;color:var(--bad)">Delete word</button>` : '');
     openSheet(phraseDetail(c, { footer }) + `<button class="btn plain" data-a="closeSheet" style="margin-top:10px">Close</button>`);
   },
   sheetAdd: el => { addToDeck(el.dataset.id); save(); bump(BY_ID[el.dataset.id].v ? 'lw' : 'learned'); closeSheet(); render(true); toast('Added to your deck'); },
@@ -505,7 +465,7 @@ document.addEventListener('input', e => {
   if (e.target.id === 'search') {
     V.q = e.target.value;
     const q = V.q.trim().toLowerCase();
-    $('#results').innerHTML = libraryResults();
+    const r = $('#results'); if (r && window.SN && SN.libraryResults) r.innerHTML = SN.libraryResults();
   } else if (e.target.id === 'typed') {
     rp.typed = e.target.value;
   } else if (e.target.dataset && e.target.dataset.s === 'rate') {
@@ -523,6 +483,13 @@ document.addEventListener('change', e => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'typed') { e.preventDefault(); e.target.blur(); rpCheck(); }
 });
+
+/* ---------- shared API for units-ui.js ---------- */
+window.SN = {
+  get S() { return S; }, get V() { return V; }, ALL, BY_ID, TTS, esc, shuffle, speakBtn, dialog, toast, save, bump, addToDeck, today,
+  go, render, VIEWS, A, newIds, newLeftToday, startLearn, statusOf, phraseList, phraseDetail, openSheet, closeSheet, tokens, norm,
+  registerCustom, PHRASE_COUNT, WORD_COUNT,
+};
 
 /* ---------- boot ---------- */
 render();

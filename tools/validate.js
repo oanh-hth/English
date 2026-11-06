@@ -2,9 +2,9 @@
 const vm = require('vm'), fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const files = [...html.matchAll(/src="((?:data|vocab)\d*\.js)"/g)].map(m => m[1]);
+const files = [...html.matchAll(/src="((?:data|vocab|units)\d*\.js)"/g)].map(m => m[1]);
 const w = {}; vm.createContext(w); w.window = w;
-vm.runInContext(files.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join(';') + ';this.T=TOPICS;this.S=SCENARIOS;this.V=window.VOCAB||[]', w);
+vm.runInContext(files.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join(';') + ';this.T=TOPICS;this.S=SCENARIOS;this.V=window.VOCAB||[];this.U=window.UNITS||[]', w);
 const TONES = new Set(['casual', 'neutral', 'polite', 'warm', 'urgent', 'formal']);
 const err = [], warn = [], seen = new Map(), keys = new Set();
 let n = 0;
@@ -35,6 +35,16 @@ for (const s of w.S) {
     if (tok(t.a).length > 14) warn.push(`${s.id}#${i}: answer very long`);
   });
 }
+const usedP = new Map(), usedV = new Map(), scn = new Set(w.S.map(x => x.id)), usedS = new Map();
+for (const u of w.U) {
+  u.p.forEach(k => { if (!w.T.find(t => t.key === k)) err.push(`unit ${u.key}: unknown phrase topic ${k}`); if (usedP.has(k)) err.push(`phrase topic ${k} in two units`); usedP.set(k, u.key); });
+  u.v.forEach(k => { if (!w.V.find(t => t.key === k)) err.push(`unit ${u.key}: unknown vocab topic ${k}`); if (usedV.has(k)) err.push(`vocab topic ${k} in two units`); usedV.set(k, u.key); });
+  u.s.forEach(k => { if (!scn.has(k)) err.push(`unit ${u.key}: unknown scenario ${k}`); usedS.set(k, u.key); });
+}
+w.T.forEach(t => { if (!usedP.has(t.key)) err.push(`phrase topic ${t.key} is not in any unit`); });
+w.V.forEach(t => { if (!usedV.has(t.key)) err.push(`vocab topic ${t.key} is not in any unit`); });
+w.S.forEach(x => { if (!usedS.has(x.id)) warn.push(`scenario ${x.id} is not in any unit`); });
+console.log(`${w.U.length} units`);
 let wn = 0; const wseen = new Set();
 for (const t of w.V) for (const r of t.words) { wn++; if (!r[0] || !r[2] || !r[3]) err.push('vocab empty field in ' + t.key); const k = r[0].toLowerCase(); if (wseen.has(k)) warn.push('duplicate word ' + k); wseen.add(k); if (!new RegExp(r[0].split(' (')[0].split(' ')[0].slice(0, 4), 'i').test(r[3])) warn.push(`word "${r[0]}": example may not contain it`); }
 console.log(`${w.V.length} vocab topics, ${wn} words`);
