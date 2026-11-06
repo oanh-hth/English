@@ -257,6 +257,13 @@ const VIEWS = {
       <h1>Me</h1>
       <div class="grid2"><div class="card stat"><b>${cards.length}</b><span>phrases in deck</span></div><div class="card stat"><b>${mastered}</b><span>mastered</span></div>
       <div class="card stat"><b>${streak()}</b><span>day streak</span></div><div class="card stat"><b>${total}</b><span>total reviews</span></div></div>
+
+      <h2>Your roadmap to fluency</h2>
+      <div class="card small">
+        <p>Research (Nation 2006) suggests about <b>3,000 word families</b> cover ~95% of everyday spoken English, and <b>6,000–7,000</b> reach ~98%, which is comfortable, native-like listening. Fluent speakers also rely on ready-made chunks, which is what this app trains.</p>
+        ${[[0, 'Survival', 100], [100, 'Everyday', 300], [300, 'Confident', 600], [600, 'Fluent chunks', 1000]].map(([lo, name, hi]) => `<p style="margin:6px 0"><b>${name}</b> <span class="muted">· ${hi} phrases</span>${cards.length >= hi ? ' ✅' : cards.length >= lo ? ' ← you are here' : ''}</p>`).join('')}
+        <p class="muted" style="margin:6px 0 0">This app has ${ALL.length} phrases so far. Pair it with daily listening (podcasts, shows) and speaking out loud.</p>
+      </div>
       <h2>Settings</h2>
       <div class="card stack">
         <label class="row"><span class="grow">New phrases per day</span><select data-s="newPerDay">${[3, 5, 8, 12, 20].map(n => `<option ${n === S.settings.newPerDay ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
