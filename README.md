@@ -37,8 +37,8 @@ Content is organised into **22 topics (units)** in `units.js`. Each topic combin
 ## Resources tab
 Edit `resources.js` to add external links (YouTube channels, podcasts…).
 
-## Ask Claude
-Every phrase and word has an **✨ Ask Claude about this** box that calls the Claude API directly from the browser with **your own API key** (Me → Claude help), stored only in that browser. The official Anthropic SDK is bundled in `vendor/anthropic-sdk.js`.
+## YouGlish and Ask Claude
+Every phrase and word has a **🔎 Hear it in real videos** box that opens YouGlish.com in the browser (link-out only, no embed). The in-app **Ask Claude** box and API-key settings are built (`claude-ui.js`, `vendor/anthropic-sdk.js`) but hidden behind `FEATURES.claude` in `app.js` until we enable it. The key would be typed on-device and kept in localStorage; never commit one.
 
 ## Secrets
 No API keys or `.env` files belong in this repo (see `.gitignore`). The Claude key is typed into the app on your own device and kept only in that browser.

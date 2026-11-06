@@ -148,6 +148,14 @@ function toast(msg) {
 
 /* ---------- shared UI bits ---------- */
 const speakBtn = (text, slow, sm) => `<button class="speak ${sm ? 'sm' : ''}" data-say="${esc(text)}" data-slow="${slow ? 1 : 0}" aria-label="${slow ? 'Play slowly' : 'Play audio'}">${slow ? '🐢' : '🔊'}</button>`;
+/* Feature switch: the in-app "Ask Claude" box is built (claude-ui.js) but hidden until it is ready. */
+const FEATURES = { claude: false };
+const ygQuery = c => { const base = c.v ? c.p.split(' (')[0] : c.p; const parts = base.split('___').map(x => x.replace(/[.,!?…"]/g, '').trim()).filter(Boolean).sort((a, b) => b.length - a.length); return parts[0] || base; };
+const ygUrl = q => `https://youglish.com/pronounce/${encodeURIComponent(q.trim())}/english/us`;
+const ytPanel = c => `<details class="aibox ytbox"><summary>🔎 Hear it in real videos <span class="muted small">(opens YouGlish)</span></summary>
+  <div class="row" style="margin-top:8px"><input class="type yg-q" style="margin:0" value="${esc(ygQuery(c))}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search"><a class="btn sm" style="flex:none;width:auto;text-decoration:none" href="${esc(ygUrl(ygQuery(c)))}" target="_blank" rel="noopener noreferrer" data-yg="1">Search ↗</a></div>
+  <p class="muted small" style="margin:6px 0 0">Opens YouGlish.com in your browser.</p></details>`;
+const extPanel = c => (FEATURES.claude ? aiPanel(c) : ytPanel(c));
 const aiPanel = c => `<details class="aibox" data-id="${c.id}"><summary>✨ Ask Claude about this</summary>
   <div class="chips"><button class="chip" data-a="aiq" data-q="Is this natural American English? Do native speakers really say it?">Is it natural?</button><button class="chip" data-a="aiq" data-q="Give me 3 more natural example sentences.">More examples</button><button class="chip" data-a="aiq" data-q="When should I NOT use this? Any tone or politeness traps?">When not to use</button><button class="chip" data-a="aiq" data-q="What are common alternatives, from casual to formal?">Alternatives</button><button class="chip" data-a="aiq" data-q="How is this pronounced in fast American speech?">Pronunciation</button></div>
   <div class="row" style="margin-top:8px"><input class="type ai-q" style="margin:0" placeholder="Ask anything about it…" autocomplete="off" autocorrect="off" enterkeyhint="send"><button class="btn sm" style="flex:none" data-a="aiask">Ask</button></div>
@@ -164,7 +172,7 @@ function phraseDetail(c, opts = {}) {
     ${c.c ? `<div class="label">${c.custom ? 'Where you heard it' : 'When to use it'}</div><p>${esc(c.c)}</p>` : ''}
     ${c.ex ? `<div class="label">${c.v ? 'Example' : 'Example conversation'}</div>${dialog(c.ex)}` : ''}
     ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
-    ${aiPanel(c)}
+    ${extPanel(c)}
     ${opts.footer || ''}`;
 }
 
@@ -234,7 +242,7 @@ const VIEWS = {
         ${c.c ? `<div class="label">${c.custom ? 'Where you heard it' : 'When to use it'}</div><p>${esc(c.c)}</p>` : ''}
         ${c.ex ? `<div class="label">Example</div>${dialog(c.ex)}` : ''}
         ${c.s ? `<div class="label">How to say it</div><div class="sound">🎧 ${esc(c.s)}</div>` : ''}
-        ${aiPanel(c)}
+        ${extPanel(c)}
         <button class="btn plain sm" data-a="flag" data-id="${c.id}" style="margin-top:12px">${S.flags[c.id] ? '🚩 Flagged' : '🏳️ Sounds odd?'}</button></div>
       <p class="muted small" style="text-align:center">${listen ? 'Did you get the meaning?' : 'Did you say it right? Repeat it out loud once more.'}</p>
       <div class="rates">${rates.map(([l, q]) => `<button class="r${q}" data-a="rate" data-q="${q}">${l}<small>${fmtIvl(st, q)}</small></button>`).join('')}</div>`;
@@ -281,7 +289,7 @@ const VIEWS = {
       </div>
       <h2>On your iPhone</h2>
       <div class="card small"><p>Open this page in <b>Safari</b>, tap <b>Share → Add to Home Screen</b>. It then opens full screen like an app and works offline.</p><p class="muted" style="margin:0">Tip: for the best voice, go to Settings → Accessibility → Spoken Content → Voices → English (US) and download an Enhanced voice (e.g. Samantha).</p></div>
-      ${window.SN && SN.aiSettingsHtml ? SN.aiSettingsHtml() : ''}
+      ${FEATURES.claude && window.SN && SN.aiSettingsHtml ? SN.aiSettingsHtml() : ''}
       <h2>Quality check</h2>
       <div class="card small"><p>Tap <b>🏳️ Sounds odd?</b> on any phrase that doesn't sound natural to you or a native speaker. You have <b>${Object.keys(S.flags).filter(id => BY_ID[id]).length}</b> flagged.</p><button class="btn ghost sm" data-a="copyFlags">Copy flagged list</button></div>
       <h2>Data</h2>
@@ -470,6 +478,7 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('input', e => {
+  if (e.target.classList && e.target.classList.contains('yg-q')) { const a = e.target.parentElement.querySelector('a[data-yg]'); if (a) a.href = ygUrl(e.target.value || ' '); return; }
   if (e.target.id === 'search') {
     V.q = e.target.value;
     const q = V.q.trim().toLowerCase();
@@ -489,6 +498,7 @@ document.addEventListener('change', e => {
   save(); if (k === 'rate') render(true);
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('yg-q')) { e.preventDefault(); const a = e.target.parentElement.querySelector('a[data-yg]'); if (a) window.open(a.href, '_blank', 'noopener'); return; }
   if (e.key === 'Enter' && e.target.id === 'typed') { e.preventDefault(); e.target.blur(); rpCheck(); }
 });
 
@@ -496,7 +506,7 @@ document.addEventListener('keydown', e => {
 window.SN = {
   get S() { return S; }, get V() { return V; }, ALL, BY_ID, TTS, esc, shuffle, speakBtn, dialog, toast, save, bump, addToDeck, today,
   go, render, VIEWS, A, newIds, newLeftToday, startLearn, statusOf, phraseList, phraseDetail, openSheet, closeSheet, tokens, norm,
-  registerCustom, PHRASE_COUNT, WORD_COUNT,
+  registerCustom, PHRASE_COUNT, WORD_COUNT, FEATURES, ygUrl,
 };
 
 /* ---------- boot ---------- */
