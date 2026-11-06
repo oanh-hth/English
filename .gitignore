@@ -1,0 +1,12 @@
+# Never commit secrets
+.env
+.env.*
+*.env
+*.pem
+*.key
+secrets.*
+.claude/settings.local.json
+
+# Local tooling
+node_modules/
+.DS_Store

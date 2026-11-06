@@ -39,3 +39,6 @@ Edit `resources.js` to add external links (YouTube channels, podcasts…).
 
 ## Ask Claude
 Every phrase and word has an **✨ Ask Claude about this** box that calls the Claude API directly from the browser with **your own API key** (Me → Claude help), stored only in that browser. The official Anthropic SDK is bundled in `vendor/anthropic-sdk.js`.
+
+## Secrets
+No API keys or `.env` files belong in this repo (see `.gitignore`). The Claude key is typed into the app on your own device and kept only in that browser.
