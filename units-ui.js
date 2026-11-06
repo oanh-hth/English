@@ -222,7 +222,7 @@ SN.VIEWS.unit = () => {
     ${isMy ? '' : `<div class="bar" style="margin:0 0 4px"><i style="width:${total ? inDeck / total * 100 : 0}%"></i></div><p class="muted small">${inDeck} of ${total} in your deck</p>`}
     <h2>Learn</h2>
     ${isMy ? '' : (ph.length ? learnBtn('phrase', newPh, 'phrases') : '') + (wd.length ? learnBtn('word', newWd, 'words') : '')}
-    <button class="item" data-a="addWord"><span class="ico">✍️</span><span class="grow"><h3>Save a word I looked up</h3><span class="muted small">Add your own word to ${isMy ? 'this list' : 'My words'}</span></span><span class="chev">＋</span></button>
+    <button class="item" data-a="addItem" data-unit="${u.key}"><span class="ico">✍️</span><span class="grow"><h3>Add a word or phrase</h3><span class="muted small">${isMy ? 'Words you looked up or heard' : 'Your own addition to this topic'}</span></span><span class="chev">＋</span></button>
     <h2>Practice <span class="muted small" style="font-weight:400">· ${exCount} questions available</span></h2>
     ${exCount ? `<button class="btn" data-a="xstart" data-unit="${u.key}" data-type="mixed" style="margin-bottom:10px">🔀 Mixed practice (12 questions)</button>
     <div class="grid2">${TYPES.map(t => { const n = eligibleCount(u.key, t); return `<button class="item" style="flex-direction:column;align-items:flex-start;gap:4px;margin:0" data-a="xstart" data-unit="${u.key}" data-type="${t.key}" ${n ? '' : 'disabled style="opacity:.45"'}><span style="font-size:24px">${t.icon}</span><b style="font-size:15px;line-height:1.2">${esc(t.name)}</b><span class="muted small">${n} items</span></button>`; }).join('')}</div>` : '<p class="muted">Save a few words to unlock exercises.</p>'}
@@ -249,23 +249,44 @@ SN.VIEWS.practice = () => {
 
 /* ---------- save a word ---------- */
 const POS = { noun: 'n', verb: 'v', adjective: 'adj', adverb: 'adv', interjection: 'interj', preposition: 'prep', conjunction: 'conj' };
-function openAdd(pre = {}) {
-  SN.openSheet(`<h2 style="margin-top:0">Save a word</h2>
-    <p class="muted small">Heard or read something new? Save it and it joins your review deck.</p>
-    <div class="label">Word or phrase</div>
-    <input class="type" id="aw-word" value="${esc(pre.word || '')}" placeholder="e.g. reluctant" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <button class="btn ghost sm" data-a="lookup">🔎 Look up meaning online</button>
-    <div class="label">Meaning</div>
-    <input class="type" id="aw-mean" placeholder="Short definition">
-    <div class="label">Example sentence (optional)</div>
-    <input class="type" id="aw-ex" placeholder="The sentence you heard">
-    <div class="label">Where did you hear it? (optional)</div>
-    <input class="type" id="aw-note" placeholder="e.g. a YouTube video, a podcast, a show">
-    <input type="hidden" id="aw-pos" value="word">
-    <div class="stack" style="margin-top:6px"><button class="btn" data-a="saveWord">Save to my deck</button><button class="btn plain" data-a="closeSheet">Cancel</button></div>`);
-  setTimeout(() => { const i = $('#aw-word'); if (i && !pre.word) i.focus(); }, 50);
+function unitOptions(sel) {
+  return `<option value="my" ${sel === 'my' ? 'selected' : ''}>📓 My words (no topic)</option>` + UNITS.map(u => `<option value="${u.key}" ${sel === u.key ? 'selected' : ''}>${u.icon} ${esc(u.name)}</option>`).join('');
 }
-A.addWord = () => openAdd();
+const TONE_LIST = ['casual', 'neutral', 'polite', 'warm', 'urgent', 'formal'];
+function openAdd(pre = {}) {
+  const unit = pre.unit || 'my', kind = pre.kind || (unit === 'my' ? 'word' : 'phrase');
+  const f = (lab, id, ph = '', v = '') => `<div class="label">${lab}</div><input class="type" id="${id}" value="${esc(v)}" placeholder="${esc(ph)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="margin:4px 0 8px">`;
+  SN.openSheet(`<h2 style="margin-top:0">Add to a topic</h2>
+    <div class="label">Topic</div>
+    <select id="aw-unit" style="width:100%;margin:4px 0 10px">${unitOptions(unit)}</select>
+    <div class="seg" style="display:flex;width:100%"><button style="flex:1" class="${kind === 'word' ? 'on' : ''}" data-a="addkind" data-k="word">Word</button><button style="flex:1" class="${kind === 'phrase' ? 'on' : ''}" data-a="addkind" data-k="phrase">Phrase</button></div>
+    <input type="hidden" id="aw-kind" value="${kind}">
+    <div id="aw-word-grp" ${kind === 'word' ? '' : 'hidden'}>
+      ${f('Word', 'aw-word', 'e.g. reluctant', pre.word || '')}
+      <button class="btn ghost sm" data-a="lookup">🔎 Look up meaning online</button>
+      ${f('Meaning', 'aw-mean', 'Short definition')}
+      ${f('Example sentence (optional)', 'aw-ex', 'The sentence you heard')}
+      ${f('Where did you hear it? (optional)', 'aw-note', 'e.g. a YouTube video, a podcast, a show')}
+      <input type="hidden" id="aw-pos" value="word">
+    </div>
+    <div id="aw-phrase-grp" ${kind === 'phrase' ? '' : 'hidden'}>
+      ${f('Phrase', 'ap-p', 'e.g. Can I pick your brain?')}
+      ${f('Meaning', 'ap-m', 'What it means')}
+      ${f('When to use it (optional)', 'ap-c', 'The situation or tone')}
+      ${f('Example conversation (optional, A | B)', 'ap-ex', 'Line A | Line B')}
+      <div class="label">Tone</div><select id="ap-tone" style="margin:4px 0 8px">${TONE_LIST.map(t => `<option>${t}</option>`).join('')}</select>
+      ${f('How to say it (optional)', 'ap-s', 'e.g. "gonna" = GUH-nuh')}
+    </div>
+    <div class="stack" style="margin-top:6px"><button class="btn" data-a="saveWord">Save</button><button class="btn plain" data-a="closeSheet">Cancel</button></div>`);
+  setTimeout(() => { const i = $(kind === 'word' ? '#aw-word' : '#ap-p'); if (i && !pre.word) i.focus(); }, 50);
+}
+A.addkind = el => {
+  const k = el.dataset.k; $('#aw-kind').value = k;
+  $('#aw-word-grp').hidden = k !== 'word'; $('#aw-phrase-grp').hidden = k !== 'phrase';
+  el.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === el));
+};
+A.addWord = () => openAdd({ unit: 'my', kind: 'word' });
+A.addItem = el => openAdd({ unit: el.dataset.unit, kind: el.dataset.kind });
 A.lookup = async el => {
   const w = ($('#aw-word').value || '').trim();
   if (!w) { SN.toast('Type the word first.'); return; }
@@ -282,12 +303,23 @@ A.lookup = async el => {
   el.textContent = old;
 };
 A.saveWord = () => {
-  const word = $('#aw-word').value.trim(), meaning = $('#aw-mean').value.trim();
-  if (!word || !meaning) { SN.toast('Add the word and its meaning.'); return; }
-  const dup = ALL.find(c => c.v && c.p.toLowerCase() === word.toLowerCase());
-  if (dup) { SN.addToDeck(dup.id); SN.save(); SN.closeSheet(); SN.toast('Already in the app. Added to your deck.'); SN.render(true); return; }
-  const w = { id: 'c:' + Date.now().toString(36), word, pos: $('#aw-pos').value || 'word', meaning, example: $('#aw-ex').value.trim(), note: $('#aw-note').value.trim(), added: Date.now() };
-  S().custom.push(w); SN.registerCustom(w); SN.addToDeck(w.id); SN.bump('lw'); SN.save();
+  const kind = $('#aw-kind').value, unit = $('#aw-unit').value || 'my';
+  let w;
+  if (kind === 'word') {
+    const word = $('#aw-word').value.trim(), meaning = $('#aw-mean').value.trim();
+    if (!word || !meaning) { SN.toast('Add the word and its meaning.'); return; }
+    const dup = ALL.find(c => c.v && c.p.toLowerCase() === word.toLowerCase());
+    if (dup) { SN.addToDeck(dup.id); SN.save(); SN.closeSheet(); SN.toast('Already in the app. Added to your deck.'); SN.render(true); return; }
+    w = { id: 'c:' + Date.now().toString(36), kind: 'word', unit, word, pos: $('#aw-pos').value || 'word', meaning, example: $('#aw-ex').value.trim(), note: $('#aw-note').value.trim(), added: Date.now() };
+  } else {
+    const phrase = $('#ap-p').value.trim(), meaning = $('#ap-m').value.trim(), ex = $('#ap-ex').value.trim();
+    if (!phrase || !meaning) { SN.toast('Add the phrase and its meaning.'); return; }
+    if (ex && ex.split(' | ').length !== 2) { SN.toast('Example needs two lines separated by " | ".'); return; }
+    const dup = ALL.find(c => !c.v && c.p.toLowerCase() === phrase.toLowerCase());
+    if (dup) { SN.addToDeck(dup.id); SN.save(); SN.closeSheet(); SN.toast('Already in the app. Added to your deck.'); SN.render(true); return; }
+    w = { id: 'c:' + Date.now().toString(36), kind: 'phrase', unit, word: phrase, pos: $('#ap-tone').value, meaning, example: ex, note: $('#ap-c').value.trim(), sound: $('#ap-s').value.trim(), added: Date.now() };
+  }
+  S().custom.push(w); SN.registerCustom(w); SN.addToDeck(w.id); SN.bump(kind === 'word' ? 'lw' : 'learned'); SN.save();
   SN.closeSheet(); SN.toast('Saved to your deck!'); SN.render(true);
 };
 /* Open the add-word sheet from a link, e.g. a Home Screen bookmark: index.html?add=word */

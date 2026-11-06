@@ -41,7 +41,10 @@ function rebuildALL() { // ALL is mutated in place so other modules keep their r
 }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
 function registerCustom(w) {
-  const c = { id: w.id, topic: 'v:my', topicName: 'My words', unit: 'my', p: w.word, m: `(${w.pos || 'word'}) ${w.meaning}`, c: w.note || '', ex: w.example || '', tone: w.pos || 'word', s: '', v: true, custom: true };
+  const unit = w.unit || 'my', phrase = w.kind === 'phrase';
+  const c = phrase
+    ? { id: w.id, topic: 'custom', topicName: 'My additions', unit, p: w.word, m: w.meaning, c: w.note || '', ex: w.example || '', tone: w.pos || 'casual', s: w.sound || '', v: false, custom: true }
+    : { id: w.id, topic: 'v:my', topicName: 'My words', unit, p: w.word, m: `(${w.pos || 'word'}) ${w.meaning}`, c: w.note || '', ex: w.example || '', tone: w.pos || 'word', s: '', v: true, custom: true };
   CUSTOM.push(c); ALL.push(c); BY_ID[c.id] = c; return c;
 }
 (S.custom || []).forEach(registerCustom);
@@ -498,6 +501,7 @@ function openEdit(id) {
       + `<div class="label">Tone</div><select id="ed-tone" style="margin:4px 0 8px">${TONES.map(t => `<option ${t === c.tone ? 'selected' : ''}>${t}</option>`).join('')}</select>`
       + field('How to say it (optional)', 'ed-s', c.s);
   }
+  if (c.custom) form += `<div class="label">Topic</div><select id="ed-unit" style="width:100%;margin:4px 0 8px"><option value="my" ${c.unit === 'my' ? 'selected' : ''}>📓 My words (no topic)</option>${(window.UNITS || []).map(u => `<option value="${u.key}" ${c.unit === u.key ? 'selected' : ''}>${u.icon} ${esc(u.name)}</option>`).join('')}</select>`;
   openSheet(`<h2 style="margin-top:0">Edit ${c.v ? 'word' : 'phrase'}</h2>${form}
     <div class="stack" style="margin-top:8px"><button class="btn" data-a="saveEdit" data-id="${id}">Save changes</button>
     ${c._orig ? `<button class="btn ghost" data-a="resetEdit" data-id="${id}">Reset to original</button>` : ''}
@@ -527,11 +531,16 @@ Object.assign(A, {
         const e = { p, m: `(${pos}) ${m}`, c: note, ex, tone: pos, s: '' };
         Object.assign(c, e); S.edits[id] = e;
       }
+    } else if (c.custom) {
+      const w = S.custom.find(x => x.id === id), e = { p, m, c: val('ed-c'), ex, tone: document.getElementById('ed-tone').value, s: val('ed-s') };
+      if (w) Object.assign(w, { word: p, meaning: m, note: e.c, example: ex, pos: e.tone, sound: e.s });
+      Object.assign(c, e);
     } else {
       c._orig ||= Object.fromEntries(FIELDS.map(f => [f, c[f]]));
       const e = { p, m, c: val('ed-c'), ex, tone: document.getElementById('ed-tone').value, s: val('ed-s') };
       Object.assign(c, e); S.edits[id] = e;
     }
+    if (c.custom && document.getElementById('ed-unit')) { const u = val('ed-unit') || 'my', w = S.custom.find(x => x.id === id); c.unit = u; if (w) w.unit = u; }
     save(); closeSheet(); render(true); toast('Saved.');
   },
   resetEdit: el => { const id = el.dataset.id, c = BY_ID[id]; if (c && c._orig) { Object.assign(c, c._orig); delete c._orig; } delete S.edits[id]; save(); closeSheet(); render(true); toast('Reset to original.'); },

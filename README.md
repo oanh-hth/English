@@ -45,3 +45,6 @@ No API keys or `.env` files belong in this repo (see `.gitignore`). The Claude k
 
 ## Editing and deleting
 Open any phrase or word and tap **✏️ Edit** or **🗑 Delete** (also on the review answer card). Changes to built-in items are saved on your device as overrides (not in the repo); **Me → Your changes** can restore deleted items or undo edits. Your own saved words are edited or deleted for real.
+
+## Adding your own items
+Open a topic and tap **Add a word or phrase** to add your own word or phrase to that topic (or to My words). It joins that topic's lists, exercises and your review deck. You can edit it later, including moving it to a different topic. Your additions are stored on your device only.
