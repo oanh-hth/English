@@ -8,6 +8,8 @@ A private, login-only scrapbook for photos and videos in **original quality**, w
 - Two (or more) users, each with a completely separate library.
 - Peach-and-mint scrapbook design. Stack: Node.js 22.9+, Express, SQLite (built into Node), plain HTML/JS with self-hosted fonts.
 
+Full documentation (user guide, architecture, API reference, security): [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
+
 ## Quick start (with R2)
 1. **Cloudflare dashboard → R2 → Create bucket** (keep it private; do *not* enable public access or a public domain).
 2. **R2 → Manage API tokens → Create API token**: permission *Object Read & Write*, scoped to that one bucket. Note the Access Key ID and Secret.
