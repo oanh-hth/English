@@ -168,6 +168,22 @@ function toast(msg, act){
   clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, act ? 8000 : 3800);
 }
 
+/* Press and hold an item (or press D, or use the Nhân đôi button) to buy another one like it, as of today */
+function duplicateItem(id, refocus){
+  const src = byId(id); if(!src) return;
+  let exp = '';
+  if(src.exp){ const life = Math.round((parseISO(src.exp) - parseISO(src.bought))/864e5); if(life > 0) exp = iso(addDays(today(), life)); }
+  const it = Object.assign({}, src, {id:uid(), bought:iso(today()), exp, x:+clamp(src.x+6, 6, 94).toFixed(2), y:+clamp(src.y+6, 10, 93).toFixed(2), used:false});
+  delete it.touched; delete it.snoozed; delete it.replacedBy;
+  state.items.push(it);                 // on purpose no rebuy rule here: you asked for two of them
+  save(); react('add', it.name, undefined, it.cat);
+  sel = it.id; justAdded = it.id; filter = null;
+  renderAll();
+  try{ if(navigator.vibrate) navigator.vibrate(25); }catch(e){}
+  if(refocus){ const n = room.querySelector('[data-id="'+it.id+'"]'); if(n) n.focus({preventScroll:true}); }
+  toast('Đã nhân đôi '+it.name+' (+'+money(it.price)+', ngày mua là hôm nay'+(exp ? ', hạn tính từ hôm nay' : '')+').', {label:'Hoàn tác', fn:() => { state.items = state.items.filter(x => x.id !== it.id); if(sel === it.id) sel = null; save(); renderAll(); }});
+}
+
 function trashItem(id){
   const idx = state.items.findIndex(i => i.id===id); if(idx < 0) return;
   const it = state.items[idx];
@@ -416,7 +432,7 @@ function renderRoom(){
     b.className = 'item st-'+st+(it.id===sel?' sel':'')+((filter && filter!==it.cat) || !inPeriod(it)?' dim':'')+(it.id===justAdded?' pop':'')+(it.id===found?' found':'');
     b.dataset.id = it.id;
     b.style.cssText = 'left:'+it.x+'%;top:'+it.y+'%;--c:'+CAT[it.cat].color+';z-index:'+Math.round(it.y*10);
-    b.setAttribute('aria-label', itemLabel(it)+'. Kéo để di chuyển, dùng phím mũi tên để nhích.');
+    b.setAttribute('aria-label', itemLabel(it)+'. Kéo để di chuyển, nhấn giữ hoặc bấm phím D để nhân đôi, phím mũi tên để nhích.');
     const badge = st==='expired' ? '<span class="badge">!</span>' : st==='soon' ? '<span class="badge">'+(d===0?'Today':d+'d')+'</span>' : '';
     const zz = isDormant(it) ? '<span class="zz" title="Nằm im lâu rồi">zZ</span>' : '';
     b.innerHTML = icon(it.cat,'ico')+badge+zz+'<span class="tag">'+esc(it.name)+'</span>';
@@ -424,6 +440,7 @@ function renderRoom(){
   });
 }
 
+const LONG_PRESS_MS = 600;
 let drag = null;
 const binEl = $('#bin');
 binEl.addEventListener('click', () => { if(sel && byId(sel)) trashItem(sel); else toast('Chọn một món trước, hoặc kéo món vào thùng rác nha.'); });
@@ -431,13 +448,20 @@ room.addEventListener('pointerdown', e => {
   const el = e.target.closest('.item'); if(!el) return;
   const it = byId(el.dataset.id); if(!it) return;
   drag = {el, it, sx:e.clientX, sy:e.clientY, ox:it.x, oy:it.y, r:room.getBoundingClientRect(), moved:false, pid:e.pointerId};
+  const d0 = drag;
+  el.classList.add('holding');
+  d0.timer = setTimeout(() => {          // press and hold without moving: duplicate
+    if(drag !== d0 || d0.moved) return;
+    drag = null; el.classList.remove('holding');
+    duplicateItem(it.id);
+  }, LONG_PRESS_MS);
   try{ el.setPointerCapture(e.pointerId); }catch(_){}
 });
 room.addEventListener('pointermove', e => {
   if(!drag || e.pointerId !== drag.pid) return;
   const dx = e.clientX-drag.sx, dy = e.clientY-drag.sy;
   if(!drag.moved && Math.hypot(dx,dy) < 5) return;
-  if(!drag.moved) binEl.classList.add('armed');
+  if(!drag.moved){ binEl.classList.add('armed'); clearTimeout(drag.timer); drag.el.classList.remove('holding'); }
   drag.moved = true; drag.el.classList.add('drag');
   drag.it.x = +clamp(drag.ox + dx/drag.r.width*100, 4, 96).toFixed(2);
   drag.it.y = +clamp(drag.oy + dy/drag.r.height*100, 8, 95).toFixed(2);
@@ -449,11 +473,13 @@ room.addEventListener('pointermove', e => {
 function endDrag(e){
   if(!drag || e.pointerId !== drag.pid) return;
   const d = drag; drag = null;
+  clearTimeout(d.timer); d.el.classList.remove('holding');
   binEl.classList.remove('armed','over');
   if(d.moved && d.over){ d.it.x = d.ox; d.it.y = d.oy; trashItem(d.it.id); return; }
   if(d.moved) save();
   select(d.it.id);
 }
+room.addEventListener('contextmenu', e => { if(e.target.closest('.item')) e.preventDefault(); });
 room.addEventListener('pointerup', endDrag);
 room.addEventListener('pointercancel', endDrag);
 room.addEventListener('click', e => {
@@ -462,6 +488,7 @@ room.addEventListener('click', e => {
 });
 room.addEventListener('keydown', e => {
   const el = e.target.closest('.item'); if(!el) return;
+  if(e.key === 'd' || e.key === 'D'){ e.preventDefault(); duplicateItem(el.dataset.id, true); return; }
   const step = {ArrowLeft:[-1.5,0], ArrowRight:[1.5,0], ArrowUp:[0,-1.5], ArrowDown:[0,1.5]}[e.key];
   if(!step) return;
   e.preventDefault();
@@ -518,12 +545,14 @@ function renderInspector(){
         '<div class="facts"><span>'+CAT[it.cat].name+'</span>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'<span>Mua ngày '+shortDate(it.bought)+'</span><span class="num">'+money(it.price)+'</span>'+pill+(it.cat==='gift'?'<span class="pill">Misu không nhắc</span>':'')+'</div></div>'+
       '<div class="insp-actions">'+
         '<label for="i-exp">Ngày hết hạn<input id="i-exp" type="date" value="'+esc(it.exp)+'"></label>'+
+        '<button class="btn ghost sm" id="i-dup" type="button">Nhân đôi</button>'+
         '<button class="btn ghost sm" id="i-touch" type="button">Vừa dùng</button>'+
         '<button class="btn ghost sm" id="i-used" type="button">Dùng hết rồi</button>'+
         '<button class="btn danger sm" id="i-del" type="button">Xoá</button>'+
       '</div>'+
     '</div>';
   $('#i-exp').addEventListener('change', e => { it.exp = e.target.value; save(); renderAll(); });
+  $('#i-dup').addEventListener('click', () => duplicateItem(it.id));
   $('#i-touch').addEventListener('click', () => { it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); toast('Đã ghi nhận bạn vừa dùng '+it.name+'.'); });
   $('#i-used').addEventListener('click', () => { it.used = true; sel = null; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); });
   $('#i-del').addEventListener('click', () => trashItem(it.id));
