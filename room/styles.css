@@ -138,11 +138,11 @@ label.f .opt{font-weight:400; opacity:.8; white-space:nowrap}
 .tab{border:0; background:none; border-radius:8px; padding:7px 8px; cursor:pointer; font-weight:500; color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.12)}
 
-.cats{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; border:0; padding:0; margin:0}
+.cats{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; border:0; padding:0; margin:0}
 .cats legend{font-size:13px; color:var(--muted); padding:0; margin-bottom:6px}
 .cat{position:relative}
 .cat input{position:absolute; opacity:0; inset:0; width:100%; height:100%; margin:0; cursor:pointer}
-.cat span{display:flex; flex-direction:column; align-items:center; gap:2px; border:1px solid var(--line); border-radius:10px; padding:6px 2px 5px; font-size:11px; text-align:center; line-height:1.2; background:var(--surface-2); color:var(--ink)}
+.cat span{display:flex; flex-direction:column; align-items:center; gap:2px; border:1px solid var(--line); border-radius:10px; padding:6px 3px 5px; font-size:11.5px; text-align:center; line-height:1.2; background:var(--surface-2); color:var(--ink)}
 .cat svg{width:28px; height:28px; color:var(--c)}
 .cat input:checked+span{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent)}
 .cat input:focus-visible+span{outline:2px solid var(--accent); outline-offset:2px}

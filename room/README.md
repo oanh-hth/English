@@ -22,7 +22,7 @@ Thư mục `room/` dùng chung `../vendor/anthropic-sdk.js` với app tiếng An
 - **Lịch sử mua sắm**: xem theo Tất cả, Tháng này, Tháng trước, 30 ngày qua hoặc khoảng ngày tự chọn, kèm tổng tiền theo nhóm.
 - **Mua lại thì món cũ coi như hết**: khi bạn thêm một món giống món đã mua ở tháng trước (cùng tên hoặc tên gần giống, ví dụ "Sữa tươi 1L" và "Sữa tươi tiệt trùng"; hoặc cùng nhóm Đồ cho bé, Chăm sóc cá nhân, Đồ vệ sinh, ví dụ bỉm tã khác hãng), món cũ được tự động đánh dấu "Đã thay bằng món mới". Món đó rời khỏi phòng, không còn bị nhắc hạn dùng hay nhắc nằm im, và tiền mua vẫn nằm trong chi tiêu. Có nút Hoàn tác, và công tắc ở cuối trang để tắt rule. Các nhóm khác (rau củ, đồ khô, đồ uống, sữa & trứng...) chỉ tính khi tên giống nhau, vì mua táo không có nghĩa là hết cam. Mua hai lần trong cùng một tháng thì không tính, vì có thể bạn đang tích trữ.
 - **Miso**: bé mèo khó tính, bình luận theo số món bạn mua, số món trong phòng và số món hết hạn.
-- **Nằm im hơn một tháng**: liệt kê món còn trong phòng mà hơn 30 ngày chưa đụng tới (tính từ ngày mua, hoặc lần bấm "Vừa dùng" gần nhất). Các món này có huy hiệu "zZ" trong phòng. Misu, bé cún hay lo xa, nhắc bạn về chúng. Mỗi món có nút Vừa dùng (tính lại 30 ngày), Dùng hết rồi và Tìm.
+- **Nằm im lâu rồi**: liệt kê món còn trong phòng mà chưa đụng tới quá lâu (tính từ ngày mua, hoặc lần bấm "Vừa dùng" gần nhất). Đồ thường: hơn 30 ngày. **Quần áo**: hơn 90 ngày (3 tháng). **Mua tặng**: Misu không bao giờ nhắc. Món nằm im có huy hiệu "zZ" trong phòng. Misu, bé cún hay lo xa, nhắc bạn về chúng. Mỗi món có nút Vừa dùng (tính lại từ hôm nay), Dùng hết rồi và Tìm.
 
 ## Đọc ảnh hoá đơn
 Khi chạy ngoài Claude, cần khoá API Claude của chính bạn (nhập ở **Thêm vào phòng → Từ hoá đơn → Khoá API Claude**). Khoá chỉ lưu trong `localStorage` của trình duyệt này và chỉ được gửi tới Anthropic. Ảnh được thu nhỏ còn tối đa 1600px trước khi gửi. Đừng commit khoá vào repo. Nếu không muốn dùng khoá, bạn vẫn dán được chữ của hoá đơn.
@@ -35,3 +35,7 @@ Lưu trong `localStorage` (khoá `phongtrudo.v1`), chỉ trên máy này. Chưa 
 
 ## Tệp
 `index.html`, `styles.css`, `app.js` (một module, không cần build), `sw.js` (chạy offline), `manifest.webmanifest`, `icons/`.
+
+## Nhóm đặc biệt
+- **Mua tặng**: đồ bạn mua để tặng người khác, không phải để tự xài. Misu không nhắc về nhóm này, và rule "mua lại thì món cũ coi như hết" cũng bỏ qua nhóm này. Tiền mua vẫn được tính trong chi tiêu, và nhắc hạn dùng vẫn chạy nếu món có hạn. App không tự đoán nhóm này; bạn chọn tay (khi đọc hoá đơn bằng Claude, Claude chỉ chọn khi hoá đơn ghi rõ là quà).
+- **Quần áo**: tự nhận diện qua từ như áo, quần, váy, giày, dép, nón. Riêng "bỉm tã quần" vẫn là Đồ cho bé.

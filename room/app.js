@@ -16,10 +16,12 @@ const CATS = [
   {id:'cleaning',    name:'Đồ vệ sinh',       color:'#19c3e0', kw:/detergent|cleaner|spray|bleach|sponge|dish|laundry/i},
   {id:'electronics', name:'Đồ điện tử',    color:'#6f86ad', kw:/cable|batter|earbud|charger|mouse|usb|phone|lamp|speaker/i},
   {id:'baby',        name:'Đồ cho bé',           color:'#ff6f9f', kw:/b[ỉi]m|\btã\b|diaper|sữa bột|em bé|baby|trẻ em|khăn ướt/i},
+  {id:'clothes',     name:'Quần áo',        color:'#5b6ee1', kw:/(^|[^\p{L}])(áo|quần|váy|đầm|giày|dép|tất|vớ|nón|mũ|găng tay|khẩu trang)([^\p{L}]|$)|\b(t-?shirts?|shirts?|dress|jeans|shoes?|sneakers?|jacket|hoodie|socks?|pants)\b/iu},
+  {id:'gift',        name:'Mua tặng',       color:'#f2b705', kw:/$^/},
   {id:'other',       name:'Khác',          color:'#c4925f', kw:/$^/}
 ];
 const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
-const GUESS_ORDER = ['baby','care','cleaning','meds','electronics','drinks','dairy','produce','pantry'];
+const GUESS_ORDER = ['baby','clothes','care','cleaning','meds','electronics','drinks','dairy','produce','pantry'];
 const VN = {
   care:/sữa tắm|dầu gội|dầu xả|kem đánh răng|xà phòng|sữa rửa mặt|kem dưỡng/i,
   cleaning:/nước rửa|nước lau|nước giặt|tẩy|xịt/i,
@@ -73,7 +75,10 @@ function seed(){
     ['Ngũ cốc ăn sáng','pantry',-31,60,4.3,1,0,0,true],
     ['Bỉm tã quần đêm','baby',-3,null,517600,1,46,74],
     ['Bỉm tã Bobby size L','baby',-33,null,18,1,30,50],
-    ['Sữa tươi tiệt trùng 1L','dairy',-38,-10,2.2,1,60,60]
+    ['Sữa tươi tiệt trùng 1L','dairy',-38,-10,2.2,1,60,60],
+    ['Áo thun cotton','clothes',-100,null,16,1,24,76],
+    ['Áo khoác mỏng','clothes',-60,null,32,1,70,84],
+    ['Quà sinh nhật cho mẹ','gift',-45,null,20,1,50,92]
   ];
   return S.map(r => ({id:uid(), name:r[0], cat:r[1], bought:iso(addDays(t,r[2])), exp:r[3]===null?'':iso(addDays(t,r[3])), price:r[4]<1000?Math.round(r[4]*25000/1000)*1000:r[4], qty:r[5], x:r[6], y:r[7], used:!!r[8]}));
 }
@@ -108,7 +113,7 @@ function sameProduct(a, b){
   if(small === 1) return ta.size === tb.size && inter === 1;
   return inter === small || inter/union >= 0.6;
 }
-const isRebuy = (older, newer) => older.id !== newer.id && !older.used && monthKey(older.bought) < monthKey(newer.bought) &&
+const isRebuy = (older, newer) => older.id !== newer.id && !older.used && older.cat !== 'gift' && newer.cat !== 'gift' && monthKey(older.bought) < monthKey(newer.bought) &&
   (sameProduct(older, newer) || (older.cat === newer.cat && REBUY_CATS.has(older.cat)));
 function applyRebuy(newItems){
   if(state.autoRebuy === false) return [];
@@ -124,9 +129,12 @@ function announceRebuy(hit){
     {label:'Hoàn tác', fn:() => { hit.forEach(h => { h.a.used = false; delete h.a.replacedBy; }); save(); renderAll(); }});
 }
 
-const DORMANT_DAYS = 30;
+/* Misu reminds about things nobody has touched for a while: 30 days, 90 days for clothes, never for things bought as gifts */
+const DORMANT_DAYS = 30, DORMANT_DAYS_CLOTHES = 90;
+const dormantAfter = it => it.cat === 'clothes' ? DORMANT_DAYS_CLOTHES : DORMANT_DAYS;
+const isDormant = it => !it.used && it.cat !== 'gift' && idleDays(it) > dormantAfter(it);
 const idleDays = it => Math.round((today() - parseISO(it.touched || it.bought))/864e5);
-const dormantList = () => state.items.filter(i => !i.used && idleDays(i) > DORMANT_DAYS).sort((a,b) => idleDays(b) - idleDays(a));
+const dormantList = () => state.items.filter(isDormant).sort((a,b) => idleDays(b) - idleDays(a));
 function whenText(d){
   if(d < 0) return 'Đã hết hạn '+(-d)+' ngày trước';
   if(d === 0) return 'Hết hạn hôm nay';
@@ -254,9 +262,9 @@ function renderDormant(){
   const F = {n:list.length, name:top ? top.name : '', days:top ? idleDays(top) : 0, money:money(list.reduce((a,i) => a + i.price, 0))};
   const mood = !list.length ? 'happy' : list.length >= 5 ? 'worried' : 'sleepy';
   const POOLS = {
-    none:['Hổng có món nào nằm im quá một tháng hết. Misu vẫy đuôi cho bạn nè!','Đồ trong phòng được dùng đều đều ghê. Misu thích lắm luôn.'],
-    some:['Misu thấy {n} món nằm im hơn một tháng rồi nè. Nhất là {name}, {days} ngày không ai ngó tới.','{name} nằm đó {days} ngày rồi. Nó chờ bạn dùng mà tủi thân lắm á.','Có {n} món đang ngủ quên, tổng cộng {money} nằm yên trong phòng. Mình dùng bớt đi bạn ơi.','Misu ngửi thấy bụi trên {name} rồi nha. {days} ngày chưa đụng tới luôn đó.'],
-    many:['{n} món ngủ quên luôn rồi! Mình dọn dẹp hoặc dùng thử vài món đi bạn ơi.','Phòng có tới {n} món nằm im, tổng cộng {money}. Misu lo quá à.','Bạn ơi, {n} món chưa được đụng tới hơn một tháng. Mình xử lý dần nha, bắt đầu từ {name} đi.'],
+    none:['Hổng có món nào nằm im quá lâu hết. Misu vẫy đuôi cho bạn nè!','Đồ trong phòng được dùng đều đều ghê. Misu thích lắm luôn.'],
+    some:['Misu thấy {n} món nằm im lâu rồi nè. Nhất là {name}, {days} ngày không ai ngó tới.','{name} nằm đó {days} ngày rồi. Nó chờ bạn dùng mà tủi thân lắm á.','Có {n} món đang ngủ quên, tổng cộng {money} nằm yên trong phòng. Mình dùng bớt đi bạn ơi.','Misu ngửi thấy bụi trên {name} rồi nha. {days} ngày chưa đụng tới luôn đó.'],
+    many:['{n} món ngủ quên luôn rồi! Mình dọn dẹp hoặc dùng thử vài món đi bạn ơi.','Phòng có tới {n} món nằm im, tổng cộng {money}. Misu lo quá à.','Bạn ơi, {n} món chưa được đụng tới lâu rồi. Mình xử lý dần nha, bắt đầu từ {name} đi.'],
     touch:['Yay, {name} được dùng rồi! Misu vẫy đuôi nè.','Cảm ơn bạn đã ghé {name}. Nó hết tủi thân rồi đó!'],
     done:['{name} xong nhiệm vụ rồi. Phòng bớt một món ngủ quên, Misu vui lắm!']
   };
@@ -265,9 +273,9 @@ function renderDormant(){
   const line = pool[(today().getDate() + misuTick) % pool.length].replace(/\{(\w+)\}/g, (_,k) => G[k]);
   const rows = showAllDormant ? list : list.slice(0,5);
   el.innerHTML =
-    '<div class="card-head"><h2 id="h-dormant">Nằm im hơn một tháng</h2><span class="small muted">'+(list.length ? list.length+' món · '+F.money : 'Chưa có món nào')+'</span></div>'+
+    '<div class="card-head"><h2 id="h-dormant">Nằm im lâu rồi</h2><span class="small muted">'+(list.length ? list.length+' món · '+F.money : 'Chưa có món nào')+'</span></div>'+
     '<div class="critic misu"><button class="av" type="button" id="misu-av" aria-label="Nhờ Misu nhắc tiếp">'+misuSvg(mood)+'</button>'+
-      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Tính từ ngày mua hoặc lần bạn bấm "Vừa dùng" gần nhất.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
+      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Đồ thường hơn 1 tháng, quần áo hơn 3 tháng, đồ mua tặng thì Misu không nhắc. Tính từ ngày mua hoặc lần bạn bấm "Vừa dùng" gần nhất.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
     (list.length ? '<ul class="dlist">'+rows.map(i =>
       '<li style="--c:'+CAT[i.cat].color+'">'+icon(i.cat)+
         '<div class="dtext"><div class="nm">'+esc(i.name)+(i.qty>1?' ×'+i.qty:'')+'</div><div class="small muted">Mua '+shortDate(i.bought)+(i.touched?' · dùng '+shortDate(i.touched):'')+' · nằm im <b>'+idleDays(i)+' ngày</b> · '+money(i.price)+'</div></div>'+
@@ -350,7 +358,7 @@ function renderRoom(){
     b.style.cssText = 'left:'+it.x+'%;top:'+it.y+'%;--c:'+CAT[it.cat].color+';z-index:'+Math.round(it.y*10);
     b.setAttribute('aria-label', itemLabel(it)+'. Kéo để di chuyển, dùng phím mũi tên để nhích.');
     const badge = st==='expired' ? '<span class="badge">!</span>' : st==='soon' ? '<span class="badge">'+(d===0?'Today':d+'d')+'</span>' : '';
-    const zz = !it.used && idleDays(it) > DORMANT_DAYS ? '<span class="zz" title="Nằm im hơn một tháng">zZ</span>' : '';
+    const zz = isDormant(it) ? '<span class="zz" title="Nằm im lâu rồi">zZ</span>' : '';
     b.innerHTML = icon(it.cat,'ico')+badge+zz+'<span class="tag">'+esc(it.name)+'</span>';
     room.appendChild(b);
   });
@@ -447,7 +455,7 @@ function renderInspector(){
     '<div class="insp" style="--c:'+CAT[it.cat].color+'">'+
       icon(it.cat,'big')+
       '<div class="insp-main"><h3>'+esc(it.name)+(it.qty>1?' <span class="muted">×'+it.qty+'</span>':'')+'</h3>'+
-        '<div class="facts"><span>'+CAT[it.cat].name+'</span>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'<span>Mua ngày '+shortDate(it.bought)+'</span><span class="num">'+money(it.price)+'</span>'+pill+'</div></div>'+
+        '<div class="facts"><span>'+CAT[it.cat].name+'</span>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'<span>Mua ngày '+shortDate(it.bought)+'</span><span class="num">'+money(it.price)+'</span>'+pill+(it.cat==='gift'?'<span class="pill">Misu không nhắc</span>':'')+'</div></div>'+
       '<div class="insp-actions">'+
         '<label for="i-exp">Ngày hết hạn<input id="i-exp" type="date" value="'+esc(it.exp)+'"></label>'+
         '<button class="btn ghost sm" id="i-touch" type="button">Vừa dùng</button>'+
@@ -789,7 +797,7 @@ function photoPrompt(){
 '- variant: size, pack or option text shown under the name (for example "Quần XL 12-18kg, 17 miếng"), or "". A topping or add-on priced 0 under a drink goes into that item\'s variant, not into its own item. A topping with a price above 0 is its own item.\n'+
 '- unit_price: the price of ONE unit as currently charged, never the crossed-out original price. Prices are Vietnamese dong, so 667.000đ and 35,000 mean 667000 and 35000. Whole numbers only.\n'+
 '- amount_paid: the final amount the customer paid for everything shown ("Thành tiền" on an online order, "Tổng tiền" on a receipt). If several shops appear, add their totals. null if none is shown.\n'+
-'- category must be one of: '+CATS.map(c => c.id+' ('+c.name+')').join(', ')+'.\n'+
+'- category must be one of: '+CATS.map(c => c.id+' ('+c.name+')').join(', ')+'. Use gift only if the bill itself says the item is a gift.\n'+
 '- Do not invent items. If the image is not a bill, return {"items": []}.';
 }
 function fromAI(out){
