@@ -76,6 +76,11 @@ function seed(){
     ['Bỉm tã quần đêm','baby',-3,null,517600,1,46,74],
     ['Bỉm tã Bobby size L','baby',-33,null,18,1,30,50],
     ['Sữa tươi tiệt trùng 1L','dairy',-38,-10,2.2,1,60,60],
+    ['Trà đào cam sả','drinks',0,null,1.8,1,67,70],
+    ['Cà phê sữa','drinks',-1,null,1.2,1,80,72],
+    ['Trà sữa trân châu','drinks',-2,null,2,1,88,64],
+    ['Nước ép ổi','drinks',-3,null,1.6,1,92,76],
+    ['Nước dừa','drinks',-4,null,1.4,1,78,92],
     ['Áo thun cotton','clothes',-100,null,16,1,24,76],
     ['Áo khoác mỏng','clothes',-60,null,32,1,70,84],
     ['Quà sinh nhật cho mẹ','gift',-45,null,20,1,50,92]
@@ -182,7 +187,7 @@ function itemLabel(it){
 }
 /* ---------- the critic: Miso the cat ---------- */
 let tick = 0, reaction = null, lastCounts = null;
-const react = (kind, name, n) => { reaction = {kind, name, n}; };
+const react = (kind, name, n, cat) => { reaction = {kind, name, n, cat}; };
 function catSvg(mood){
   const fur='#f4a259', dark='#3b2a1a';
   let face='';
@@ -192,6 +197,41 @@ function catSvg(mood){
   else face='<circle cx="29" cy="42" r="7" fill="#fff"/><circle cx="51" cy="42" r="7" fill="#fff"/><circle cx="29" cy="43" r="2" fill="'+dark+'"/><circle cx="51" cy="43" r="2" fill="'+dark+'"/><ellipse cx="40" cy="60" rx="4" ry="5" fill="#7a2e3a"/><path d="M69 22q5 8 0 12q-5-4 0-12z" fill="#7ec8ff"/>';
   return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M13 36L15 9l18 13z" fill="'+fur+'"/><path d="M67 36L65 9 47 22z" fill="'+fur+'"/><path d="M18 28l1-10 8 6z" fill="#f3a3b6"/><path d="M62 28l-1-10-8 6z" fill="#f3a3b6"/><ellipse cx="40" cy="45" rx="29" ry="26" fill="'+fur+'"/><path d="M40 20v8M32 21l2 7M48 21l-2 7" stroke="#d9822b" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="55" rx="12" ry="9" fill="#fff3e0"/>'+face+'<path d="M37 50h6l-3 4z" fill="#e0607e"/><path d="M12 50l12 2M12 57l12-2M68 50l-12 2M68 57l-12-2" stroke="#8a5a2b" stroke-width="1.4" stroke-linecap="round"/></svg>';
 }
+/* Miso on weekly habits: how many of the last 7 days did you buy something from the same category? 5-6 days is a nudge, 7 of 7 is a scolding */
+const HABIT_MIN_DAYS = 5;
+const HABIT = {
+  drinks:{strong:['Bảy ngày liền ngày nào cũng mua đồ uống luôn đó. Bạn là cá hay sao mà uống dữ vậy?','{hdays}/7 ngày, ngày nào cũng có đồ uống mới. Thận bạn gọi điện cầu cứu tui rồi nè.','Đồ uống mua mỗi ngày trong tuần luôn. Uống nước lọc thử đi bạn ơi, miễn phí á.'],
+          mild:['{hdays} ngày trong tuần bạn đều mua đồ uống. Nhớ uống nước lọc nữa nha.','Tuần này đồ uống về nhà gần như mỗi ngày. Bạn uống nhiều quá rồi đó nha.']},
+  dairy:{strong:['Ngày nào cũng mua sữa & trứng, bạn nuôi cả đàn hả?','7/7 ngày mua sữa & trứng luôn. Tủ lạnh bạn sắp thành nông trại rồi.'],
+         mild:['{hdays} ngày trong tuần mua sữa & trứng. Uống không hết là nó hư á nha.','Sữa & trứng mua đều ghê, nhưng ăn hết chưa mà mua tiếp vậy?']},
+  produce:{strong:['Ngày nào cũng mua rau củ quả, tốt cho sức khoẻ thiệt. Nhưng ăn hết chưa đó, tui thấy rau héo rồi nè.','7/7 ngày mua rau củ quả. Bạn định mở sạp rau trong phòng hả?'],
+           mild:['{hdays} ngày trong tuần mua rau củ quả. Chăm ghê, nhớ ăn cho hết nha.','Rau củ về đều đều, tui khen. Nhưng đừng để nó héo nha.']},
+  pantry:{strong:['Đồ khô mua hết 7 ngày trong tuần luôn. Kho lương của bạn sắp thành siêu thị rồi.','Ngày nào cũng mua đồ khô, bạn chuẩn bị qua mùa đông hả?'],
+          mild:['{hdays} ngày trong tuần bạn mua đồ khô. Kệ bếp thở không nổi nữa rồi.','Đồ khô mua đều quá. Bạn tích trữ hả?']},
+  meds:{strong:['Ngày nào cũng mua thuốc và vitamin... Bạn khoẻ không vậy? Tui hơi lo đó.','7/7 ngày mua thuốc. Bạn nhớ đi khám nha, đừng tự mua hoài.'],
+        mild:['{hdays} ngày trong tuần mua thuốc, vitamin. Bạn nhớ uống đúng liều nha.','Thuốc men mua đều ghê. Bạn có khoẻ không đó?']},
+  care:{strong:['Ngày nào cũng mua đồ chăm sóc cá nhân. Bạn đẹp thêm cỡ nào nữa vậy trời?','7/7 ngày mua đồ chăm sóc cá nhân. Chai lọ trong phòng nhiều hơn cả tui rồi.'],
+        mild:['{hdays} ngày trong tuần mua đồ chăm sóc cá nhân. Đẹp vừa thôi nha.','Dầu gội, kem dưỡng mua đều ghê. Dùng hết cái cũ chưa?']},
+  cleaning:{strong:['Ngày nào cũng mua đồ vệ sinh. Bạn dọn nhà mỗi ngày hay mua để ngắm vậy?','7/7 ngày mua đồ vệ sinh. Nhà sạch bóng rồi, tha cho nó đi.'],
+            mild:['{hdays} ngày trong tuần mua đồ vệ sinh. Chăm dọn dẹp ghê, hay mua dư rồi?','Nước giặt, nước lau mua đều quá. Dùng hết cái cũ chưa?']},
+  electronics:{strong:['Ngày nào cũng mua đồ điện tử. Ví bạn kêu cứu rồi nè.','7/7 ngày mua đồ điện tử. Bạn mở cửa hàng công nghệ hả?'],
+               mild:['{hdays} ngày trong tuần mua đồ điện tử. Dây cáp trong phòng sắp rối thành cuộn len rồi.','Đồ điện tử mua đều ghê. Cái cũ còn xài được không đó?']},
+  baby:{strong:['Ngày nào cũng mua đồ cho bé. Bé nhà bạn xài dữ ha, hay bạn mua nhiều quá?','7/7 ngày mua đồ cho bé. Thương bé vừa thôi, thương ví bạn nữa nha.'],
+        mild:['{hdays} ngày trong tuần mua đồ cho bé. Bé được cưng ghê.','Đồ cho bé mua đều. Nhớ kiểm tra còn dư bao nhiêu trước khi mua thêm nha.']},
+  clothes:{strong:['Ngày nào cũng mua quần áo. Tủ đồ của bạn sắp tràn ra phòng rồi nè.','7/7 ngày mua quần áo. Bạn mặc kịp hết không đó?'],
+           mild:['{hdays} ngày trong tuần mua quần áo. Tủ đồ than thở rồi đó.','Quần áo mua đều ghê. Mặc cái cũ chưa?']},
+  other:{strong:['Ngày nào cũng mua đồ linh tinh. Nhóm "Khác" mà nhiều thế này thì hết là khác rồi.','7/7 ngày mua đồ nhóm Khác. Bạn mua gì mà tui không phân loại nổi vậy?'],
+         mild:['{hdays} ngày trong tuần mua đồ linh tinh. Nhớ phân loại cho tui nha.','Đồ nhóm Khác mua đều ghê. Mua gì vậy bạn?']}
+};
+function weeklyHabit(){
+  const t = today(), week = new Set(Array.from({length:7}, (_,i) => iso(addDays(t,-i)))), days = {};
+  state.items.forEach(i => { if(i.cat === 'gift' || !week.has(i.bought)) return; (days[i.cat] = days[i.cat] || new Set()).add(i.bought); });
+  let best = null;
+  Object.keys(days).forEach(cat => { const n = days[cat].size; if(n >= HABIT_MIN_DAYS && (!best || n > best.days)) best = {cat, days:n}; });
+  return best;
+}
+const habitLines = h => h ? HABIT[h.cat][h.days >= 7 ? 'strong' : 'mild'] : [];
+
 function critique(){
   const t = today(), y = t.getFullYear(), m = t.getMonth(), day = t.getDate();
   const ly = m===0 ? y-1 : y, lm = m===0 ? 11 : m-1;
@@ -200,9 +240,11 @@ function critique(){
   const inRoom = state.items.filter(i => !i.used);
   const expired = inRoom.filter(i => status(i)==='expired');
   const lost = expired.reduce((a,i) => a + i.price, 0);
-  const F = {now, prev, day, inRoom:inRoom.length, expired:expired.length, lost:money(lost), name:expired[0] ? expired[0].name : '', ratio:prev ? String(+(now/prev).toFixed(1)) : ''};
+  const habit = weeklyHabit();
+  const F = {hdays:habit ? habit.days : 0, now, prev, day, inRoom:inRoom.length, expired:expired.length, lost:money(lost), name:expired[0] ? expired[0].name : '', ratio:prev ? String(+(now/prev).toFixed(1)) : ''};
   let tier, mood;
   if(F.expired >= 3){ tier='waste'; mood='horrified'; }
+  else if(habit){ tier='habit'; mood = habit.days >= 7 ? 'horrified' : 'judging'; }
   else if(F.inRoom >= 24){ tier='hoard'; mood='horrified'; }
   else if(prev > 0 && now >= prev*1.5 && now >= 6){ tier='more'; mood='judging'; }
   else if(F.expired >= 1){ tier='expired'; mood='judging'; }
@@ -211,6 +253,7 @@ function critique(){
   else { tier='ok'; mood='neutral'; }
   const L = {
     waste:['{expired} món hết hạn rồi nè bạn ơi. Tủ đồ ăn của bạn sắp thành vườn nấm luôn đó nha.','Hết hạn mất {lost} rồi. Tui xót ví giùm bạn ghê, lần sau ăn sớm sớm nha.','{expired} món bị bỏ quên trong góc. Tụi nó buồn hiu hà, bạn ghé thăm chút đi.'],
+    habit: habitLines(habit),
     hoard:['{inRoom} món trong phòng rồi nè. Tui sắp hết chỗ nằm phơi nắng luôn á.','Phòng đầy ắp {inRoom} món, bạn định mở tiệm tạp hóa hả? Cho tui làm bảo vệ nha.','{inRoom} món! Mình ăn bớt đồ cũ trước rồi hẵng mua thêm nha bạn.','Phòng chật cứng {inRoom} món rồi. Tui đi qua còn phải nín thở nữa đó.','{inRoom} món luôn á. Bạn thử dọn bớt một góc cho tui nằm đi, hứa không quậy.','Tui đếm được {inRoom} món. Mai mốt kệ cũng phải có kệ riêng cho tui nha.','Phòng đầy ú ụ {inRoom} món. Nghỉ mua vài bữa cho phòng thở với bạn ơi.'],
     more:['Mới ngày {day} mà bạn mua {now} món rồi. Tháng trước cùng kỳ có {prev} thôi à nha.','Nhanh gấp {ratio} lần tháng trước luôn. Ví bạn đang thở dốc đó, thương nó chút đi.','{now} món trong {day} ngày. Ngón tay bạn bấm thanh toán nhanh dữ ha.'],
     expired:['{name} hết hạn mất tiêu rồi. Hồi nãy nó còn chờ bạn ăn đó, tội ghê.','Ôi {name} hết hạn rồi. Tui không giận đâu, tui chỉ buồn xíu thôi à.'],
@@ -226,14 +269,16 @@ function critique(){
     rebuy:['Mua lại {name} rồi hả? Món cũ coi như hết rồi nha, tui dọn giùm bạn.','{name} mới về là {n} món cũ nghỉ hưu liền. Phòng thoáng hơn rồi nè.'],
     undo:['Hoàn tác hả? Thôi được, {name} quay về phòng. Giờ lại {inRoom} món.']
   }[reaction.kind];
-  const pool = R || L, G = reaction ? Object.assign({}, F, {name:reaction.name, n:reaction.n}) : F;
+  const useHabit = !!(reaction && (reaction.kind === 'add' || reaction.kind === 'bulk') && habit && [].concat(reaction.cat || []).indexOf(habit.cat) >= 0);
+  if(useHabit) mood = habit.days >= 7 ? 'horrified' : 'judging';
+  const pool = (useHabit ? habitLines(habit) : R) || L, G = reaction ? Object.assign({}, F, {name:reaction.name, n:reaction.n}) : F;
   const line = pool[(t.getDate() + tick) % pool.length].replace(/\{(\w+)\}/g, (_,k) => G[k]);
-  return {line, mood, now, prev, inRoom:F.inRoom};
+  return {line, mood, now, prev, inRoom:F.inRoom, habit:habit ? {name:CAT[habit.cat].name, days:habit.days} : null};
 }
 function renderCritic(){
   const c = critique();
   $('#critic').innerHTML = '<button class="av" type="button" id="cat-av" aria-label="Nhờ Miso chê tiếp">'+catSvg(c.mood)+'</button>'+
-    '<div class="bubble" lang="vi"><div class="eyebrow">Miso, bé mèo khó tính</div><p>'+esc(c.line)+'</p><div class="meta"><span>Tháng này: <b id="m-now">'+c.now+'</b> món đã mua · <b id="m-room">'+c.inRoom+'</b> món trong phòng · cùng kỳ tháng trước '+c.prev+' món</span><button class="btn ghost sm" id="cat-more" type="button">Chê tiếp đi</button></div></div>';
+    '<div class="bubble" lang="vi"><div class="eyebrow">Miso, bé mèo khó tính</div><p>'+esc(c.line)+'</p><div class="meta"><span>Tháng này: <b id="m-now">'+c.now+'</b> món đã mua · <b id="m-room">'+c.inRoom+'</b> món trong phòng · cùng kỳ tháng trước '+c.prev+' món'+(c.habit ? ' · 7 ngày qua mua <b>'+esc(c.habit.name)+'</b> '+c.habit.days+'/7 ngày' : '')+'</span><button class="btn ghost sm" id="cat-more" type="button">Chê tiếp đi</button></div></div>';
   if(lastCounts){
     if(lastCounts.now !== c.now) $('#m-now').classList.add('bump');
     if(lastCounts.inRoom !== c.inRoom) $('#m-room').classList.add('bump');
@@ -627,7 +672,7 @@ $('#pane-hand').addEventListener('submit', e => {
   const cat = (document.querySelector('input[name="f-cat"]:checked')||{}).value || 'other';
   const spot = freeSpot();
   const it = {id:uid(), name, cat, exp:$('#f-exp').value, price:isNaN(price)?0:price, qty:Math.max(1, parseInt($('#f-qty').value,10)||1), bought:$('#f-bought').value||iso(today()), x:spot.x, y:spot.y, used:false};
-  state.items.push(it); const hit = applyRebuy([it]); save(); hit.length ? react('rebuy', it.name, hit.length) : react('add', it.name);
+  state.items.push(it); const hit = applyRebuy([it]); save(); hit.length ? react('rebuy', it.name, hit.length) : react('add', it.name, undefined, it.cat);
   sel = it.id; justAdded = it.id; filter = null;
   renderAll();
   $('#f-name').value = ''; $('#f-exp').value = ''; $('#f-price').value = ''; $('#f-qty').value = '1';
@@ -908,7 +953,7 @@ function renderBill(){
       state.items.push(o); added.push(o);
     });
     const hit = applyRebuy(added);
-    if(hit.length) react('rebuy', hit[0].b.name, hit.length); else react(chosen.length>1 ? 'bulk' : 'add', chosen[0] ? chosen[0].name : '', chosen.length);
+    if(hit.length) react('rebuy', hit[0].b.name, hit.length); else react(chosen.length>1 ? 'bulk' : 'add', chosen[0] ? chosen[0].name : '', chosen.length, chosen.map(r => r.cat));
     save(); filter = null; sel = null; billRows = []; files = []; renderThumbs(); $('#bill-preview').innerHTML = ''; $('#bill-text').value = '';
     renderAll();
     if(hit.length) announceRebuy(hit); else toast(chosen.length+' món '+(consumed?'đã được tính vào chi tiêu.':'đã thêm từ hoá đơn.'));
