@@ -217,8 +217,8 @@ function catSvg(mood){
 /* Miso on weekly habits: how many of the last 7 days did you buy something from the same category? 5-6 days is a nudge, 7 of 7 is a scolding */
 const HABIT_MIN_DAYS = 5;
 const HABIT = {
-  drinks:{strong:['Bảy ngày liền ngày nào cũng mua đồ uống luôn đó. Bạn là cá hay sao mà uống dữ vậy?','{hdays}/7 ngày, ngày nào cũng có đồ uống mới. Thận bạn gọi điện cầu cứu tui rồi nè.','Đồ uống mua mỗi ngày trong tuần luôn. Uống nước lọc thử đi bạn ơi, miễn phí á.'],
-          mild:['{hdays} ngày trong tuần bạn đều mua đồ uống. Nhớ uống nước lọc nữa nha.','Tuần này đồ uống về nhà gần như mỗi ngày. Bạn uống nhiều quá rồi đó nha.']},
+  drinks:{strong:['Cả tuần ngày nào cũng có đồ uống mới. Bạn uống nước hay uống tiền vậy?','{hdays}/7 ngày liền mua đồ uống. Tui bắt đầu nghi bạn là cá heo hoá thân rồi á.','Tuần này nhà mình ngập trong đồ uống luôn. Cho tui xin một ngày không đồ uống đi bạn.'],
+          mild:['{hdays} ngày trong tuần có đồ uống mới về nhà. Bạn chắc là không ngập nước chứ?','Đồ uống về đều như đi làm vậy. Nghỉ một hôm cho bụng bạn thở nha.']},
   dairy:{strong:['Ngày nào cũng mua sữa & trứng, bạn nuôi cả đàn hả?','7/7 ngày mua sữa & trứng luôn. Tủ lạnh bạn sắp thành nông trại rồi.'],
          mild:['{hdays} ngày trong tuần mua sữa & trứng. Uống không hết là nó hư á nha.','Sữa & trứng mua đều ghê, nhưng ăn hết chưa mà mua tiếp vậy?']},
   produce:{strong:['Ngày nào cũng mua rau củ quả, tốt cho sức khoẻ thiệt. Nhưng ăn hết chưa đó, tui thấy rau héo rồi nè.','7/7 ngày mua rau củ quả. Bạn định mở sạp rau trong phòng hả?'],
@@ -253,7 +253,7 @@ const habitLines = h => h ? HABIT[h.cat][h.days >= 7 ? 'strong' : 'mild'] : [];
    A purchase is one add by hand, or one whole bill (every line on a bill shares a batch). */
 const DAILY_MIN = 2;
 const DAILY = {
-  drinks:['Hôm nay bạn mua đồ uống {dcount} lần rồi đó. Uống gì mà khát dữ vậy?','Lại đồ uống nữa hả? Mới trong hôm nay mà đã {dcount} lần rồi, tui đếm hết đó nha.','{dcount} lần đồ uống trong một ngày luôn. Bụng bạn chứa nổi không đó?'],
+  drinks:['Hôm nay {dcount} lần mua nước rồi hả? Bạn định biến thành cái hồ nước di động à?','{dcount} lần mua nước trong một ngày. Con mèo như tui còn uống ít hơn bạn đó.','Tui nghe tiếng ùng ục từ đây luôn. Đồ uống {dcount} lần rồi nha bạn.','Đồ uống {dcount} lần trong hôm nay. Bạn chắc không phải đang tích nước như lạc đà chứ?','Ví bạn nhẹ đi, bụng bạn thì nặng lên. {dcount} lần đồ uống hôm nay rồi đó.','Nước lọc ở nhà đang tủi thân vì bạn mua đồ uống {dcount} lần hôm nay.'],
   dairy:['Hôm nay mua sữa & trứng {dcount} lần rồi nha. Một lần là đủ mà bạn.','Sữa & trứng {dcount} lần trong một ngày. Tủ lạnh bạn có kêu không đó?'],
   produce:['Rau củ quả hôm nay mua {dcount} lần rồi. Chăm ghê, nhưng ăn cho hết nha.','{dcount} lần mua rau củ trong một ngày. Bạn đi chợ hay đi dạo vậy?'],
   pantry:['Đồ khô mua {dcount} lần trong hôm nay rồi. Mua một lần cho đủ đi bạn ơi.','{dcount} lần đồ khô trong một ngày. Kệ bếp sắp hết chỗ rồi nè.'],
