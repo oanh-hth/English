@@ -1,4 +1,3 @@
-import Anthropic from '../vendor/anthropic-sdk.js';
 
 (function(){
 'use strict';
@@ -61,7 +60,7 @@ function seed(){
     ['Mì Ý','pantry',-6,240,2.0,2,72,16],
     ['Cà chua đóng hộp','pantry',-20,400,5.4,3,80,16],
     ['Ibuprofen','meds',-22,45,6.5,1,88,16],
-    ['Vitamin C','meds',-30,5,9.9,1,14,87],
+    ['Vitamin C','meds',-41,5,9.9,1,14,87],
     ['Dầu gội','care',-25,180,7.2,1,11,53],
     ['Kem dưỡng tay','care',-12,20,5.5,1,38,91],
     ['Xịt rửa chén','cleaning',-35,null,4.2,1,93,56],
@@ -91,6 +90,9 @@ function status(it){
   if(d <= state.win) return 'soon';
   return 'ok';
 }
+const DORMANT_DAYS = 30;
+const idleDays = it => Math.round((today() - parseISO(it.touched || it.bought))/864e5);
+const dormantList = () => state.items.filter(i => !i.used && idleDays(i) > DORMANT_DAYS).sort((a,b) => idleDays(b) - idleDays(a));
 function whenText(d){
   if(d < 0) return 'Đã hết hạn '+(-d)+' ngày trước';
   if(d === 0) return 'Hết hạn hôm nay';
@@ -194,6 +196,56 @@ function renderCritic(){
   $('#cat-more').addEventListener('click', again); $('#cat-av').addEventListener('click', again);
 }
 
+/* ---------- Misu the puppy: reminds you about things nobody has touched for over a month ---------- */
+let misuTick = 0, misuReaction = null, showAllDormant = false;
+function misuSvg(mood){
+  const dark = '#3b2a1a';
+  let eyes, extra = '';
+  if(mood === 'sleepy'){
+    eyes = '<path d="M23 43q5 5 10 0M47 43q5 5 10 0" stroke="'+dark+'" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    extra = '<text x="60" y="20" font-size="11" font-weight="700" font-family="sans-serif" fill="#6c86ad">z</text><text x="67" y="12" font-size="8" font-weight="700" font-family="sans-serif" fill="#6c86ad">z</text>';
+  }else if(mood === 'worried'){
+    eyes = '<circle cx="29" cy="43" r="3.6" fill="'+dark+'"/><circle cx="51" cy="43" r="3.6" fill="'+dark+'"/><circle cx="30.200" cy="41.800" r="1.200" fill="#fff"/><circle cx="52.200" cy="41.800" r="1.200" fill="#fff"/><path d="M22 35l10 4M58 35l-10 4" stroke="'+dark+'" stroke-width="2.500" stroke-linecap="round"/>';
+    extra = '<path d="M70 28q4 6 0 9q-4-3 0-9z" fill="#7ec8ff"/>';
+  }else{
+    eyes = '<circle cx="29" cy="43" r="3.6" fill="'+dark+'"/><circle cx="51" cy="43" r="3.6" fill="'+dark+'"/><circle cx="30.200" cy="41.800" r="1.200" fill="#fff"/><circle cx="52.200" cy="41.800" r="1.200" fill="#fff"/>';
+  }
+  const mouth = mood === 'worried' ? '<path d="M34 61q6-4 12 0" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/>'
+    : '<path d="M40 54v4q-4 4-8 1M40 58q4 4 8 1" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/>'+(mood==='happy' ? '<path d="M36 61q4 9 8 0z" fill="#f08aa1"/>' : '');
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><ellipse cx="13" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(14 13 40)"/><ellipse cx="67" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(-14 67 40)"/><ellipse cx="40" cy="45" rx="27" ry="25" fill="#fbf1e4"/><ellipse cx="55" cy="39" rx="9" ry="10" fill="#d9b99b"/><ellipse cx="40" cy="56" rx="11" ry="8" fill="#fff"/>'+eyes+'<ellipse cx="40" cy="51" rx="4.500" ry="3.200" fill="'+dark+'"/>'+mouth+extra+'</svg>';
+}
+function renderDormant(){
+  const list = dormantList(), el = $('#dormant'), top = list[0];
+  const F = {n:list.length, name:top ? top.name : '', days:top ? idleDays(top) : 0, money:money(list.reduce((a,i) => a + i.price, 0))};
+  const mood = !list.length ? 'happy' : list.length >= 5 ? 'worried' : 'sleepy';
+  const POOLS = {
+    none:['Hổng có món nào nằm im quá một tháng hết. Misu vẫy đuôi cho bạn nè!','Đồ trong phòng được dùng đều đều ghê. Misu thích lắm luôn.'],
+    some:['Misu thấy {n} món nằm im hơn một tháng rồi nè. Nhất là {name}, {days} ngày không ai ngó tới.','{name} nằm đó {days} ngày rồi. Nó chờ bạn dùng mà tủi thân lắm á.','Có {n} món đang ngủ quên, tổng cộng {money} nằm yên trong phòng. Mình dùng bớt đi bạn ơi.','Misu ngửi thấy bụi trên {name} rồi nha. {days} ngày chưa đụng tới luôn đó.'],
+    many:['{n} món ngủ quên luôn rồi! Mình dọn dẹp hoặc dùng thử vài món đi bạn ơi.','Phòng có tới {n} món nằm im, tổng cộng {money}. Misu lo quá à.','Bạn ơi, {n} món chưa được đụng tới hơn một tháng. Mình xử lý dần nha, bắt đầu từ {name} đi.'],
+    touch:['Yay, {name} được dùng rồi! Misu vẫy đuôi nè.','Cảm ơn bạn đã ghé {name}. Nó hết tủi thân rồi đó!'],
+    done:['{name} xong nhiệm vụ rồi. Phòng bớt một món ngủ quên, Misu vui lắm!']
+  };
+  const pool = misuReaction ? POOLS[misuReaction.kind] : POOLS[!list.length ? 'none' : list.length >= 5 ? 'many' : 'some'];
+  const G = misuReaction ? Object.assign({}, F, {name:misuReaction.name}) : F;
+  const line = pool[(today().getDate() + misuTick) % pool.length].replace(/\{(\w+)\}/g, (_,k) => G[k]);
+  const rows = showAllDormant ? list : list.slice(0,5);
+  el.innerHTML =
+    '<div class="card-head"><h2 id="h-dormant">Nằm im hơn một tháng</h2><span class="small muted">'+(list.length ? list.length+' món · '+F.money : 'Chưa có món nào')+'</span></div>'+
+    '<div class="critic misu"><button class="av" type="button" id="misu-av" aria-label="Nhờ Misu nhắc tiếp">'+misuSvg(mood)+'</button>'+
+      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Tính từ ngày mua hoặc lần bạn bấm "Vừa dùng" gần nhất.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
+    (list.length ? '<ul class="dlist">'+rows.map(i =>
+      '<li style="--c:'+CAT[i.cat].color+'">'+icon(i.cat)+
+        '<div class="dtext"><div class="nm">'+esc(i.name)+(i.qty>1?' ×'+i.qty:'')+'</div><div class="small muted">Mua '+shortDate(i.bought)+(i.touched?' · dùng '+shortDate(i.touched):'')+' · nằm im <b>'+idleDays(i)+' ngày</b> · '+money(i.price)+'</div></div>'+
+        '<div class="dacts"><button class="btn ghost sm" type="button" data-touch="'+i.id+'">Vừa dùng</button><button class="btn ghost sm" type="button" data-done="'+i.id+'">Dùng hết rồi</button><button class="btn ghost sm" type="button" data-dfind="'+i.id+'">Tìm</button></div></li>').join('')+'</ul>'+
+      (list.length>5 ? '<button type="button" class="btn ghost sm more" id="d-more">'+(showAllDormant?'Thu gọn':'Xem hết '+list.length+' món')+'</button>' : '') : '');
+  const again = () => { misuTick++; misuReaction = null; renderDormant(); const b = $('#misu-more'); if(b) b.focus(); };
+  $('#misu-more').addEventListener('click', again); $('#misu-av').addEventListener('click', again);
+  const more = $('#d-more'); if(more) more.addEventListener('click', () => { showAllDormant = !showAllDormant; renderDormant(); });
+  el.querySelectorAll('[data-touch]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.touch); it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); }));
+  el.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.done); it.used = true; if(sel===it.id) sel = null; misuReaction = {kind:'done', name:it.name}; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); }));
+  el.querySelectorAll('[data-dfind]').forEach(b => b.addEventListener('click', () => { sel = b.dataset.dfind; found = sel; renderRoom(); renderInspector(); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
+}
+
 /* ---------- period ---------- */
 let period = {key:'all', from:'', to:''}, showAllRows = false, refocus = null;
 function periodRange(){
@@ -263,7 +315,8 @@ function renderRoom(){
     b.style.cssText = 'left:'+it.x+'%;top:'+it.y+'%;--c:'+CAT[it.cat].color+';z-index:'+Math.round(it.y*10);
     b.setAttribute('aria-label', itemLabel(it)+'. Kéo để di chuyển, dùng phím mũi tên để nhích.');
     const badge = st==='expired' ? '<span class="badge">!</span>' : st==='soon' ? '<span class="badge">'+(d===0?'Today':d+'d')+'</span>' : '';
-    b.innerHTML = icon(it.cat,'ico')+badge+'<span class="tag">'+esc(it.name)+'</span>';
+    const zz = !it.used && idleDays(it) > DORMANT_DAYS ? '<span class="zz" title="Nằm im hơn một tháng">zZ</span>' : '';
+    b.innerHTML = icon(it.cat,'ico')+badge+zz+'<span class="tag">'+esc(it.name)+'</span>';
     room.appendChild(b);
   });
 }
@@ -362,11 +415,13 @@ function renderInspector(){
         '<div class="facts"><span>'+CAT[it.cat].name+'</span>'+(it.note?'<span>'+esc(it.note)+'</span>':'')+'<span>Mua ngày '+shortDate(it.bought)+'</span><span class="num">'+money(it.price)+'</span>'+pill+'</div></div>'+
       '<div class="insp-actions">'+
         '<label for="i-exp">Ngày hết hạn<input id="i-exp" type="date" value="'+esc(it.exp)+'"></label>'+
+        '<button class="btn ghost sm" id="i-touch" type="button">Vừa dùng</button>'+
         '<button class="btn ghost sm" id="i-used" type="button">Dùng hết rồi</button>'+
         '<button class="btn danger sm" id="i-del" type="button">Xoá</button>'+
       '</div>'+
     '</div>';
   $('#i-exp').addEventListener('change', e => { it.exp = e.target.value; save(); renderAll(); });
+  $('#i-touch').addEventListener('click', () => { it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); toast('Đã ghi nhận bạn vừa dùng '+it.name+'.'); });
   $('#i-used').addEventListener('click', () => { it.used = true; sel = null; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); });
   $('#i-del').addEventListener('click', () => trashItem(it.id));
 }
@@ -621,7 +676,15 @@ let billRows = [];
 const KEY_API = 'phongtrudo.apikey', KEY_MODEL = 'phongtrudo.model';
 const lsGet = k => { try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } };
 const lsSet = (k,v) => { try{ v ? localStorage.setItem(k,v) : localStorage.removeItem(k); }catch(e){} };
-let maxImgs = 4, files = [], ctl = null;
+let maxImgs = 4, files = [], ctl = null, sampleFn = null;
+/* inside a Claude artifact the page can ask Claude itself, so no key is needed there */
+(async () => {
+  try{
+    if(!window.claude) return;
+    const sm = await window.claude.use('sample'), lim = sm && await sm.limits();
+    if(lim && lim.images){ sampleFn = sm; maxImgs = lim.images.maxCount || 4; $('#key-details').hidden = true; }
+  }catch(e){}
+})();
 $('#api-key').value = lsGet(KEY_API);
 if(lsGet(KEY_MODEL)) $('#api-model').value = lsGet(KEY_MODEL);
 $('#api-save').addEventListener('click', () => {
@@ -660,6 +723,14 @@ const ERR_BY_STATUS = {
   403:'Khoá API chưa được phép dùng mô hình này.',
   429:'Đang gửi hơi nhiều. Đợi một chút rồi thử lại nha.',
   413:'Ảnh hơi nặng. Thử ảnh nhỏ hơn nhé.'
+};
+const ERR_BY_CODE = {
+  not_granted:'Bạn cần cho phép app dùng Claude để đọc ảnh. Hoặc dán chữ của hoá đơn vào nha.',
+  sampling_disabled:'Tài khoản này chưa dùng được Claude. Bạn dán chữ của hoá đơn vào nha.',
+  rate_limited:'Đang gửi hơi nhiều. Đợi một chút rồi thử lại nha.',
+  image_rejected:'Ảnh này chưa đọc được. Bạn thử ảnh khác nha.',
+  invalid_json:'Miso chưa hiểu kết quả. Bạn thử lại hoặc dùng ảnh rõ hơn nha.',
+  session_expired:'Bạn đăng nhập lại rồi thử nữa nha.'
 };
 function parseJsonLoose(t){
   try{ return JSON.parse(t); }catch(e){}
@@ -703,19 +774,24 @@ function fromAI(out){
 $('#photo-read').addEventListener('click', async () => {
   if(!files.length) return;
   const key = lsGet(KEY_API);
-  if(!key){ $('#key-details').open = true; pStatus('Bạn thêm khoá API Claude ở dưới trước nha. Hoặc dán chữ của hoá đơn vào thay cho ảnh.'); return; }
+  if(!key && !sampleFn){ $('#key-details').open = true; pStatus('Bạn thêm khoá API Claude ở dưới trước nha. Hoặc dán chữ của hoá đơn vào thay cho ảnh.'); return; }
   ctl = new AbortController();
   $('#photo-read').disabled = true; $('#photo-stop').hidden = false; $('#bill-preview').innerHTML = '';
   pStatus('Miso đang đọc hoá đơn, đợi xíu nha…');
   try{
-    const images = await Promise.all(files.map(toBase64));
-    const client = new Anthropic({apiKey:key, dangerouslyAllowBrowser:true});
-    const res = await client.messages.create({
-      model: lsGet(KEY_MODEL) || 'claude-sonnet-5-5', max_tokens: 4000,
-      messages: [{role:'user', content:[...images.map(data => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data}})), {type:'text', text:photoPrompt()}]}]
-    }, {signal: ctl.signal});
-    const text = res.content.filter(b => b.type==='text').map(b => b.text).join('\n');
-    const out = parseJsonLoose(text);
+    let out;
+    if(sampleFn){
+      out = await sampleFn.json(photoPrompt(), {images:files.slice(), signal:ctl.signal, modelTier:'default'});
+    }else{
+      const images = await Promise.all(files.map(toBase64));
+      const { default: Anthropic } = await import('../vendor/anthropic-sdk.js');
+      const client = new Anthropic({apiKey:key, dangerouslyAllowBrowser:true});
+      const res = await client.messages.create({
+        model: lsGet(KEY_MODEL) || 'claude-sonnet-5-5', max_tokens: 4000,
+        messages: [{role:'user', content:[...images.map(data => ({type:'image', source:{type:'base64', media_type:'image/jpeg', data}})), {type:'text', text:photoPrompt()}]}]
+      }, {signal: ctl.signal});
+      out = parseJsonLoose(res.content.filter(b => b.type==='text').map(b => b.text).join('\n'));
+    }
     if(!out){ pStatus('Miso chưa hiểu kết quả. Bạn thử lại hoặc dùng ảnh rõ hơn nha.'); }
     else {
       billRows = fromAI(out);
@@ -724,7 +800,7 @@ $('#photo-read').addEventListener('click', async () => {
     }
   }catch(e){
     const aborted = ctl && ctl.signal.aborted;
-    pStatus(aborted ? '' : (ERR_BY_STATUS[e && e.status] || 'Chưa đọc được hoá đơn (có thể mất mạng). Bạn thử lại nha.'));
+    pStatus(aborted || (e && e.code==='cancelled') ? '' : (ERR_BY_STATUS[e && e.status] || ERR_BY_CODE[e && e.code] || 'Chưa đọc được hoá đơn (có thể mất mạng). Bạn thử lại nha.'));
   }finally{
     $('#photo-read').disabled = !files.length; $('#photo-stop').hidden = true; ctl = null;
   }
@@ -803,7 +879,7 @@ twoStep($('#wipe'), 'Bấm lần nữa để xoá hết', () => { state.items = 
 $('#load-sample').addEventListener('click', loadSample);
 
 /* ---------- boot ---------- */
-function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); }
+function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); }
 renderAll();
 dailyNotify();
 if('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});

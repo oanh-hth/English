@@ -20,10 +20,11 @@ Thư mục `room/` dùng chung `../vendor/anthropic-sdk.js` với app tiếng An
 - **Nhắc hạn dùng**: banner, danh sách "Sắp hết hạn", số trên chuông, và thông báo của trình duyệt.
 - **Chi tiêu**: tháng này so với cùng kỳ tháng trước, biểu đồ cộng dồn theo ngày. "Dùng hết rồi" vẫn giữ tiền trong chi tiêu, còn xoá bằng thùng rác thì bỏ luôn.
 - **Lịch sử mua sắm**: xem theo Tất cả, Tháng này, Tháng trước, 30 ngày qua hoặc khoảng ngày tự chọn, kèm tổng tiền theo nhóm.
-- **Miso**: bình luận theo số món bạn mua, số món trong phòng và số món hết hạn.
+- **Miso**: bé mèo khó tính, bình luận theo số món bạn mua, số món trong phòng và số món hết hạn.
+- **Nằm im hơn một tháng**: liệt kê món còn trong phòng mà hơn 30 ngày chưa đụng tới (tính từ ngày mua, hoặc lần bấm "Vừa dùng" gần nhất). Các món này có huy hiệu "zZ" trong phòng. Misu, bé cún hay lo xa, nhắc bạn về chúng. Mỗi món có nút Vừa dùng (tính lại 30 ngày), Dùng hết rồi và Tìm.
 
 ## Đọc ảnh hoá đơn
-Cần khoá API Claude của chính bạn (nhập ở **Thêm vào phòng → Từ hoá đơn → Khoá API Claude**). Khoá chỉ lưu trong `localStorage` của trình duyệt này và chỉ được gửi tới Anthropic. Ảnh được thu nhỏ còn tối đa 1600px trước khi gửi. Đừng commit khoá vào repo. Nếu không muốn dùng khoá, bạn vẫn dán được chữ của hoá đơn.
+Khi chạy ngoài Claude, cần khoá API Claude của chính bạn (nhập ở **Thêm vào phòng → Từ hoá đơn → Khoá API Claude**). Khoá chỉ lưu trong `localStorage` của trình duyệt này và chỉ được gửi tới Anthropic. Ảnh được thu nhỏ còn tối đa 1600px trước khi gửi. Đừng commit khoá vào repo. Nếu không muốn dùng khoá, bạn vẫn dán được chữ của hoá đơn.
 
 ## Thông báo
 Đây là web app tĩnh, nên thông báo chỉ hiện khi bạn mở app (tối đa một lần mỗi ngày), không đẩy được khi app đang đóng. Muốn nhắc khi đóng app thì cần thêm máy chủ gửi Web Push, hoặc làm bản app điện thoại.
