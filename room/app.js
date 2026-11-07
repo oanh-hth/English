@@ -77,6 +77,7 @@ function seed(){
     ['Bỉm tã Bobby size L','baby',-33,null,18,1,30,50],
     ['Sữa tươi tiệt trùng 1L','dairy',-38,-10,2.2,1,60,60],
     ['Trà đào cam sả','drinks',0,null,1.8,1,67,70],
+    ['Nước suối','drinks',0,null,0.5,1,86,86],
     ['Cà phê sữa','drinks',-1,null,1.2,1,80,72],
     ['Trà sữa trân châu','drinks',-2,null,2,1,88,64],
     ['Nước ép ổi','drinks',-3,null,1.6,1,92,76],
@@ -174,7 +175,7 @@ function duplicateItem(id, refocus){
   let exp = '';
   if(src.exp){ const life = Math.round((parseISO(src.exp) - parseISO(src.bought))/864e5); if(life > 0) exp = iso(addDays(today(), life)); }
   const it = Object.assign({}, src, {id:uid(), bought:iso(today()), exp, x:+clamp(src.x+6, 6, 94).toFixed(2), y:+clamp(src.y+6, 10, 93).toFixed(2), used:false});
-  delete it.touched; delete it.snoozed; delete it.replacedBy;
+  delete it.touched; delete it.snoozed; delete it.replacedBy; delete it.batch;
   state.items.push(it);                 // on purpose no rebuy rule here: you asked for two of them
   save(); react('add', it.name, undefined, it.cat);
   sel = it.id; justAdded = it.id; filter = null;
@@ -248,6 +249,31 @@ function weeklyHabit(){
 }
 const habitLines = h => h ? HABIT[h.cat][h.days >= 7 ? 'strong' : 'mild'] : [];
 
+/* Miso on the same day: buying from one category in 2 or more separate purchases today is already too much.
+   A purchase is one add by hand, or one whole bill (every line on a bill shares a batch). */
+const DAILY_MIN = 2;
+const DAILY = {
+  drinks:['Hôm nay bạn mua đồ uống {dcount} lần rồi đó. Uống gì mà khát dữ vậy?','Lại đồ uống nữa hả? Mới trong hôm nay mà đã {dcount} lần rồi, tui đếm hết đó nha.','{dcount} lần đồ uống trong một ngày luôn. Bụng bạn chứa nổi không đó?'],
+  dairy:['Hôm nay mua sữa & trứng {dcount} lần rồi nha. Một lần là đủ mà bạn.','Sữa & trứng {dcount} lần trong một ngày. Tủ lạnh bạn có kêu không đó?'],
+  produce:['Rau củ quả hôm nay mua {dcount} lần rồi. Chăm ghê, nhưng ăn cho hết nha.','{dcount} lần mua rau củ trong một ngày. Bạn đi chợ hay đi dạo vậy?'],
+  pantry:['Đồ khô mua {dcount} lần trong hôm nay rồi. Mua một lần cho đủ đi bạn ơi.','{dcount} lần đồ khô trong một ngày. Kệ bếp sắp hết chỗ rồi nè.'],
+  meds:['Hôm nay mua thuốc, vitamin {dcount} lần rồi. Bạn khoẻ không đó? Tui hơi lo.','{dcount} lần mua thuốc trong một ngày. Nhớ đọc kỹ liều dùng nha.'],
+  care:['Đồ chăm sóc cá nhân hôm nay mua {dcount} lần rồi. Đẹp vừa thôi nha.','{dcount} lần dầu gội, kem dưỡng trong một ngày. Bạn mở spa hả?'],
+  cleaning:['Đồ vệ sinh hôm nay mua {dcount} lần rồi. Nhà có sạch quá đâu mà.','{dcount} lần mua nước giặt, nước lau trong một ngày. Dùng hết cái cũ chưa?'],
+  electronics:['Đồ điện tử hôm nay mua {dcount} lần rồi. Ví bạn kêu cứu rồi nè.','{dcount} lần mua đồ điện tử trong một ngày. Bạn bị cuốn vào giỏ hàng rồi.'],
+  baby:['Đồ cho bé hôm nay mua {dcount} lần rồi. Thương bé vừa thôi, thương ví bạn nữa.','{dcount} lần mua đồ cho bé trong một ngày. Kiểm tra còn dư bao nhiêu chưa?'],
+  clothes:['Quần áo hôm nay mua {dcount} lần rồi. Tủ đồ than thở rồi đó.','{dcount} lần mua quần áo trong một ngày. Mặc kịp hết không bạn?'],
+  other:['Đồ nhóm Khác hôm nay mua {dcount} lần rồi. Mua gì mà tui không phân loại nổi vậy?','{dcount} lần mua đồ linh tinh trong một ngày. Dừng tay lại nào bạn.']
+};
+function dailyMany(){
+  const day = iso(today()), buys = {};
+  state.items.forEach(i => { if(i.cat === 'gift' || i.bought !== day) return; (buys[i.cat] = buys[i.cat] || new Set()).add(i.batch || i.id); });
+  let best = null;
+  Object.keys(buys).forEach(cat => { const n = buys[cat].size; if(n >= DAILY_MIN && (!best || n > best.count)) best = {cat, count:n}; });
+  return best;
+}
+const dailyLines = d => d ? DAILY[d.cat] : [];
+
 function critique(){
   const t = today(), y = t.getFullYear(), m = t.getMonth(), day = t.getDate();
   const ly = m===0 ? y-1 : y, lm = m===0 ? 11 : m-1;
@@ -256,10 +282,11 @@ function critique(){
   const inRoom = state.items.filter(i => !i.used);
   const expired = inRoom.filter(i => status(i)==='expired');
   const lost = expired.reduce((a,i) => a + i.price, 0);
-  const habit = weeklyHabit();
-  const F = {hdays:habit ? habit.days : 0, now, prev, day, inRoom:inRoom.length, expired:expired.length, lost:money(lost), name:expired[0] ? expired[0].name : '', ratio:prev ? String(+(now/prev).toFixed(1)) : ''};
+  const habit = weeklyHabit(), daily = dailyMany();
+  const F = {dcount:daily ? daily.count : 0, hdays:habit ? habit.days : 0, now, prev, day, inRoom:inRoom.length, expired:expired.length, lost:money(lost), name:expired[0] ? expired[0].name : '', ratio:prev ? String(+(now/prev).toFixed(1)) : ''};
   let tier, mood;
   if(F.expired >= 3){ tier='waste'; mood='horrified'; }
+  else if(daily){ tier='daily'; mood = daily.count >= 3 ? 'horrified' : 'judging'; }
   else if(habit){ tier='habit'; mood = habit.days >= 7 ? 'horrified' : 'judging'; }
   else if(F.inRoom >= 24){ tier='hoard'; mood='horrified'; }
   else if(prev > 0 && now >= prev*1.5 && now >= 6){ tier='more'; mood='judging'; }
@@ -269,6 +296,7 @@ function critique(){
   else { tier='ok'; mood='neutral'; }
   const L = {
     waste:['{expired} món hết hạn rồi nè bạn ơi. Tủ đồ ăn của bạn sắp thành vườn nấm luôn đó nha.','Hết hạn mất {lost} rồi. Tui xót ví giùm bạn ghê, lần sau ăn sớm sớm nha.','{expired} món bị bỏ quên trong góc. Tụi nó buồn hiu hà, bạn ghé thăm chút đi.'],
+    daily: dailyLines(daily),
     habit: habitLines(habit),
     hoard:['{inRoom} món trong phòng rồi nè. Tui sắp hết chỗ nằm phơi nắng luôn á.','Phòng đầy ắp {inRoom} món, bạn định mở tiệm tạp hóa hả? Cho tui làm bảo vệ nha.','{inRoom} món! Mình ăn bớt đồ cũ trước rồi hẵng mua thêm nha bạn.','Phòng chật cứng {inRoom} món rồi. Tui đi qua còn phải nín thở nữa đó.','{inRoom} món luôn á. Bạn thử dọn bớt một góc cho tui nằm đi, hứa không quậy.','Tui đếm được {inRoom} món. Mai mốt kệ cũng phải có kệ riêng cho tui nha.','Phòng đầy ú ụ {inRoom} món. Nghỉ mua vài bữa cho phòng thở với bạn ơi.'],
     more:['Mới ngày {day} mà bạn mua {now} món rồi. Tháng trước cùng kỳ có {prev} thôi à nha.','Nhanh gấp {ratio} lần tháng trước luôn. Ví bạn đang thở dốc đó, thương nó chút đi.','{now} món trong {day} ngày. Ngón tay bạn bấm thanh toán nhanh dữ ha.'],
@@ -285,16 +313,18 @@ function critique(){
     rebuy:['Mua lại {name} rồi hả? Món cũ coi như hết rồi nha, tui dọn giùm bạn.','{name} mới về là {n} món cũ nghỉ hưu liền. Phòng thoáng hơn rồi nè.'],
     undo:['Hoàn tác hả? Thôi được, {name} quay về phòng. Giờ lại {inRoom} món.']
   }[reaction.kind];
-  const useHabit = !!(reaction && (reaction.kind === 'add' || reaction.kind === 'bulk') && habit && [].concat(reaction.cat || []).indexOf(habit.cat) >= 0);
-  if(useHabit) mood = habit.days >= 7 ? 'horrified' : 'judging';
-  const pool = (useHabit ? habitLines(habit) : R) || L, G = reaction ? Object.assign({}, F, {name:reaction.name, n:reaction.n}) : F;
+  const justAddedTo = c => !!(reaction && (reaction.kind === 'add' || reaction.kind === 'bulk') && [].concat(reaction.cat || []).indexOf(c) >= 0);
+  const useDaily = !!(daily && justAddedTo(daily.cat)), useHabit = !useDaily && !!(habit && justAddedTo(habit.cat));
+  if(useDaily) mood = daily.count >= 3 ? 'horrified' : 'judging';
+  else if(useHabit) mood = habit.days >= 7 ? 'horrified' : 'judging';
+  const pool = (useDaily ? dailyLines(daily) : useHabit ? habitLines(habit) : R) || L, G = reaction ? Object.assign({}, F, {name:reaction.name, n:reaction.n}) : F;
   const line = pool[(t.getDate() + tick) % pool.length].replace(/\{(\w+)\}/g, (_,k) => G[k]);
-  return {line, mood, now, prev, inRoom:F.inRoom, habit:habit ? {name:CAT[habit.cat].name, days:habit.days} : null};
+  return {line, mood, now, prev, inRoom:F.inRoom, habit:habit ? {name:CAT[habit.cat].name, days:habit.days} : null, daily:daily ? {name:CAT[daily.cat].name, count:daily.count} : null};
 }
 function renderCritic(){
   const c = critique();
   $('#critic').innerHTML = '<button class="av" type="button" id="cat-av" aria-label="Nhờ Miso chê tiếp">'+catSvg(c.mood)+'</button>'+
-    '<div class="bubble" lang="vi"><div class="eyebrow">Miso, bé mèo khó tính</div><p>'+esc(c.line)+'</p><div class="meta"><span>Tháng này: <b id="m-now">'+c.now+'</b> món đã mua · <b id="m-room">'+c.inRoom+'</b> món trong phòng · cùng kỳ tháng trước '+c.prev+' món'+(c.habit ? ' · 7 ngày qua mua <b>'+esc(c.habit.name)+'</b> '+c.habit.days+'/7 ngày' : '')+'</span><button class="btn ghost sm" id="cat-more" type="button">Chê tiếp đi</button></div></div>';
+    '<div class="bubble" lang="vi"><div class="eyebrow">Miso, bé mèo khó tính</div><p>'+esc(c.line)+'</p><div class="meta"><span>Tháng này: <b id="m-now">'+c.now+'</b> món đã mua · <b id="m-room">'+c.inRoom+'</b> món trong phòng · cùng kỳ tháng trước '+c.prev+' món'+(c.daily ? ' · Hôm nay mua <b>'+esc(c.daily.name)+'</b> '+c.daily.count+' lần' : '')+(c.habit ? ' · 7 ngày qua mua <b>'+esc(c.habit.name)+'</b> '+c.habit.days+'/7 ngày' : '')+'</span><button class="btn ghost sm" id="cat-more" type="button">Chê tiếp đi</button></div></div>';
   if(lastCounts){
     if(lastCounts.now !== c.now) $('#m-now').classList.add('bump');
     if(lastCounts.inRoom !== c.inRoom) $('#m-room').classList.add('bump');
@@ -976,9 +1006,9 @@ function renderBill(){
   $('#bill-add').addEventListener('click', () => {
     const consumed = $('#bill-used').checked;
     const chosen = billRows.filter(r => r.on && r.name.trim());
-    const added = [];
+    const added = [], batch = uid();
     chosen.forEach(r => {
-      const spot = freeSpot(), o = {id:uid(), name:r.name.trim(), cat:r.cat, exp:r.exp, price:r.price, qty:r.qty, note:r.note||'', bought:r.bought, x:spot.x, y:spot.y, used:consumed};
+      const spot = freeSpot(), o = {id:uid(), name:r.name.trim(), cat:r.cat, exp:r.exp, price:r.price, qty:r.qty, note:r.note||'', bought:r.bought, x:spot.x, y:spot.y, used:consumed, batch};
       state.items.push(o); added.push(o);
     });
     const hit = applyRebuy(added);
