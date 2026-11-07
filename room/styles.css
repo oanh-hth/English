@@ -259,3 +259,5 @@ details.paste summary{cursor:pointer; font-size:13.5px; color:var(--muted); padd
 .dlist .small b{color:var(--ink)}
 .dacts{grid-column:2; display:flex; flex-wrap:wrap; gap:6px}
 .zz{position:absolute; bottom:-2%; left:-14%; font-size:10px; font-weight:700; line-height:1; padding:3px 5px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:#6c86ad; pointer-events:none}
+
+.dlist .q{color:var(--accent)}

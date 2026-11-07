@@ -132,7 +132,11 @@ function announceRebuy(hit){
 /* Misu reminds about things nobody has touched for a while: 30 days, 90 days for clothes, never for things bought as gifts */
 const DORMANT_DAYS = 30, DORMANT_DAYS_CLOTHES = 90;
 const dormantAfter = it => it.cat === 'clothes' ? DORMANT_DAYS_CLOTHES : DORMANT_DAYS;
-const isDormant = it => !it.used && it.cat !== 'gift' && idleDays(it) > dormantAfter(it);
+/* Still in date? Then Misu only asks "have you used it yet?" instead of nagging; "Chưa dùng" snoozes the question for 30 days */
+const inDate = it => !!it.exp && daysLeft(it) >= 0;
+const snoozeActive = it => !!it.snoozed && (today() - parseISO(it.snoozed))/864e5 <= DORMANT_DAYS;
+const isDormant = it => !it.used && it.cat !== 'gift' && idleDays(it) > dormantAfter(it) && !(inDate(it) && snoozeActive(it));
+const needsAsk = it => isDormant(it) && inDate(it);
 const idleDays = it => Math.round((today() - parseISO(it.touched || it.bought))/864e5);
 const dormantList = () => state.items.filter(isDormant).sort((a,b) => idleDays(b) - idleDays(a));
 function whenText(d){
@@ -258,33 +262,44 @@ function misuSvg(mood){
   return '<svg viewBox="0 0 80 80" aria-hidden="true"><ellipse cx="13" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(14 13 40)"/><ellipse cx="67" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(-14 67 40)"/><ellipse cx="40" cy="45" rx="27" ry="25" fill="#fbf1e4"/><ellipse cx="55" cy="39" rx="9" ry="10" fill="#d9b99b"/><ellipse cx="40" cy="56" rx="11" ry="8" fill="#fff"/>'+eyes+'<ellipse cx="40" cy="51" rx="4.500" ry="3.200" fill="'+dark+'"/>'+mouth+extra+'</svg>';
 }
 function renderDormant(){
-  const list = dormantList(), el = $('#dormant'), top = list[0];
-  const F = {n:list.length, name:top ? top.name : '', days:top ? idleDays(top) : 0, money:money(list.reduce((a,i) => a + i.price, 0))};
-  const mood = !list.length ? 'happy' : list.length >= 5 ? 'worried' : 'sleepy';
+  const list = dormantList(), el = $('#dormant'), asks = list.filter(needsAsk), std = list.filter(i => !needsAsk(i)), top = std[0] || asks[0];
+  const F = {n:std.length, name:top ? top.name : '', days:top ? idleDays(top) : 0, exp:top && top.exp ? shortDate(top.exp) : '', money:money(std.reduce((a,i) => a + i.price, 0))};
+  const mood = !std.length ? 'happy' : std.length >= 5 ? 'worried' : 'sleepy';
   const POOLS = {
     none:['Hổng có món nào nằm im quá lâu hết. Misu vẫy đuôi cho bạn nè!','Đồ trong phòng được dùng đều đều ghê. Misu thích lắm luôn.'],
     some:['Misu thấy {n} món nằm im lâu rồi nè. Nhất là {name}, {days} ngày không ai ngó tới.','{name} nằm đó {days} ngày rồi. Nó chờ bạn dùng mà tủi thân lắm á.','Có {n} món đang ngủ quên, tổng cộng {money} nằm yên trong phòng. Mình dùng bớt đi bạn ơi.','Misu ngửi thấy bụi trên {name} rồi nha. {days} ngày chưa đụng tới luôn đó.'],
     many:['{n} món ngủ quên luôn rồi! Mình dọn dẹp hoặc dùng thử vài món đi bạn ơi.','Phòng có tới {n} món nằm im, tổng cộng {money}. Misu lo quá à.','Bạn ơi, {n} món chưa được đụng tới lâu rồi. Mình xử lý dần nha, bắt đầu từ {name} đi.'],
     touch:['Yay, {name} được dùng rồi! Misu vẫy đuôi nè.','Cảm ơn bạn đã ghé {name}. Nó hết tủi thân rồi đó!'],
+    ask:['Misu hỏi nhỏ thôi nha: {name} còn hạn dùng tới {exp}, bạn dùng chưa vậy?','Hỏi xíu thôi: {name} vẫn còn hạn, bạn đã dùng chưa nè?','{name} còn hạn mà lâu rồi chưa thấy bạn nhắc tới. Bạn dùng chưa?'],
+    snooze:['Ok, chưa dùng thì thôi. Misu hỏi lại sau nha, nhớ dùng {name} trước khi hết hạn đó.'],
     done:['{name} xong nhiệm vụ rồi. Phòng bớt một món ngủ quên, Misu vui lắm!']
   };
-  const pool = misuReaction ? POOLS[misuReaction.kind] : POOLS[!list.length ? 'none' : list.length >= 5 ? 'many' : 'some'];
+  const pool = misuReaction ? POOLS[misuReaction.kind] : POOLS[!list.length ? 'none' : !std.length ? 'ask' : std.length >= 5 ? 'many' : 'some'];
   const G = misuReaction ? Object.assign({}, F, {name:misuReaction.name}) : F;
   const line = pool[(today().getDate() + misuTick) % pool.length].replace(/\{(\w+)\}/g, (_,k) => G[k]);
   const rows = showAllDormant ? list : list.slice(0,5);
   el.innerHTML =
-    '<div class="card-head"><h2 id="h-dormant">Nằm im lâu rồi</h2><span class="small muted">'+(list.length ? list.length+' món · '+F.money : 'Chưa có món nào')+'</span></div>'+
+    '<div class="card-head"><h2 id="h-dormant">Nằm im lâu rồi</h2><span class="small muted">'+(list.length ? list.length+' món' : 'Chưa có món nào')+'</span></div>'+
     '<div class="critic misu"><button class="av" type="button" id="misu-av" aria-label="Nhờ Misu nhắc tiếp">'+misuSvg(mood)+'</button>'+
-      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Đồ thường hơn 1 tháng, quần áo hơn 3 tháng, đồ mua tặng thì Misu không nhắc. Tính từ ngày mua hoặc lần bạn bấm "Vừa dùng" gần nhất.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
-    (list.length ? '<ul class="dlist">'+rows.map(i =>
-      '<li style="--c:'+CAT[i.cat].color+'">'+icon(i.cat)+
-        '<div class="dtext"><div class="nm">'+esc(i.name)+(i.qty>1?' ×'+i.qty:'')+'</div><div class="small muted">Mua '+shortDate(i.bought)+(i.touched?' · dùng '+shortDate(i.touched):'')+' · nằm im <b>'+idleDays(i)+' ngày</b> · '+money(i.price)+'</div></div>'+
-        '<div class="dacts"><button class="btn ghost sm" type="button" data-touch="'+i.id+'">Vừa dùng</button><button class="btn ghost sm" type="button" data-done="'+i.id+'">Dùng hết rồi</button><button class="btn ghost sm" type="button" data-dfind="'+i.id+'">Tìm</button></div></li>').join('')+'</ul>'+
+      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Đồ thường hơn 1 tháng, quần áo hơn 3 tháng, đồ mua tặng thì Misu không nhắc. Món còn hạn dùng thì Misu chỉ hỏi bạn đã dùng chưa.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
+    (list.length ? '<ul class="dlist">'+rows.map(i => {
+      const ask = needsAsk(i);
+      const info = ask
+        ? 'Còn hạn tới '+shortDate(i.exp)+' ('+daysLeft(i)+' ngày nữa) · <b class="q">Bạn dùng chưa?</b> · '+money(i.price)
+        : 'Mua '+shortDate(i.bought)+(i.touched?' · dùng '+shortDate(i.touched):'')+' · nằm im <b>'+idleDays(i)+' ngày</b> · '+money(i.price);
+      const btns = ask
+        ? '<button class="btn ghost sm" type="button" data-touch="'+i.id+'">Dùng rồi</button><button class="btn ghost sm" type="button" data-snooze="'+i.id+'">Chưa dùng</button>'
+        : '<button class="btn ghost sm" type="button" data-touch="'+i.id+'">Vừa dùng</button>';
+      return '<li style="--c:'+CAT[i.cat].color+'">'+icon(i.cat)+
+        '<div class="dtext"><div class="nm">'+esc(i.name)+(i.qty>1?' ×'+i.qty:'')+'</div><div class="small muted">'+info+'</div></div>'+
+        '<div class="dacts">'+btns+'<button class="btn ghost sm" type="button" data-done="'+i.id+'">Dùng hết rồi</button><button class="btn ghost sm" type="button" data-dfind="'+i.id+'">Tìm</button></div></li>';
+    }).join('')+'</ul>'+
       (list.length>5 ? '<button type="button" class="btn ghost sm more" id="d-more">'+(showAllDormant?'Thu gọn':'Xem hết '+list.length+' món')+'</button>' : '') : '');
   const again = () => { misuTick++; misuReaction = null; renderDormant(); const b = $('#misu-more'); if(b) b.focus(); };
   $('#misu-more').addEventListener('click', again); $('#misu-av').addEventListener('click', again);
   const more = $('#d-more'); if(more) more.addEventListener('click', () => { showAllDormant = !showAllDormant; renderDormant(); });
   el.querySelectorAll('[data-touch]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.touch); it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); }));
+  el.querySelectorAll('[data-snooze]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.snooze); it.snoozed = iso(today()); misuReaction = {kind:'snooze', name:it.name}; save(); renderAll(); toast('Ok, Misu sẽ hỏi lại về '+it.name+' sau 30 ngày nha.'); }));
   el.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.done); it.used = true; if(sel===it.id) sel = null; misuReaction = {kind:'done', name:it.name}; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); }));
   el.querySelectorAll('[data-dfind]').forEach(b => b.addEventListener('click', () => { sel = b.dataset.dfind; found = sel; renderRoom(); renderInspector(); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
 }
