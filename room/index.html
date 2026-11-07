@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2f8ff">
+  <meta name="color-scheme" content="light">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Trữ Đồ">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <title>Phòng Trữ Đồ</title>
+</head>
+<body>
+<!-- Category objects: each is a small illustrated object tinted by its category colour -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="s-produce" viewBox="0 0 48 48"><path d="M24 15c-6-4-15-1-15 9 0 9 6 18 11 18 2 0 3-1 4-1s2 1 4 1c5 0 11-9 11-18 0-10-9-13-15-9z" fill="currentColor"/><ellipse cx="16.5" cy="25" rx="2.6" ry="6" fill="#fff" fill-opacity=".28" transform="rotate(12 16.5 25)"/><path d="M25 14c0-4 2-8 7-9 0 5-3 8-7 9z" fill="#4c9a3f"/><rect x="23" y="11" width="2.2" height="7" rx="1" fill="#6b4a2b"/></symbol>
+    <symbol id="s-dairy" viewBox="0 0 48 48"><path d="M13 17h22v25a1 1 0 0 1-1 1H14a1 1 0 0 1-1-1z" fill="currentColor"/><path d="M13 17l6-9h10l6 9z" fill="currentColor"/><path d="M13 17l6-9h10l6 9z" fill="#000" fill-opacity=".16"/><rect x="19" y="5" width="10" height="4" rx="1.5" fill="#fff" fill-opacity=".85"/><rect x="17" y="24" width="14" height="12" rx="2" fill="#fff" fill-opacity=".88"/><path d="M24 26.5c2 2.8 3 4 3 5.3a3 3 0 0 1-6 0c0-1.3 1-2.500 3-5.300z" fill="currentColor"/></symbol>
+    <symbol id="s-drinks" viewBox="0 0 48 48"><rect x="20.500" y="4" width="7" height="5" rx="1.500" fill="#3b3b3b"/><path d="M21 9h6v7c0 2 6 4 6 9v15c0 2-1 3-3 3H18c-2 0-3-1-3-3V25c0-5 6-7 6-9z" fill="currentColor"/><rect x="15.500" y="26" width="17" height="10" fill="#fff" fill-opacity=".88"/><ellipse cx="19.500" cy="22" rx="1.600" ry="4" fill="#fff" fill-opacity=".3"/></symbol>
+    <symbol id="s-pantry" viewBox="0 0 48 48"><rect x="11" y="9" width="26" height="33" rx="3" fill="currentColor"/><rect x="11" y="9" width="26" height="4" rx="2" fill="#000" fill-opacity=".2"/><rect x="11" y="38" width="26" height="4" rx="2" fill="#000" fill-opacity=".2"/><rect x="14.500" y="18" width="19" height="14" rx="2" fill="#fff" fill-opacity=".88"/><circle cx="24" cy="25" r="4" fill="currentColor"/></symbol>
+    <symbol id="s-meds" viewBox="0 0 48 48"><rect x="12" y="6" width="24" height="10" rx="2.500" fill="#f1f3f5"/><rect x="12" y="6" width="24" height="10" rx="2.500" fill="#000" fill-opacity=".1"/><rect x="14" y="15" width="20" height="28" rx="3" fill="currentColor"/><rect x="16.500" y="22" width="15" height="14" rx="2" fill="#fff" fill-opacity=".92"/><path d="M22.500 25h3v3h3v3h-3v3h-3v-3h-3v-3h3z" fill="currentColor"/></symbol>
+    <symbol id="s-care" viewBox="0 0 48 48"><rect x="22" y="12" width="4" height="8" fill="#4a4a4a"/><rect x="17" y="6" width="16" height="6" rx="3" fill="#4a4a4a"/><rect x="33" y="8" width="5" height="2.500" rx="1.200" fill="#4a4a4a"/><rect x="14" y="19" width="20" height="24" rx="6" fill="currentColor"/><rect x="17.500" y="26" width="13" height="11" rx="2" fill="#fff" fill-opacity=".9"/><ellipse cx="18.500" cy="30" rx="1.500" ry="5" fill="#fff" fill-opacity=".25"/></symbol>
+    <symbol id="s-cleaning" viewBox="0 0 48 48"><rect x="14" y="21" width="19" height="22" rx="4" fill="currentColor"/><rect x="19" y="15" width="9" height="7" fill="#4a4a4a"/><path d="M16 8h15l4 4v5H16z" fill="#4a4a4a"/><path d="M35 12h7v3h-7z" fill="#4a4a4a"/><path d="M33 20l4 6" stroke="#4a4a4a" stroke-width="2.500" stroke-linecap="round"/><rect x="17.500" y="27" width="12" height="10" rx="2" fill="#fff" fill-opacity=".9"/><circle cx="23.500" cy="32" r="3" fill="currentColor"/></symbol>
+    <symbol id="s-electronics" viewBox="0 0 48 48"><rect x="9" y="9" width="30" height="22" rx="2.500" fill="#2b3340"/><rect x="11.500" y="11.500" width="25" height="17" rx="1" fill="currentColor"/><path d="M11.500 11.500h25l-12 17h-13z" fill="#fff" fill-opacity=".14"/><path d="M4 33h40l-3.500 6H7.500z" fill="#9aa5b3"/><rect x="19" y="33" width="10" height="2" rx="1" fill="#6c7786"/></symbol>
+    <symbol id="s-baby" viewBox="0 0 48 48"><path d="M18 10c0-3 2-4.500 6-4.500s6 1.500 6 4.500" fill="none" stroke="#4a4a4a" stroke-width="2.500" stroke-linecap="round"/><rect x="9" y="9" width="30" height="34" rx="6" fill="currentColor"/><rect x="13" y="16" width="22" height="15" rx="3" fill="#fff" fill-opacity=".9"/><path d="M16 20h16v3c0 3-3 5-8 5s-8-2-8-5z" fill="currentColor"/><rect x="13" y="34" width="22" height="5" rx="2.500" fill="#fff" fill-opacity=".55"/></symbol>
+    <symbol id="s-other" viewBox="0 0 48 48"><path d="M8 17l16-8 16 8v18L24 43 8 35z" fill="currentColor"/><path d="M24 25L8 17M24 25l16-8M24 25v18" stroke="#000" stroke-opacity=".28" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M16 13l16 8v6l-16-8z" fill="#fff" fill-opacity=".35"/></symbol>
+    <symbol id="s-bell" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v3.500L4.500 16h15L18 12.500V9a6 6 0 0 0-6-6z" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Phòng Trữ Đồ</h1>
+      <p class="sub">Mọi thứ bạn đã mua, xếp gọn trong một căn phòng xinh xinh.</p>
+    </div>
+    <div class="top-actions">
+      <label class="win" for="win">Nhắc mình
+        <select id="win">
+          <option value="2">trước 2 ngày</option>
+          <option value="3">trước 3 ngày</option>
+          <option value="5">trước 5 ngày</option>
+          <option value="7">trước 7 ngày</option>
+          <option value="14">trước 14 ngày</option>
+        </select>
+      </label>
+      <button class="bell" id="bell" type="button" aria-label="Món sắp hết hạn">
+        <svg aria-hidden="true"><use href="#s-bell"/></svg><span>Nhắc nhở</span><span class="count num" id="bell-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="grid">
+    <section class="stage" aria-label="Căn phòng của bạn">
+      <div class="room" id="room">
+        <svg class="bg" viewBox="0 0 800 500" preserveAspectRatio="none" aria-hidden="true">
+          <rect width="800" height="212" fill="var(--wall)"/>
+          <rect width="800" height="70" fill="var(--wall-2)" opacity=".35"/>
+          <!-- window -->
+          <rect x="78" y="38" width="160" height="118" rx="4" fill="var(--frame)"/>
+          <rect x="88" y="48" width="140" height="98" fill="var(--glass)"/>
+          <path d="M158 48v98M88 97h140" stroke="var(--frame)" stroke-width="5"/>
+          <!-- picture -->
+          <rect x="330" y="52" width="86" height="64" rx="3" fill="var(--frame)"/>
+          <rect x="338" y="60" width="70" height="48" fill="var(--wall-2)"/>
+          <path d="M338 100l20-22 14 14 12-12 24 20v8h-70z" fill="var(--rug)" opacity=".8"/>
+          <!-- shelf -->
+          <rect x="534" y="124" width="216" height="9" rx="2" fill="var(--floor-line)"/>
+          <path d="M556 133v18M728 133v18" stroke="var(--floor-line)" stroke-width="5" stroke-linecap="round"/>
+          <!-- base board + floor -->
+          <rect y="204" width="800" height="12" fill="var(--base)"/>
+          <rect y="216" width="800" height="284" fill="var(--floor)"/>
+          <g stroke="var(--floor-line)" stroke-width="1.500" fill="none" opacity=".8">
+            <path d="M0 246H800M0 282H800M0 324H800M0 372H800M0 428H800M0 492H800"/>
+            <path d="M0 500L300 216M100 500L340 216M200 500L380 216M300 500L420 216M400 500V216M500 500L380 216M600 500L420 216M700 500L460 216M800 500L500 216"/>
+          </g>
+          <!-- light from the window -->
+          <path d="M96 216h140l-60 150h-160z" fill="#fff" opacity=".28"/>
+          <!-- rug -->
+          <ellipse cx="410" cy="388" rx="210" ry="62" fill="var(--rug)" opacity=".85"/>
+          <ellipse cx="410" cy="388" rx="176" ry="48" fill="none" stroke="var(--frame)" stroke-width="2" opacity=".6"/>
+          <!-- plant -->
+          <path d="M752 236l6 38h26l6-38z" fill="#b96a4a"/>
+          <path d="M771 238c-22-10-26-34-14-52 12 14 18 32 14 52zM771 238c-2-30 8-46 26-56 4 22-6 42-26 56zM771 238c12-16 30-22 40-18-6 14-22 22-40 18z" fill="#4c9a3f"/>
+        </svg>
+        <button class="bin" id="bin" type="button" aria-label="Thùng rác. Xoá món đang chọn, hoặc kéo một món vào đây." title="Kéo món vào đây để xoá">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path class="bdy" d="M11 17h26l-2 25a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2z"/><path d="M19 22v16M24 22v16M29 22v16" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/><g class="lid"><rect x="8" y="10" width="32" height="5.500" rx="2.500" fill="#5d6c80"/><rect x="19" y="6" width="10" height="5.500" rx="2" fill="#5d6c80"/></g></svg>
+        </button>
+        <span class="hint">Kéo món đi đâu cũng được. Thả vào thùng rác để xoá.</span>
+        <div class="empty-room" id="empty-room" hidden>
+          <p><strong>Phòng còn trống trơn nè!</strong></p>
+          <p class="small">Thêm món đầu tiên ở khung bên phải, hoặc xem thử với dữ liệu mẫu nhé.</p>
+          <button class="btn sm" id="load-sample" type="button">Xem thử với dữ liệu mẫu</button>
+        </div>
+      </div>
+
+      <div class="critic" id="critic" aria-live="polite"></div>
+
+      <div class="legend" id="legend" role="group" aria-label="Lọc theo nhóm"></div>
+
+      <div class="card" id="inspector" aria-live="polite"></div>
+
+      <section class="card" id="history" aria-labelledby="h-hist"></section>
+    </section>
+
+    <aside class="side">
+      <section class="card" id="spend" aria-labelledby="h-spend"></section>
+
+      <section class="card" id="alerts" aria-labelledby="h-alerts"></section>
+
+      <section class="card" id="add" aria-labelledby="h-add">
+        <div class="card-head"><h2 id="h-add">Thêm vào phòng</h2></div>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="tab-hand" aria-selected="true" aria-controls="pane-hand" type="button">Nhập tay</button>
+          <button class="tab" role="tab" id="tab-bill" aria-selected="false" aria-controls="pane-bill" type="button">Từ hoá đơn</button>
+        </div>
+
+        <form id="pane-hand" class="stack" role="tabpanel" aria-labelledby="tab-hand" autocomplete="off" novalidate>
+          <label class="f" for="f-name">Tên món
+            <input id="f-name" type="text" placeholder="VD: Sữa hạt 1L" maxlength="60">
+          </label>
+          <fieldset class="cats" id="f-cats"><legend>Nhóm</legend></fieldset>
+          <div class="row">
+            <label class="f" for="f-exp">Hạn dùng <span class="opt">(nếu có)</span>
+              <input id="f-exp" type="date">
+            </label>
+            <label class="f" for="f-price">Giá đã trả
+              <input id="f-price" type="number" inputmode="decimal" min="0" step="1000" placeholder="0">
+            </label>
+          </div>
+          <div class="row">
+            <label class="f" for="f-bought">Ngày mua
+              <input id="f-bought" type="date">
+            </label>
+            <label class="f" for="f-qty">Số lượng
+              <input id="f-qty" type="number" min="1" step="1" value="1">
+            </label>
+          </div>
+          <p class="err" id="f-err" role="alert"></p>
+          <button class="btn" type="submit">Đặt vào phòng</button>
+        </form>
+
+        <div id="pane-bill" class="stack" role="tabpanel" aria-labelledby="tab-bill" hidden>
+          <div id="photo-box" class="stack">
+            <div class="drop" id="drop">
+              <p><strong>Thêm ảnh chụp hoặc ảnh màn hình hoá đơn</strong></p>
+              <p class="small muted">Đơn Shopee, bill quán cà phê, hoá đơn siêu thị đều được. Claude đọc giúp bạn, bạn kiểm tra lại rồi mới thêm nha.</p>
+              <button class="btn" id="bill-pick" type="button">Chọn ảnh</button>
+              <span class="small muted">hoặc kéo ảnh thả vào đây</span>
+            </div>
+            <input type="file" id="bill-file" accept="image/*" multiple hidden>
+            <div class="thumbs" id="thumbs"></div>
+            <div class="row" style="align-items:center">
+              <button class="btn" id="photo-read" type="button" disabled>Đọc hoá đơn</button>
+              <button class="btn ghost" id="photo-stop" type="button" hidden>Dừng</button>
+            </div>
+            <p class="small muted" id="photo-status" role="status"></p>
+            <details class="paste" id="key-details">
+              <summary>Khoá API Claude để đọc ảnh</summary>
+              <div class="stack" style="margin-top:10px">
+                <p class="small muted">Ảnh được gửi thẳng từ máy bạn tới Anthropic bằng khoá của chính bạn. Khoá chỉ lưu trên máy này, đừng chia sẻ cho ai và nhớ đặt hạn mức chi tiêu trong Anthropic Console. Mỗi hoá đơn tốn khoảng vài trăm đồng.</p>
+                <input id="api-key" type="password" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Khoá API Claude">
+                <select id="api-model" aria-label="Mô hình">
+                  <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (cân bằng, mặc định)</option>
+                  <option value="claude-haiku-5-5">Claude Haiku 5.5 (rẻ nhất, nhanh nhất)</option>
+                  <option value="claude-opus-5-5">Claude Opus 5.5 (đọc kỹ nhất, đắt hơn)</option>
+                </select>
+                <div class="row"><button class="btn ghost sm" id="api-save" type="button">Lưu khoá</button><button class="btn ghost sm" id="api-clear" type="button">Xoá khoá</button></div>
+              </div>
+            </details>
+          </div>
+          <details class="paste" id="paste-details">
+            <summary>Không có ảnh? Dán chữ của hoá đơn vào đây</summary>
+            <div class="stack" style="margin-top:10px">
+              <div class="bill-tools">
+                <select id="bill-sample" aria-label="Hoá đơn mẫu">
+                  <option value="shopee">Ví dụ: đơn Shopee</option>
+                  <option value="cafe">Ví dụ: bill quán cà phê</option>
+                  <option value="receipt">Ví dụ: hoá đơn siêu thị</option>
+                </select>
+                <button class="btn ghost sm" id="bill-load" type="button">Dùng ví dụ</button>
+              </div>
+              <label class="f" for="bill-text">Chữ trên hoá đơn
+                <textarea id="bill-text" spellcheck="false" placeholder="Dán hoá đơn vào đây"></textarea>
+              </label>
+              <button class="btn ghost" id="bill-read" type="button">Đọc đoạn chữ đã dán</button>
+            </div>
+          </details>
+          <div id="bill-preview"></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <p class="footer-note">Dữ liệu được lưu ngay trên máy của bạn. <button id="reset" type="button">Nạp dữ liệu mẫu</button> · <button id="wipe" type="button">Xoá hết dữ liệu</button></p>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

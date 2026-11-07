@@ -48,3 +48,6 @@ Open any phrase or word and tap **✏️ Edit** or **🗑 Delete** (also on the 
 
 ## Adding your own items
 Open a topic and tap **Add a word or phrase** to add your own word or phrase to that topic (or to My words). It joins that topic's lists, exercises and your review deck. You can edit it later, including moving it to a different topic. Your additions are stored on your device only.
+
+## Phòng Trữ Đồ (room inventory app)
+A separate Vietnamese-language app lives in [`room/`](room/README.md): a cosy room that holds everything you buy, with expiry reminders, bill reading and monthly spending. Open `/room/` when serving this repo.

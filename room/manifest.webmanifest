@@ -1,0 +1,17 @@
+{
+  "name": "Phòng Trữ Đồ",
+  "short_name": "Trữ Đồ",
+  "description": "Căn phòng nhỏ chứa mọi thứ bạn đã mua: nhắc hạn dùng, đọc hoá đơn và theo dõi chi tiêu.",
+  "lang": "vi",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f8ff",
+  "theme_color": "#07877d",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
