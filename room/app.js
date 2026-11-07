@@ -71,7 +71,9 @@ function seed(){
     ['Dầu ô liu','pantry',-34,300,8.5,1,26,52,true],
     ['Nước giặt','cleaning',-33,null,12.4,1,66,90],
     ['Ngũ cốc ăn sáng','pantry',-31,60,4.3,1,0,0,true],
-    ['Bỉm tã quần đêm','baby',-3,null,517600,1,46,74]
+    ['Bỉm tã quần đêm','baby',-3,null,517600,1,46,74],
+    ['Bỉm tã Bobby size L','baby',-33,null,18,1,30,50],
+    ['Sữa tươi tiệt trùng 1L','dairy',-38,-10,2.2,1,60,60]
   ];
   return S.map(r => ({id:uid(), name:r[0], cat:r[1], bought:iso(addDays(t,r[2])), exp:r[3]===null?'':iso(addDays(t,r[3])), price:r[4]<1000?Math.round(r[4]*25000/1000)*1000:r[4], qty:r[5], x:r[6], y:r[7], used:!!r[8]}));
 }
@@ -90,6 +92,38 @@ function status(it){
   if(d <= state.win) return 'soon';
   return 'ok';
 }
+/* ---------- rebuy rule: buying the same thing again means last month's one is finished ---------- */
+const REBUY_CATS = new Set(['baby','care','cleaning']);   // one-at-a-time things: a new diaper pack replaces the old one, whatever the brand
+const monthKey = d => String(d).slice(0,7);
+const unaccent = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+const NAME_STOP = new Set(['combo','tang','tui','mini','size','goi','mieng','hop','chai','lon','thung','set','pack']);
+function nameTokens(name){
+  return new Set(unaccent(name).replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(t => t.length > 1 && !/\d/.test(t) && !NAME_STOP.has(t)));
+}
+function sameProduct(a, b){
+  const ta = nameTokens(a.name), tb = nameTokens(b.name);
+  if(!ta.size || !tb.size) return unaccent(a.name).trim() === unaccent(b.name).trim();
+  let inter = 0; ta.forEach(t => { if(tb.has(t)) inter++; });
+  const small = Math.min(ta.size, tb.size), union = ta.size + tb.size - inter;
+  if(small === 1) return ta.size === tb.size && inter === 1;
+  return inter === small || inter/union >= 0.6;
+}
+const isRebuy = (older, newer) => older.id !== newer.id && !older.used && monthKey(older.bought) < monthKey(newer.bought) &&
+  (sameProduct(older, newer) || (older.cat === newer.cat && REBUY_CATS.has(older.cat)));
+function applyRebuy(newItems){
+  if(state.autoRebuy === false) return [];
+  const hit = [];
+  newItems.filter(b => !b.used).forEach(b => {
+    state.items.forEach(a => { if(isRebuy(a, b)){ a.used = true; a.replacedBy = b.id; hit.push({a, b}); } });
+  });
+  return hit;
+}
+function announceRebuy(hit){
+  const b = hit[0].b, names = hit.map(h => h.a.name);
+  toast('Bạn mua lại '+b.name+', nên '+(names.length > 2 ? names[0]+' và '+(names.length-1)+' món cũ' : names.join(', '))+' của tháng trước được tính là đã hết.',
+    {label:'Hoàn tác', fn:() => { hit.forEach(h => { h.a.used = false; delete h.a.replacedBy; }); save(); renderAll(); }});
+}
+
 const DORMANT_DAYS = 30;
 const idleDays = it => Math.round((today() - parseISO(it.touched || it.bought))/864e5);
 const dormantList = () => state.items.filter(i => !i.used && idleDays(i) > DORMANT_DAYS).sort((a,b) => idleDays(b) - idleDays(a));
@@ -177,6 +211,7 @@ function critique(){
     bulk:['Mua một lèo {n} món luôn hả? Tháng này tổng {now} món rồi đó nha.','{n} món mới toanh vào phòng. Giờ phòng có {inRoom} món, tui chen chân hông nổi.'],
     trash:['Tạm biệt {name}. Phòng còn {inRoom} món, tháng này tính còn {now} món.','Bỏ {name} rồi hả? Tui hơi tiếc, nhưng phòng thoáng hơn, còn {inRoom} món.'],
     used:['{name} dùng hết rồi, bạn giỏi ghê. Phòng còn {inRoom} món nè.','Xong {name} rồi hả? Tui ghi công cho bạn. Phòng còn {inRoom} món.'],
+    rebuy:['Mua lại {name} rồi hả? Món cũ coi như hết rồi nha, tui dọn giùm bạn.','{name} mới về là {n} món cũ nghỉ hưu liền. Phòng thoáng hơn rồi nè.'],
     undo:['Hoàn tác hả? Thôi được, {name} quay về phòng. Giờ lại {inRoom} món.']
   }[reaction.kind];
   const pool = R || L, G = reaction ? Object.assign({}, F, {name:reaction.name, n:reaction.n}) : F;
@@ -268,7 +303,7 @@ function periodLabel(){
   return shortDate(r[0])+' – '+shortDate(r[1]);
 }
 function rowStatus(it){
-  if(it.used) return '<span class="pill">Đã dùng hết</span>';
+  if(it.used) return '<span class="pill">'+(it.replacedBy ? 'Đã thay bằng món mới' : 'Đã dùng hết')+'</span>';
   const st = status(it), d = daysLeft(it);
   if(st==='expired') return '<span class="pill bad">'+whenText(d)+'</span>';
   if(st==='soon') return '<span class="pill warn">'+whenText(d)+'</span>';
@@ -569,11 +604,11 @@ $('#pane-hand').addEventListener('submit', e => {
   const cat = (document.querySelector('input[name="f-cat"]:checked')||{}).value || 'other';
   const spot = freeSpot();
   const it = {id:uid(), name, cat, exp:$('#f-exp').value, price:isNaN(price)?0:price, qty:Math.max(1, parseInt($('#f-qty').value,10)||1), bought:$('#f-bought').value||iso(today()), x:spot.x, y:spot.y, used:false};
-  state.items.push(it); save(); react('add', it.name);
+  state.items.push(it); const hit = applyRebuy([it]); save(); hit.length ? react('rebuy', it.name, hit.length) : react('add', it.name);
   sel = it.id; justAdded = it.id; filter = null;
   renderAll();
   $('#f-name').value = ''; $('#f-exp').value = ''; $('#f-price').value = ''; $('#f-qty').value = '1';
-  toast(name+' đã vào phòng rồi. Kéo nó tới chỗ bạn thích nha.');
+  if(hit.length) announceRebuy(hit); else toast(name+' đã vào phòng rồi. Kéo nó tới chỗ bạn thích nha.');
   room.scrollIntoView({behavior:'smooth', block:'center'});
 });
 
@@ -844,14 +879,16 @@ function renderBill(){
   $('#bill-add').addEventListener('click', () => {
     const consumed = $('#bill-used').checked;
     const chosen = billRows.filter(r => r.on && r.name.trim());
+    const added = [];
     chosen.forEach(r => {
-      const spot = freeSpot();
-      state.items.push({id:uid(), name:r.name.trim(), cat:r.cat, exp:r.exp, price:r.price, qty:r.qty, note:r.note||'', bought:r.bought, x:spot.x, y:spot.y, used:consumed});
+      const spot = freeSpot(), o = {id:uid(), name:r.name.trim(), cat:r.cat, exp:r.exp, price:r.price, qty:r.qty, note:r.note||'', bought:r.bought, x:spot.x, y:spot.y, used:consumed};
+      state.items.push(o); added.push(o);
     });
-    react(chosen.length>1 ? 'bulk' : 'add', chosen[0] ? chosen[0].name : '', chosen.length);
+    const hit = applyRebuy(added);
+    if(hit.length) react('rebuy', hit[0].b.name, hit.length); else react(chosen.length>1 ? 'bulk' : 'add', chosen[0] ? chosen[0].name : '', chosen.length);
     save(); filter = null; sel = null; billRows = []; files = []; renderThumbs(); $('#bill-preview').innerHTML = ''; $('#bill-text').value = '';
     renderAll();
-    toast(chosen.length+' món '+(consumed?'đã được tính vào chi tiêu.':'đã thêm từ hoá đơn.'));
+    if(hit.length) announceRebuy(hit); else toast(chosen.length+' món '+(consumed?'đã được tính vào chi tiêu.':'đã thêm từ hoá đơn.'));
     room.scrollIntoView({behavior:'smooth', block:'center'});
   });
 }
@@ -873,10 +910,12 @@ function twoStep(btn, armedText, fn){
     t = setTimeout(() => { btn.dataset.armed = '0'; btn.textContent = orig; }, 3500);
   });
 }
-const loadSample = () => { state.items = seed(); sel = null; filter = null; save(); renderAll(); toast('Đã nạp dữ liệu mẫu nè.'); };
+const loadSample = () => { state.items = seed(); applyRebuy(state.items); sel = null; filter = null; save(); renderAll(); toast('Đã nạp dữ liệu mẫu nè.'); };
 twoStep($('#reset'), 'Bấm lần nữa để thay bằng dữ liệu mẫu', loadSample);
 twoStep($('#wipe'), 'Bấm lần nữa để xoá hết', () => { state.items = []; sel = null; filter = null; save(); renderAll(); toast('Đã xoá hết dữ liệu.'); });
 $('#load-sample').addEventListener('click', loadSample);
+$('#auto-rebuy').checked = state.autoRebuy !== false;
+$('#auto-rebuy').addEventListener('change', e => { state.autoRebuy = e.target.checked; save(); });
 
 /* ---------- boot ---------- */
 function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); }
