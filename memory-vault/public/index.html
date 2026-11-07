@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Memory Vault</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main id="login" hidden>
+    <form id="login-form" class="card narrow" autocomplete="on">
+      <h1>Memory Vault</h1>
+      <p class="muted">Private. Sign in to continue.</p>
+      <label>Username <input name="username" autocomplete="username" required autofocus></label>
+      <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+      <p id="login-error" class="error" role="alert"></p>
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+  </main>
+
+  <div id="app" hidden>
+    <header>
+      <h1>Memory Vault</h1>
+      <input id="search" type="search" placeholder="Search titles, notes, tags…" aria-label="Search">
+      <select id="kind" aria-label="Filter"><option value="">All</option><option value="image">Photos</option><option value="video">Videos</option></select>
+      <label class="button primary" for="file-input">Upload</label>
+      <input id="file-input" type="file" accept="image/*,video/*" multiple hidden>
+      <button id="logout" type="button">Sign out (<span id="who"></span>)</button>
+    </header>
+
+    <div id="dropzone" class="muted">Drop photos or videos anywhere to upload them in original quality.</div>
+    <ul id="uploads"></ul>
+    <p id="empty" class="muted" hidden>Nothing here yet.</p>
+    <section id="grid"></section>
+  </div>
+
+  <dialog id="detail">
+    <div class="detail-body">
+      <div id="viewer"></div>
+      <form id="detail-form">
+        <label>Title <input name="title" maxlength="200"></label>
+        <label>Date of the memory <input name="taken_on" type="date"></label>
+        <label>Tags (comma separated) <input name="tags" maxlength="300"></label>
+        <label>Notes <textarea name="note" rows="9" maxlength="50000" placeholder="What was happening? Who was there? How did it feel?"></textarea></label>
+        <p id="meta" class="muted"></p>
+        <p id="detail-status" class="muted" role="status"></p>
+        <div class="row">
+          <button class="primary" type="submit">Save</button>
+          <a id="download" class="button" href="#">Download original</a>
+          <button id="delete" type="button" class="danger">Delete</button>
+          <button id="close" type="button">Close</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

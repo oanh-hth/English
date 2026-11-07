@@ -1,0 +1,15 @@
+{
+  "name": "memory-vault",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private, login-protected vault for original-quality photos/videos with notes.",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "create-user": "node --disable-warning=ExperimentalWarning scripts/create-user.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
