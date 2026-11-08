@@ -323,14 +323,15 @@ function renderList() {
     <div class="page-head">
       <div><h1>My charts</h1><p class="muted">Pick a pattern to keep working, or start a new one.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" data-act="import">Import</button>
+        <button class="btn" data-act="paste">Paste pattern</button>
+        <button class="btn" data-act="import">Import file</button>
         <button class="btn primary" data-act="new">+ New chart</button>
       </div>
     </div>
     ${DB.charts.length ? `<div class="grid">${cards}</div>` : `
       <div class="card empty"><div class="big">🧶</div><h2>Nothing on the hook yet</h2>
         <p class="muted">Start a chart and it will be saved right here in your browser.</p>
-        <button class="btn primary" data-act="new">+ New chart</button></div>`}
+        <button class="btn primary" data-act="new">+ New chart</button> <button class="btn" data-act="paste">Paste pattern</button></div>`}
     <input type="file" id="importFile" accept="application/json,.json" hidden>`;
 }
 
@@ -545,6 +546,214 @@ function createChart(tpl, name) {
   save(); render(); window.scrollTo(0, 0);
 }
 
+/* ------------------------------------------------------- paste-a-pattern import */
+/* Reads written patterns ("Round 2: (dc, ch 1) x 12 (24)") into chart rows. */
+const NAMES = [
+  ['sl', 'sl\\.?\\s*st(?:itch)?|slip\\s*st(?:itch)?|ss'],
+  ['invdec', 'inv(?:isible)?\\.?\\s*dec(?:rease)?'],
+  ['dec', 'sc\\s*2\\s*tog|dec(?:rease)?'],
+  ['inc', 'inc(?:rease)?'],
+  ['tch', 'turning\\s+chain|t-?ch'],
+  ['mr', 'magic\\s+(?:ring|circle|loop)|adjustable\\s+ring|mr|mc'],
+  ['ch', 'chain|ch'],
+  ['sc', 'single\\s+crochet|sc'],
+  ['hdc', 'half\\s+double\\s+crochet|half\\s+treble|hdc|htr'],
+  ['dtr', 'double\\s+treble(?:\\s+crochet)?|triple\\s+treble|dtr|trtr'],
+  ['tr', 'treble\\s+crochet|treble|trc|tr'],
+  ['dc', 'double\\s+crochet|dc'],
+  ['fpdc', 'front\\s+post\\s+(?:double\\s+crochet|dc)|fpdc|fptr'],
+  ['bpdc', 'back\\s+post\\s+(?:double\\s+crochet|dc)|bpdc|bptr'],
+  ['sk', 'skip|sk'],
+  ['cl', 'cluster|cl'],
+  ['shell', 'shell'],
+  ['v', 'v-?\\s*st(?:itch)?'],
+  ['picot', 'picot'],
+  ['bob', 'bobble|bob'],
+  ['puff', 'puff(?:\\s+stitch)?'],
+  ['pop', 'popcorn|pop']
+].map(([id, src]) => [id, new RegExp('^(?:' + src + ')(?![a-z])', 'i')]);
+/* in UK patterns these words mean the next stitch down */
+const UKMAP = { dc: 'sc', 'double crochet': 'sc', tr: 'dc', treble: 'dc', 'treble crochet': 'dc', trc: 'dc', dtr: 'tr', 'double treble': 'tr', 'double treble crochet': 'tr' };
+const IGNORE_REST = /^(in|into|around|across|along|to|each|every|next|same|st|sts|stitch|stitches|sp|space|loop|loops|ring|from|of|\(|-|,|\.|and|then)/;
+
+function splitTop(str) {
+  const parts = []; let depth = 0, cur = '';
+  for (const ch of str) {
+    if (ch === '(' || ch === '[') depth++;
+    if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+    if ((ch === ',' || ch === ';') && depth === 0) { parts.push(cur); cur = ''; } else cur += ch;
+  }
+  parts.push(cur);
+  return parts.filter(p => p.trim());
+}
+function matchClose(s) {
+  let d = 0;
+  for (let k = 0; k < s.length; k++) {
+    if (s[k] === '(' || s[k] === '[') d++;
+    else if (s[k] === ')' || s[k] === ']') { d--; if (!d) return k; }
+  }
+  return -1;
+}
+function readRep(after) {
+  let m;
+  if ((m = after.match(/^\s*(?:x|\*)\s*(\d+)/i))) return { rep: +m[1], rest: after.slice(m[0].length) };
+  if ((m = after.match(/^\s*(?:repeat|rep)\.?\s*(\d+)\s*(more\s+)?(?:times?|x)?/i))) return { rep: +m[1] + (m[2] ? 1 : 0), rest: after.slice(m[0].length) };
+  if ((m = after.match(/^\s*(\d+)\s*(more\s+)?(?:times?|x)\b/i))) return { rep: +m[1] + (m[2] ? 1 : 0), rest: after.slice(m[0].length) };
+  if ((m = after.match(/^\s*(?:all\s+)?(?:around|across|to\s+end|evenly)\b/i))) return { auto: true, rest: after.slice(m[0].length) };
+  return null;
+}
+function parseToken(raw, ctx) {
+  let t = raw.trim().toLowerCase().replace(/\s+/g, ' ').replace(/^(then|and|work|make|crochet)\s+/, '').replace(/[.]+$/, '');
+  if (!t || /^(turn|fasten off|cut yarn|break yarn|rs|ws|do not turn)$/.test(t)) return null;
+  if (/^join\b/.test(t)) return /\b(sl|slip|ss)/.test(t) ? { kind: 'st', st: 'sl', n: 1, mod: '' } : null;
+  let mod = '';
+  if (/\b(blo|back loops? only|in back loops? only)\b/.test(t)) mod = 'BLO';
+  else if (/\b(flo|front loops? only|in front loops? only)\b/.test(t)) mod = 'FLO';
+  t = t.replace(/\b(in\s+)?(blo|flo|(?:back|front) loops? only)\b/g, '').trim();
+  let n = null, m;
+  if ((m = t.match(/^(\d+)\s*x?\s*(.*)$/))) { n = +m[1]; t = m[2]; }
+  let hit = null;
+  for (const [id, re] of NAMES) {
+    const mm = t.match(re);
+    if (mm) { hit = { id, word: mm[0].toLowerCase().replace(/\s+/g, ' ') }; t = t.slice(mm[0].length).trim(); break; }
+  }
+  if (!hit) { ctx.unknown.push(raw.trim()); return null; }
+  let id = hit.id;
+  if (ctx.uk && UKMAP[hit.word]) id = UKMAP[hit.word];
+  if (n == null && (m = t.match(/^-?\s*(\d+)\b\s*(.*)$/))) { n = +m[1]; t = m[2]; }
+  const each = (/\b(each|every)\b/.test(t) && /\b(around|across|end)\b/.test(t)) || /^(around|across)\b/.test(t);
+  if (each && ctx.prevMade > 0) {
+    const base = Math.max(1, Math.ceil(ctx.prevMade / Math.max(1, ST[id].uses)));
+    if (n == null) n = /\b(2nd|second)\s+ch\b/.test(t) ? Math.max(1, base - 1) : base;
+    else if (id === 'sc' && n === 2) { id = 'inc'; n = base; }
+    else n = n * base;
+  } else if (id === 'sc' && n === 2 && /\b(in|into)\s+(?:the\s+)?(next|same|each|every)\b/.test(t)) { id = 'inc'; n = 1; }
+  if (t && !IGNORE_REST.test(t)) ctx.unknown.push(raw.trim());
+  return { kind: 'st', st: id, n: clamp(n || 1, 1, 99), mod: ST[id].mod ? mod : '' };
+}
+function parseGroup(p, ctx, nested) {
+  const close = matchClose(p);
+  const inner = close < 0 ? p.slice(1) : p.slice(1, close), after = close < 0 ? '' : p.slice(close + 1);
+  const items = parseSeq(inner, ctx, true);
+  const r = readRep(after);
+  let out = items, rest = after;
+  if (r) {
+    let rep = r.rep;
+    if (r.auto) {
+      const uses = expand(items).reduce((a, c) => a + ST[c.st].uses, 0);
+      rep = uses > 0 && ctx.prevMade > 0 ? Math.max(1, Math.round(ctx.prevMade / uses)) : 1;
+      if (!(uses > 0 && ctx.prevMade > 0)) ctx.unknown.push('"around": set the repeat count yourself');
+    }
+    out = items.length ? [{ kind: 'grp', rep: clamp(rep, 1, 99), items }] : [];
+    rest = r.rest;
+  }
+  rest = rest.trim().replace(/^[,;.\s]+/, '');
+  if (rest) out = out.concat(parseSeq(rest, ctx, nested));
+  return out;
+}
+function parseSeq(str, ctx, nested) {
+  let out = [];
+  for (const part of splitTop(str)) {
+    const p = part.trim();
+    if (p[0] === '(' || p[0] === '[') out = out.concat(parseGroup(p, ctx, nested));
+    else { const it = parseToken(p, ctx); if (it) out.push(it); }
+  }
+  if (nested) out = out.flatMap(it => it.kind === 'grp' ? Array.from({ length: it.rep }, () => it.items).flat() : [it]).slice(0, 200);
+  const merged = [];
+  for (const it of out) {
+    const last = merged[merged.length - 1];
+    if (last && last.kind === 'st' && it.kind === 'st' && last.st === it.st && last.mod === it.mod && !['ch', 'tch'].includes(it.st) && last.n + it.n <= 99) last.n += it.n;
+    else merged.push(it);
+  }
+  return merged;
+}
+function parsePattern(text, o = {}) {
+  let t = String(text).replace(/\r/g, '').replace(/[–—]/g, '-').replace(/[×✕]/g, 'x');
+  t = t.replace(/\*\s*([^*\n]+?)\s*[,;.]?\s*(?:repeat|rep)\.?\s*from\s*\*\s*(\d+)\s*(more\s+)?(?:times|time|x)\b/gi, (m, g, n, more) => `(${g}) x ${(+n) + (more ? 1 : 0)}`);
+  t = t.replace(/\*([^*\n]+)\*/g, '($1)');
+  t = t.replace(/(?<=\S)[ \t]*(?=\b(?:rounds?|rnds?|rows?)\s*\d+(?:\s*-\s*\d+)?\s*[:)])/gi, '\n');
+  const headKw = /^\s*(?:rounds?|rnds?|rows?|r)\s*\.?\s*(\d+)(?:\s*-\s*(\d+))?\s*[:.)-]?\s*(.*)$/i;
+  const headNum = /^\s*(\d+)(?:\s*-\s*(\d+))?\s*[:.)]\s*(.*)$/;
+  const lines = t.split('\n').map(l => l.replace(/^\s*[•·\-–]\s+/, '').trim()).filter(Boolean);
+  const raw = [], preface = [];
+  const isHead = l => { const m = l.match(headKw) || l.match(headNum); return m && (headKw.test(l) && /^(?:rounds?|rnds?|rows?|r)\b/i.test(l) ? /^(?:rounds?|rnds?|rows?)\b/i.test(l) || /^r\s*\.?\s*\d+\s*[:.)]/i.test(l) || /^r\d+/i.test(l) : true) ? m : null; };
+  for (const l of lines) {
+    const m = isHead(l);
+    if (m) raw.push({ from: +m[1], to: m[2] ? +m[2] : +m[1], text: m[3] });
+    else if (raw.length) { const last = raw[raw.length - 1]; last.text += (/[,;(]$/.test(last.text) ? ' ' : ', ') + l; }
+    else preface.push(l);
+  }
+  let skipped = [];
+  if (!raw.length) { preface.forEach((l, i) => raw.push({ from: i + 1, to: i + 1, text: l })); skipped = []; }
+  const rows = []; let prevMade = 0;
+  for (const r of raw) {
+    let body = r.text
+      .replace(/\([^()]*\b(?:counts?|count as|does not|doesn't|beginning)\b[^()]*\)/gi, '')
+      .replace(/\s*[(\[]\s*\d+\s*(?:sts?|stitches|sc|dc|hdc|tr)?\s*[)\]]\s*\.?\s*$/i, '')
+      .replace(/\s*[=:-]\s*\d+\s*(?:sts?|stitches)(?:\s+total)?\.?\s*$/i, '')
+      .replace(/,?\s*\b\d+\s*(?:sts|stitches)\b\.?\s*$/i, '');
+    const ctx = { uk: !!o.uk, prevMade, unknown: [] };
+    let items = parseSeq(body, ctx, false);
+    if (/\b(?:in|into)\s+(?:a\s+|the\s+)?(?:magic\s+(?:ring|circle)|adjustable\s+ring)\b/i.test(body) && !items.some(i => i.st === 'mr')) items.unshift({ kind: 'st', st: 'mr', n: 1, mod: '' });
+    if (!items.length) { if (body.trim()) skipped.push(r.text.trim()); continue; }
+    const made = rowStats({ items }).made;
+    const span = Math.min(r.to, r.from + 11) - r.from + 1;
+    for (let k = 0; k < Math.max(1, span); k++) rows.push({ items: JSON.parse(JSON.stringify(items)), unknown: ctx.unknown.slice() });
+    prevMade = made;
+  }
+  const all = String(text);
+  let mode = 'flat';
+  if (/\b(?:rounds?|rnds?)\b/i.test(all) || rows.some(r => r.items.some(i => i.st === 'mr'))) mode = 'round';
+  let name = '';
+  if (preface.length && raw !== undefined && lines.length > preface.length) { const f = preface[0].replace(/\s*pattern\s*$/i, ''); if (f.length <= 50 && !/[:]/.test(f)) name = f; }
+  return { rows, mode, name, skipped };
+}
+
+function importPreview() {
+  const el = $('#impPreview'); if (!el) return;
+  const txt = $('#impText').value;
+  const res = parsePattern(txt, { uk: $('#impUK').checked });
+  ui.imp = res;
+  $('#impName').placeholder = res.name || 'Imported pattern';
+  const mode = $('#impMode').value === 'auto' ? res.mode : $('#impMode').value;
+  const unit = mode === 'round' ? 'Rnd' : 'Row';
+  $('#impCreate').disabled = !res.rows.length;
+  if (!txt.trim()) { el.innerHTML = '<p class="muted small">Paste your pattern above and the rows it understands will appear here.</p>'; return; }
+  if (!res.rows.length) { el.innerHTML = '<p class="hint">No rows found. Start each row with something like "Round 1:" or "Row 1:", then the stitches.</p>'; return; }
+  el.innerHTML = `<p class="small muted">Found ${res.rows.length} ${mode === 'round' ? 'rounds' : 'rows'} · ${mode === 'round' ? 'in the round' : 'flat'}. Check the rows, then create the chart. You can edit everything afterwards.</p><ol class="imp-list">` +
+    res.rows.map((r, i) => `<li><b>${unit} ${i + 1}:</b> ${esc(rowText({ items: r.items }))}${r.unknown.length ? ` <span class="warn">couldn't read: ${r.unknown.map(u => '"' + esc(u) + '"').join(', ')}</span>` : ''}</li>`).join('') +
+    `</ol>${res.skipped.length ? `<p class="hint">Skipped: ${res.skipped.map(u => '"' + esc(u) + '"').join(', ')}</p>` : ''}`;
+}
+const IMP_EXAMPLE = `Pink flower coaster
+Round 1: MR, 12 dc (12)
+Round 2: (dc, ch 1) x 12 (24)
+Round 3: *2 dc, ch 1* repeat 11 more times
+Round 4: sl st, ch 2, (shell, sc 3) x 12`;
+function pasteModal() {
+  openModal(`
+    <h2>Paste a pattern</h2>
+    <p class="muted small">Copy the written rounds from a video description, blog or captions. Lines like <i>Round 2: (dc, ch 1) x 12</i>, <i>R3: *2 sc, inc* repeat 5 more times</i> or <i>Row 4: ch 1, sc in each st across</i> all work.</p>
+    <label class="f" for="impText">Pattern text</label>
+    <textarea id="impText" rows="8" placeholder="Round 1: MR, 6 sc (6)&#10;Round 2: 6 inc (12)&#10;Round 3: (sc, inc) x 6 (18)"></textarea>
+    <div class="imp-opts">
+      <label for="impName">Name <input type="text" id="impName" maxlength="60" placeholder="Imported pattern"></label>
+      <label for="impMode">Shape <select id="impMode"><option value="auto">Detect</option><option value="flat">Flat rows</option><option value="round">In the round</option></select></label>
+      <label class="chk" for="impUK"><input type="checkbox" id="impUK" ${DB.uk ? 'checked' : ''}> Pattern uses UK terms</label>
+    </div>
+    <div id="impPreview"></div>
+    <div class="actions"><button class="btn" data-act="impexample">Try an example</button><button class="btn" data-act="closemodal">Cancel</button><button class="btn primary" id="impCreate" data-act="impcreate" disabled>Create chart</button></div>`);
+  importPreview();
+  setTimeout(() => $('#impText') && $('#impText').focus(), 30);
+}
+function importCreate() {
+  const res = ui.imp; if (!res || !res.rows.length) return;
+  const mode = $('#impMode').value === 'auto' ? res.mode : $('#impMode').value;
+  const c = { id: uid(), name: ($('#impName').value.trim() || res.name || 'Imported pattern').slice(0, 60), mode, updated: Date.now(),
+    rows: res.rows.map(r => ({ id: uid(), color: PAL[1][1], note: r.unknown.length ? `Check: ${r.unknown.join('; ')}`.slice(0, 200) : '', items: r.items })) };
+  closeModal(); DB.charts.push(c); ui.chartId = c.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null;
+  save(); render(); window.scrollTo(0, 0); toast('Pattern imported. Check the rows against your source.');
+}
+
 /* ------------------------------------------------------------------- events */
 function pngExport() {
   const c = chart();
@@ -579,6 +788,9 @@ document.addEventListener('click', e => {
     case 'tpl': ui.tpl = d.tpl; document.querySelectorAll('.tpl').forEach(b => b.setAttribute('aria-pressed', b.dataset.tpl === d.tpl)); break;
     case 'create': { const n = $('#newName').value.trim(); closeModal(); createChart(ui.tpl, n || TEMPLATES[ui.tpl].label); break; }
     case 'closemodal': closeModal(); break;
+    case 'paste': pasteModal(); break;
+    case 'impexample': $('#impText').value = IMP_EXAMPLE; importPreview(); break;
+    case 'impcreate': importCreate(); break;
     case 'open': ui.chartId = d.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null; render(); window.scrollTo(0, 0); break;
     case 'back': stopPlay(false); ui.view = 'charts'; render(); break;
     case 'tryit': createChart(d.tpl, TEMPLATES[d.tpl].label); toast('Starter chart ready. Tweak it!'); break;
@@ -668,6 +880,7 @@ document.addEventListener('change', e => {
     }).catch(() => toast('That file is not a chart from this app'));
     return;
   }
+  if (t.id === 'impMode' || t.id === 'impUK') { importPreview(); return; }
   if (t.id === 'pickN') { ui.n = toInt(t.value); renderPicker(); return; }
   if (t.id === 'pickMod') { ui.mod = t.value; return; }
   if (d.act === 'n' || d.act === 'rep') {
@@ -680,6 +893,7 @@ document.addEventListener('change', e => {
 
 document.addEventListener('input', e => {
   const t = e.target, d = t.dataset;
+  if (t.id === 'impText') { importPreview(); return; }
   if (t.id === 'chartName') { chart().name = t.value; save(); }
   else if (d.act === 'note') { const r = findRow(d.r); if (r) { r.note = t.value; renderWritten(); save(); } }
   else if (t.id === 'scrubber') { stopPlay(false); ui.upTo = +t.value; renderViz(true); }
