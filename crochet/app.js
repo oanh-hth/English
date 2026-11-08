@@ -906,6 +906,7 @@ function photoModal() {
     <h2>Chart from a photo</h2>
     <p class="muted small">Upload a photo of a flat, round piece (a coaster, a circle, a doily) taken from above. I find its edge and color and estimate the number of rounds, then build a starting chart. A photo can't show every stitch, so check the result against your piece.</p>
     <input type="file" id="phFile" accept="image/*">
+    <p class="muted small" id="phHint">You can also paste an image (Ctrl/Cmd+V) or drop one here.</p>
     <div id="phStage" hidden>
       <canvas id="phCanvas" aria-label="Photo with the detected outline"></canvas>
       <p class="muted small">Drag the dots so the outline hugs the piece. The thin rings show the rounds counted; slide them with Rounds until they match what you see.</p>
@@ -932,6 +933,28 @@ async function startPhoto(file) {
   $('#phNote').textContent = e.found ? '' : "I couldn't find the piece on its own, so drag the dots to outline it.";
   wirePhoto(cv); photoUpdate(true);
 }
+function imageFrom(dt) {
+  if (!dt) return null;
+  for (const it of dt.items || []) if (it.kind === 'file' && it.type.startsWith('image/')) return it.getAsFile();
+  for (const f of dt.files || []) if (f.type.startsWith('image/')) return f;
+  return null;
+}
+async function openPhotoFile(f) {
+  if (!f) return;
+  if ($('#modal').hidden || !$('#phFile')) { if (!$('#modal').hidden) return; photoModal(); }
+  try { await startPhoto(f); } catch (err) { toast('Could not open that image'); }
+}
+document.addEventListener('paste', e => {
+  const f = imageFrom(e.clipboardData);
+  if (!f) return;
+  if (ui.view !== 'charts' && $('#modal').hidden) return;
+  e.preventDefault(); openPhotoFile(f);
+});
+document.addEventListener('dragover', e => { if ($('#phFile') && !$('#modal').hidden) e.preventDefault(); });
+document.addEventListener('drop', e => {
+  if (!$('#phFile') || $('#modal').hidden) return;
+  e.preventDefault(); openPhotoFile(imageFrom(e.dataTransfer));
+});
 function wirePhoto(cv) {
   let drag = null;
   const pos = ev => { const r = cv.getBoundingClientRect(), k = cv.width / r.width; return { x: (ev.clientX - r.left) * k, y: (ev.clientY - r.top) * k, k }; };
