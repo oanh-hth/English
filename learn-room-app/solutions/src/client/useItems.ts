@@ -1,0 +1,101 @@
+import { useCallback, useEffect, useReducer, useState } from 'react';
+import type { Item, NewItemInput } from '../domain/types';
+import type { ApiClient } from './api';
+import { itemsReducer } from './reducer';
+
+export type ItemsApi = Pick<ApiClient, 'listItems' | 'addItem' | 'patchItem' | 'deleteItem'>;
+
+export interface UseItems {
+  items: Item[];
+  status: 'loading' | 'ready' | 'error';
+  error: string;
+  add: (input: NewItemInput) => Promise<void>;
+  move: (id: string, x: number, y: number) => Promise<void>;
+  remove: (id: string) => Promise<void>;
+}
+
+/**
+ * Keeps the room's items in sync with the server.
+ *  - on mount: status 'loading', call api.listItems(), dispatch 'loaded', status 'ready'. If it fails: status 'error' and error = the message.
+ *  - add: await api.addItem, then dispatch 'added' (not optimistic: the server decides the id and the rebuy result)
+ *  - move: OPTIMISTIC. Dispatch 'moved' immediately, then api.patchItem(id, { x, y }). If the call fails, reload the list from the server and set error.
+ *  - remove: optimistic as well (dispatch 'removed' first, then api.deleteItem; on failure reload and set error)
+ */
+export function useItems(api: ItemsApi): UseItems {
+  // @solution-start useReducer for the items, useState for status/error. A `reload` function shared by the first load and by the "undo" after a failed optimistic update. Guard the effect against setting state after unmount with a cancelled flag in the cleanup.
+  const [items, dispatch] = useReducer(itemsReducer, []);
+  const [status, setStatus] = useState<UseItems['status']>('loading');
+  const [error, setError] = useState('');
+
+  const reload = useCallback(async () => {
+    const list = await api.listItems();
+    dispatch({ type: 'loaded', items: list });
+  }, [api]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus('loading');
+    api
+      .listItems()
+      .then((list) => {
+        if (cancelled) return;
+        dispatch({ type: 'loaded', items: list });
+        setStatus('ready');
+      })
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : 'Something went wrong');
+        setStatus('error');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  const rollback = useCallback(
+    async (e: unknown) => {
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+      try {
+        await reload();
+      } catch {
+        /* keep what we have */
+      }
+    },
+    [reload],
+  );
+
+  const add = useCallback(
+    async (input: NewItemInput) => {
+      const { item, replacedIds } = await api.addItem(input);
+      dispatch({ type: 'added', item, replacedIds });
+    },
+    [api],
+  );
+
+  const move = useCallback(
+    async (id: string, x: number, y: number) => {
+      dispatch({ type: 'moved', id, x, y });
+      try {
+        await api.patchItem(id, { x, y });
+      } catch (e) {
+        await rollback(e);
+      }
+    },
+    [api, rollback],
+  );
+
+  const remove = useCallback(
+    async (id: string) => {
+      dispatch({ type: 'removed', id });
+      try {
+        await api.deleteItem(id);
+      } catch (e) {
+        await rollback(e);
+      }
+    },
+    [api, rollback],
+  );
+
+  return { items, status, error, add, move, remove };
+  // @solution-end
+}

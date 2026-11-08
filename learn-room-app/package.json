@@ -1,0 +1,45 @@
+{
+  "name": "learn-room-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Learn React, TypeScript and Node.js by rebuilding Phong Tru Do (a room inventory app), one tested exercise at a time",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "learn": "tsx tools/learn.ts",
+    "check": "tsx tools/learn.ts check",
+    "next": "tsx tools/learn.ts next",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dev": "vite",
+    "server": "tsx watch src/server/main.ts",
+    "verify": "tsx tools/learn.ts verify",
+    "stubs": "tsx tools/make-stubs.ts"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/supertest": "^7.2.1",
+    "@vitejs/plugin-react": "^6.2.1",
+    "jsdom": "^31.0.0",
+    "supertest": "^7.3.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

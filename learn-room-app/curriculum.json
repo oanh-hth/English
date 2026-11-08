@@ -1,0 +1,580 @@
+{
+  "title": "Phòng Trữ Đồ: learn React, TypeScript and Node.js by building it",
+  "phases": [
+    {
+      "id": 0,
+      "title": "Setup and tools",
+      "lesson": "lessons/00-setup.md",
+      "exercises": [
+        {
+          "id": "0.1",
+          "title": "Hello, tests",
+          "practice": "Check that everything is installed",
+          "tests": [
+            "tests/phase0/setup.test.ts"
+          ],
+          "files": [],
+          "goal": "Nothing to write: run `npm run check` and watch it pass. This proves Node, TypeScript and Vitest work and that the `@/` import alias reaches your `src/` folder.",
+          "hints": [
+            "Run the tests in watch mode with `npm run test:watch` and edit a file.",
+            "Find the `@` alias in vitest.config.ts and tsconfig.json."
+          ],
+          "passesOnStubs": true
+        }
+      ],
+      "manual": [
+        {
+          "id": "0.m1",
+          "text": "I can run one exercise's tests with `npm run check <id>`"
+        },
+        {
+          "id": "0.m2",
+          "text": "I know `solutions/` holds spoilers and `src/` is where I work"
+        },
+        {
+          "id": "0.m3",
+          "text": "I can explain what `npm run typecheck` does that the tests do not"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "TypeScript and pure functions",
+      "lesson": "lessons/01-typescript-and-pure-functions.md",
+      "exercises": [
+        {
+          "id": "1.1",
+          "title": "Types and the item factory",
+          "practice": "Model an item and validate input",
+          "tests": [
+            "tests/phase1/types.test.ts"
+          ],
+          "files": [
+            "src/domain/types.ts"
+          ],
+          "goal": "Write a type guard (`value is CategoryId`), a lookup that cannot return undefined, and `makeItem`, which validates input and fills defaults.",
+          "hints": [
+            "`CATEGORY_IDS as readonly string[]` lets `.includes` accept any string. Why is that cast needed?",
+            "Throw early: validate every field before building the object."
+          ]
+        },
+        {
+          "id": "1.2",
+          "title": "Dates without surprises",
+          "practice": "Parse, format and compare calendar days",
+          "tests": [
+            "tests/phase1/dates.test.ts"
+          ],
+          "files": [
+            "src/domain/dates.ts"
+          ],
+          "goal": "Six small functions. The lesson: `new Date('2026-11-08')` is UTC, `new Date(2026, 10, 8)` is local, and `toISOString` is always UTC.",
+          "hints": [
+            "Months are 0-based in `new Date(y, m, d)`.",
+            "After building a Date, read it back: if the day changed, the input was invalid (Feb 31)."
+          ]
+        },
+        {
+          "id": "1.3",
+          "title": "Expiry status",
+          "practice": "Combine small functions into app rules",
+          "tests": [
+            "tests/phase1/expiry.test.ts"
+          ],
+          "files": [
+            "src/domain/expiry.ts"
+          ],
+          "goal": "Classify items (none, ok, soon, expired), write the human text, and build the list the notification panel shows.",
+          "hints": [
+            "`Array.prototype.sort` mutates. What do you call before sorting to avoid that?",
+            "Return early for the special cases (negative, 0, 1) before the general message."
+          ]
+        },
+        {
+          "id": "1.4",
+          "title": "Spending comparison",
+          "practice": "Group by month and compare with last month",
+          "tests": [
+            "tests/phase1/spending.test.ts"
+          ],
+          "files": [
+            "src/domain/spending.ts"
+          ],
+          "goal": "Format Vietnamese dong with `Intl`, total a month, and compare this month so far with the same days of last month (including the January to December wrap).",
+          "hints": [
+            "`new Date(year, month + 1, 0).getDate()` is the number of days in `month`.",
+            "Write `totalForMonth` first; `compareSpending` is three calls to it."
+          ]
+        }
+      ],
+      "manual": [
+        {
+          "id": "1.m1",
+          "text": "I can explain the difference between `string`, a literal union and `unknown`"
+        },
+        {
+          "id": "1.m2",
+          "text": "I can explain why functions take `today` as a parameter instead of calling `new Date()`"
+        },
+        {
+          "id": "1.m3",
+          "text": "I can explain what 'pure function' means and why `sort` on the input is a bug"
+        },
+        {
+          "id": "1.m4",
+          "text": "I can name one way UTC and local time differ in `Date`"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Strings, regex and collections",
+      "lesson": "lessons/02-strings-regex-collections.md",
+      "exercises": [
+        {
+          "id": "2.1",
+          "title": "Are these the same product?",
+          "practice": "Normalise text and compare word sets",
+          "tests": [
+            "tests/phase2/names.test.ts"
+          ],
+          "files": [
+            "src/domain/names.ts"
+          ],
+          "goal": "Remove accents with `normalize('NFD')`, split names into meaningful words and decide with set arithmetic.",
+          "hints": [
+            "`đ` does not decompose; replace it by hand.",
+            "Intersection and union sizes are enough for both rules."
+          ]
+        },
+        {
+          "id": "2.2",
+          "title": "The rebuy rule",
+          "practice": "Immutable updates with Map",
+          "tests": [
+            "tests/phase2/rebuy.test.ts"
+          ],
+          "files": [
+            "src/domain/rebuy.ts"
+          ],
+          "goal": "When you buy something again, last month's copy leaves the room. Return new objects, never mutate.",
+          "hints": [
+            "`{ ...older, used: true }` copies an object.",
+            "Use a Map from id to its replacement and `items.map(i => map.get(i.id) ?? i)`."
+          ]
+        },
+        {
+          "id": "2.3",
+          "title": "Dormant items",
+          "practice": "Compose helpers into business rules",
+          "tests": [
+            "tests/phase2/dormant.test.ts"
+          ],
+          "files": [
+            "src/domain/dormant.ts"
+          ],
+          "goal": "Find items nobody touched for a long time, with different thresholds per category and a snooze.",
+          "hints": [
+            "Read the doc comment of `isDormant` as a list of early returns.",
+            "`needsAsk` is one line if `isDormant` and `inDate` exist."
+          ]
+        },
+        {
+          "id": "2.4",
+          "title": "Guess the category",
+          "practice": "Unicode regex and caching",
+          "tests": [
+            "tests/phase2/guess.test.ts"
+          ],
+          "files": [
+            "src/domain/guess.ts"
+          ],
+          "goal": "Match whole words in Vietnamese. `\\b` only understands ASCII, so build the boundary yourself with `\\p{L}` and the `u` flag.",
+          "hints": [
+            "Look-around is not needed: capture groups on both sides are enough for `test`.",
+            "Cache each category's RegExp in a Map; building a RegExp is not free."
+          ]
+        },
+        {
+          "id": "2.5",
+          "title": "Reading money",
+          "practice": "Parse numbers as printed on Vietnamese bills",
+          "tests": [
+            "tests/phase2/money.test.ts"
+          ],
+          "files": [
+            "src/domain/money.ts"
+          ],
+          "goal": "`72.000` is seventy-two thousand, `12,5` is twelve and a half. Two tiny parsers with big consequences.",
+          "hints": [
+            "Test the dot-thousands pattern first.",
+            "`parseInt(x, 10) || 0` turns NaN into 0."
+          ]
+        },
+        {
+          "id": "2.6",
+          "title": "Supermarket receipt parser",
+          "practice": "Line-by-line parsing",
+          "tests": [
+            "tests/phase2/receipt.test.ts"
+          ],
+          "files": [
+            "src/domain/receipt.ts"
+          ],
+          "goal": "One product per line, price at the end. Skip totals and taxes (in English and Vietnamese) without skipping real products.",
+          "hints": [
+            "Slice the price off the end first, then look for the quantity in what is left.",
+            "Dates set `bought` for all rows, so collect it while looping and apply it at the end."
+          ]
+        },
+        {
+          "id": "2.7",
+          "title": "Online order parser (Shopee)",
+          "practice": "State machines over lines",
+          "tests": [
+            "tests/phase2/shopee.test.ts"
+          ],
+          "files": [
+            "src/domain/shopee.ts"
+          ],
+          "goal": "A product spans three lines; a 'Thành tiền' line closes a group and spreads the real total across it.",
+          "hints": [
+            "Keep three variables: the previous line, the current product and the products waiting for a total.",
+            "Check for a price line before the generic 'remember this as the product name' fallback."
+          ]
+        },
+        {
+          "id": "2.8",
+          "title": "Café receipt parser",
+          "practice": "Regex with optional groups",
+          "tests": [
+            "tests/phase2/dineIn.test.ts"
+          ],
+          "files": [
+            "src/domain/dineIn.ts"
+          ],
+          "goal": "Parse a table, attach free toppings to the line above and scale prices to the grand total.",
+          "hints": [
+            "Name the capture groups in comments before writing the regex.",
+            "Rounding: `Math.round(grand * price / sum)`."
+          ]
+        },
+        {
+          "id": "2.9",
+          "title": "Pick the right parser",
+          "practice": "Dispatching on a union type",
+          "tests": [
+            "tests/phase2/bills.test.ts"
+          ],
+          "files": [
+            "src/domain/bills.ts"
+          ],
+          "goal": "Detect the bill format and call the right parser. Order matters because a café bill also contains 'Thành tiền'.",
+          "hints": [
+            "A `switch` over a union lets TypeScript prove you covered every case."
+          ]
+        }
+      ],
+      "manual": [
+        {
+          "id": "2.m1",
+          "text": "I can write a regex that matches whole Vietnamese words and say why `\\b` fails"
+        },
+        {
+          "id": "2.m2",
+          "text": "I can explain `normalize('NFD')`"
+        },
+        {
+          "id": "2.m3",
+          "text": "I can pass a function as a parameter to make code testable (`guess`)"
+        },
+        {
+          "id": "2.m4",
+          "text": "I know when to use Map, Set and array methods, and which of them mutate"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Node.js API",
+      "lesson": "lessons/03-node-api.md",
+      "exercises": [
+        {
+          "id": "3.1",
+          "title": "In-memory store",
+          "practice": "Classes, encapsulation and defensive copies",
+          "tests": [
+            "tests/phase3/store.test.ts"
+          ],
+          "files": [
+            "src/server/store.ts"
+          ],
+          "goal": "A tiny repository class that hands out copies and notifies when data changes.",
+          "hints": [
+            "Spread (`{ ...item }`) makes a shallow copy; items only hold primitives so that is enough.",
+            "Only call `emit()` when something actually changed."
+          ]
+        },
+        {
+          "id": "3.2",
+          "title": "Saving to a file",
+          "practice": "Async file I/O and atomic writes",
+          "tests": [
+            "tests/phase3/fileStore.test.ts"
+          ],
+          "files": [
+            "src/server/fileStore.ts"
+          ],
+          "goal": "Load and save JSON with `fs/promises`. A missing file is fine on the first run; a broken file must NOT silently become an empty room.",
+          "hints": [
+            "`error.code === 'ENOENT'` identifies a missing file.",
+            "Write to `path.tmp`, then `rename`: rename is atomic."
+          ]
+        },
+        {
+          "id": "3.3",
+          "title": "Validating requests with zod",
+          "practice": "Never trust the network",
+          "tests": [
+            "tests/phase3/schema.test.ts"
+          ],
+          "files": [
+            "src/server/schema.ts"
+          ],
+          "goal": "Describe request bodies as zod schemas. The TypeScript type is derived from the schema, so they cannot drift apart.",
+          "hints": [
+            "`z.enum` accepts a readonly tuple like CATEGORY_IDS.",
+            "`.optional()` makes a key optional; `.trim().min(1)` rejects blank names."
+          ]
+        },
+        {
+          "id": "3.4",
+          "title": "Express routes",
+          "practice": "HTTP verbs, status codes, error middleware",
+          "tests": [
+            "tests/phase3/app.test.ts"
+          ],
+          "files": [
+            "src/server/app.ts"
+          ],
+          "goal": "Wire the domain functions into a REST API and test it with supertest, without opening a port.",
+          "hints": [
+            "Let `schema.parse` throw; one error middleware turns ZodError into a 400.",
+            "Use 201 for create, 204 for delete (no body) and 404 for unknown ids."
+          ]
+        }
+      ],
+      "manual": [
+        {
+          "id": "3.m1",
+          "text": "I can explain what 200, 201, 204, 400 and 404 mean"
+        },
+        {
+          "id": "3.m2",
+          "text": "I can explain why validation lives at the edge (the route) and the domain trusts its types"
+        },
+        {
+          "id": "3.m3",
+          "text": "I can explain why `fetch`/HTTP errors are not exceptions by default"
+        },
+        {
+          "id": "3.m4",
+          "text": "I ran `npm run server` and called the API with curl or a browser"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "React components",
+      "lesson": "lessons/04-react-components.md",
+      "exercises": [
+        {
+          "id": "4.1",
+          "title": "The items reducer",
+          "practice": "State as pure transitions",
+          "tests": [
+            "tests/phase4/reducer.test.ts"
+          ],
+          "files": [
+            "src/client/reducer.ts"
+          ],
+          "goal": "All the ways the room can change, in one pure function with a discriminated union of actions.",
+          "hints": [
+            "Inside `case 'added':` TypeScript knows `action.item` exists.",
+            "Return the same array when nothing changed so React can skip a render."
+          ]
+        },
+        {
+          "id": "4.2",
+          "title": "Dragging maths",
+          "practice": "Pointer coordinates to percentages",
+          "tests": [
+            "tests/phase4/drag.test.ts"
+          ],
+          "files": [
+            "src/client/drag.ts"
+          ],
+          "goal": "Convert pointer positions into room percentages. Pure maths is easy to test and easy to reuse in the component later.",
+          "hints": [
+            "`(clientX - box.left) / box.width * 100`.",
+            "`Math.round(v * 10) / 10` rounds to one decimal."
+          ]
+        },
+        {
+          "id": "4.3",
+          "title": "The add-item form",
+          "practice": "Controlled inputs and form events",
+          "tests": [
+            "tests/phase4/itemForm.test.tsx"
+          ],
+          "files": [
+            "src/client/ItemForm.tsx"
+          ],
+          "goal": "A controlled form with validation. Tests use Testing Library: they find things by label and role, the way users and screen readers do.",
+          "hints": [
+            "`<label htmlFor>` must match the input's `id`, or `getByLabelText` fails.",
+            "`event.preventDefault()` stops the browser from reloading the page."
+          ]
+        },
+        {
+          "id": "4.4",
+          "title": "Needs-attention list",
+          "practice": "Derived data and lists with keys",
+          "tests": [
+            "tests/phase4/expiringList.test.tsx"
+          ],
+          "files": [
+            "src/client/ExpiringList.tsx"
+          ],
+          "goal": "Render the notification list from props. No state and no effect: compute during render.",
+          "hints": [
+            "Do not store `needsAttention(...)` in state; it is derived from props.",
+            "The `key` must be stable and unique: use the item id."
+          ]
+        },
+        {
+          "id": "4.5",
+          "title": "Spending card",
+          "practice": "Presentational components",
+          "tests": [
+            "tests/phase4/spendingCard.test.tsx"
+          ],
+          "files": [
+            "src/client/SpendingCard.tsx"
+          ],
+          "goal": "A pure view of a `SpendingComparison`. Accessibility roles (`region`, `status`) make it testable and usable.",
+          "hints": [
+            "Build the change text in a small helper above the JSX."
+          ]
+        },
+        {
+          "id": "4.6",
+          "title": "The room",
+          "practice": "Conditional rendering and positioned elements",
+          "tests": [
+            "tests/phase4/room.test.tsx"
+          ],
+          "files": [
+            "src/client/Room.tsx"
+          ],
+          "goal": "Items as buttons positioned with percentages. Buttons (not divs) give you keyboard support for free.",
+          "hints": [
+            "`aria-pressed` expects a boolean-ish value.",
+            "Filter out used items before mapping."
+          ]
+        }
+      ],
+      "manual": [
+        {
+          "id": "4.m1",
+          "text": "I can explain controlled vs uncontrolled inputs"
+        },
+        {
+          "id": "4.m2",
+          "text": "I can explain why derived data should not live in state"
+        },
+        {
+          "id": "4.m3",
+          "text": "I can explain what `key` does"
+        },
+        {
+          "id": "4.m4",
+          "text": "I can explain why the reducer must not mutate state"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Full stack",
+      "lesson": "lessons/05-full-stack.md",
+      "exercises": [
+        {
+          "id": "5.1",
+          "title": "Typed API client",
+          "practice": "fetch, errors and dependency injection",
+          "tests": [
+            "tests/phase5/api.test.ts"
+          ],
+          "files": [
+            "src/client/api.ts"
+          ],
+          "goal": "One `request` helper that handles JSON, errors and 204. The `fetch` function is a parameter, so tests pass a fake.",
+          "hints": [
+            "`response.ok` is false for 4xx and 5xx; fetch only rejects on network failure.",
+            "Call `response.json()` inside try/catch: an error page may not be JSON."
+          ]
+        },
+        {
+          "id": "5.2",
+          "title": "useItems hook",
+          "practice": "Effects, optimistic updates and rollback",
+          "tests": [
+            "tests/phase5/useItems.test.tsx"
+          ],
+          "files": [
+            "src/client/useItems.ts"
+          ],
+          "goal": "Load on mount, add after the server answers, move and remove optimistically and undo by reloading when the server says no.",
+          "hints": [
+            "Wrap functions in `useCallback` so their identity is stable.",
+            "A `cancelled` flag in the effect cleanup prevents updates after unmount."
+          ]
+        },
+        {
+          "id": "5.3",
+          "title": "Put it all together",
+          "practice": "Composition",
+          "tests": [
+            "tests/phase5/App.test.tsx"
+          ],
+          "files": [
+            "src/client/App.tsx"
+          ],
+          "goal": "Combine the hook and all components into the real screen. This is the app you started with.",
+          "hints": [
+            "Hooks must run in the same order every render: call `useItems` and `useState` BEFORE any early return.",
+            "Derive `selected` from `selectedId` instead of storing the whole item."
+          ]
+        }
+      ],
+      "manual": [
+        {
+          "id": "5.m1",
+          "text": "I can explain optimistic updates and when to roll back"
+        },
+        {
+          "id": "5.m2",
+          "text": "I ran `npm run server` and `npm run dev` together and added an item in the browser"
+        },
+        {
+          "id": "5.m3",
+          "text": "I can explain why `App` receives `api` and `today` as props"
+        },
+        {
+          "id": "5.m4",
+          "text": "I can name two things I would add next (for example photo upload, drag to move, a real database)"
+        }
+      ]
+    }
+  ]
+}
