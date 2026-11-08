@@ -323,8 +323,7 @@ function renderList() {
     <div class="page-head">
       <div><h1>My charts</h1><p class="muted">Pick a pattern to keep working, or start a new one.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" data-act="photo">From photo</button>
-        <button class="btn" data-act="paste">Paste pattern</button>
+        <button class="btn" data-act="impopen">Import pattern</button>
         <button class="btn" data-act="import">Import file</button>
         <button class="btn primary" data-act="new">+ New chart</button>
       </div>
@@ -332,7 +331,7 @@ function renderList() {
     ${DB.charts.length ? `<div class="grid">${cards}</div>` : `
       <div class="card empty"><div class="big">🧶</div><h2>Nothing on the hook yet</h2>
         <p class="muted">Start a chart and it will be saved right here in your browser.</p>
-        <button class="btn primary" data-act="new">+ New chart</button> <button class="btn" data-act="paste">Paste pattern</button></div>`}
+        <button class="btn primary" data-act="new">+ New chart</button> <button class="btn" data-act="impopen">Import pattern</button></div>`}
     <input type="file" id="importFile" accept="application/json,.json" hidden>`;
 }
 
@@ -715,44 +714,84 @@ function importPreview() {
   const txt = $('#impText').value;
   const res = parsePattern(txt, { uk: $('#impUK').checked });
   ui.imp = res;
-  $('#impName').placeholder = res.name || 'Imported pattern';
+  $('#impName').placeholder = res.name || (ui.ph ? 'Chart from photo' : 'Imported pattern');
   const mode = $('#impMode').value === 'auto' ? res.mode : $('#impMode').value;
   const unit = mode === 'round' ? 'Rnd' : 'Row';
-  $('#impCreate').disabled = !res.rows.length;
-  if (!txt.trim()) { el.innerHTML = '<p class="muted small">Paste your pattern above and the rows it understands will appear here.</p>'; return; }
-  if (!res.rows.length) { el.innerHTML = '<p class="hint">No rows found. Start each row with something like "Round 1:" or "Row 1:", then the stitches.</p>'; return; }
-  el.innerHTML = `<p class="small muted">Found ${res.rows.length} ${mode === 'round' ? 'rounds' : 'rows'} · ${mode === 'round' ? 'in the round' : 'flat'}. Check the rows, then create the chart. You can edit everything afterwards.</p><ol class="imp-list">` +
-    res.rows.map((r, i) => `<li><b>${unit} ${i + 1}:</b> ${esc(rowText({ items: r.items }))}${r.unknown.length ? ` <span class="warn">couldn't read: ${r.unknown.map(u => '"' + esc(u) + '"').join(', ')}</span>` : ''}</li>`).join('') +
-    `</ol>${res.skipped.length ? `<p class="hint">Skipped: ${res.skipped.map(u => '"' + esc(u) + '"').join(', ')}</p>` : ''}`;
+  if (!res.rows.length) {
+    el.innerHTML = !txt.trim() ? (ui.ph ? '' : '<p class="muted small">Paste your pattern above, add a photo, or both. What I understand will show up here.</p>')
+      : '<p class="hint">No rows found in the text. Start each row with something like "Round 1:" or "Row 1:", then the stitches.</p>';
+  } else {
+    el.innerHTML = `<p class="small muted">Found ${res.rows.length} ${mode === 'round' ? 'rounds' : 'rows'} · ${mode === 'round' ? 'in the round' : 'flat'}.${ui.ph ? ' The yarn color comes from your photo.' : ''} Check the rows, then create the chart. You can edit everything afterwards.</p><ol class="imp-list">` +
+      res.rows.map((r, i) => `<li><b>${unit} ${i + 1}:</b> ${esc(rowText({ items: r.items }))}${r.unknown.length ? ` <span class="warn">couldn't read: ${r.unknown.map(u => '"' + esc(u) + '"').join(', ')}</span>` : ''}</li>`).join('') +
+      `</ol>${res.skipped.length ? `<p class="hint">Skipped: ${res.skipped.map(u => '"' + esc(u) + '"').join(', ')}</p>` : ''}`;
+  }
+  syncImport();
+}
+/* one dialog, two sources: written rounds give the stitches, a photo gives the colour (and the rounds when there is no text) */
+function syncImport() {
+  const hasText = !!(ui.imp && ui.imp.rows.length), hasPhoto = !!ui.ph;
+  const btn = $('#impCreate'); if (btn) btn.disabled = !(hasText || hasPhoto);
+  const circ = $('#phCircle'); if (circ) circ.hidden = !(hasPhoto && !hasText);
+  const lead = $('#phLead'); if (lead) lead.textContent = hasText ? 'The yarn color is taken from the photo. Drag the dots so the outline hugs the piece.' : 'Drag the dots so the outline hugs the piece. The thin rings show the rounds counted; change Rounds until they match what you see.';
 }
 const IMP_EXAMPLE = `Pink flower coaster
 Round 1: MR, 12 dc (12)
 Round 2: (dc, ch 1) x 12 (24)
 Round 3: *2 dc, ch 1* repeat 11 more times
 Round 4: sl st, ch 2, (shell, sc 3) x 12`;
-function pasteModal() {
+function importModal() {
+  ui.ph = null; ui.imp = null;
   openModal(`
-    <h2>Paste a pattern</h2>
-    <p class="muted small">Copy the written rounds from a video description, blog or captions. Lines like <i>Round 2: (dc, ch 1) x 12</i>, <i>R3: *2 sc, inc* repeat 5 more times</i> or <i>Row 4: ch 1, sc in each st across</i> all work.</p>
-    <label class="f" for="impText">Pattern text</label>
-    <textarea id="impText" rows="8" placeholder="Round 1: MR, 6 sc (6)&#10;Round 2: 6 inc (12)&#10;Round 3: (sc, inc) x 6 (18)"></textarea>
+    <h2>Import a pattern</h2>
+    <p class="muted small">Paste the written rounds, add a photo of the finished piece, or use both. Text gives the exact stitches. A photo gives the yarn color, and with no text it also estimates the rounds of a flat round piece.</p>
+    <label class="f" for="impText">Pattern text <span class="muted">(optional)</span></label>
+    <textarea id="impText" rows="6" placeholder="Round 1: MR, 6 sc (6)&#10;Round 2: 6 inc (12)&#10;Round 3: (sc, inc) x 6 (18)"></textarea>
+    <label class="f" for="phFile">Photo <span class="muted">(optional)</span></label>
+    <input type="file" id="phFile" accept="image/*">
+    <p class="muted small">You can also paste an image (Ctrl/Cmd+V) or drop one here.</p>
+    <div id="phStage" hidden>
+      <canvas id="phCanvas" aria-label="Photo with the detected outline"></canvas>
+      <p class="muted small" id="phLead"></p>
+      <div class="imp-opts"><label for="phColor">Yarn color <input type="color" id="phColor" value="#b7a6e0"></label></div>
+      <div id="phCircle">
+        <div class="imp-opts">
+          <label for="phN">Rounds <span class="stepper"><button type="button" id="phMinus" aria-label="Fewer rounds">−</button><input id="phN" type="number" min="2" max="30" value="6"><button type="button" id="phPlus" aria-label="More rounds">+</button></span></label>
+          <label for="phSt">Stitch <select id="phSt"><option value="sc">Single crochet</option><option value="hdc">Half double</option><option value="dc">Double crochet</option></select></label>
+        </div>
+        <div class="ph-prev"><div><div class="small muted">Brightness from the center outward</div><canvas id="phProf" width="320" height="60"></canvas></div><div id="phChart"></div></div>
+      </div>
+      <p class="muted small" id="phNote"></p>
+    </div>
     <div class="imp-opts">
       <label for="impName">Name <input type="text" id="impName" maxlength="60" placeholder="Imported pattern"></label>
       <label for="impMode">Shape <select id="impMode"><option value="auto">Detect</option><option value="flat">Flat rows</option><option value="round">In the round</option></select></label>
-      <label class="chk" for="impUK"><input type="checkbox" id="impUK" ${DB.uk ? 'checked' : ''}> Pattern uses UK terms</label>
+      <label class="chk" for="impUK"><input type="checkbox" id="impUK" ${DB.uk ? 'checked' : ''}> Text uses UK terms</label>
     </div>
     <div id="impPreview"></div>
     <div class="actions"><button class="btn" data-act="impexample">Try an example</button><button class="btn" data-act="closemodal">Cancel</button><button class="btn primary" id="impCreate" data-act="impcreate" disabled>Create chart</button></div>`);
+  $('#phFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { await startPhoto(f); } catch (err) { toast('Could not open that image'); }
+  });
   importPreview();
   setTimeout(() => $('#impText') && $('#impText').focus(), 30);
 }
 function importCreate() {
-  const res = ui.imp; if (!res || !res.rows.length) return;
-  const mode = $('#impMode').value === 'auto' ? res.mode : $('#impMode').value;
-  const c = { id: uid(), name: ($('#impName').value.trim() || res.name || 'Imported pattern').slice(0, 60), mode, updated: Date.now(),
-    rows: res.rows.map(r => ({ id: uid(), color: PAL[1][1], note: r.unknown.length ? `Check: ${r.unknown.join('; ')}`.slice(0, 200) : '', items: r.items })) };
+  const res = ui.imp, hasText = !!(res && res.rows.length);
+  if (!hasText && !ui.ph) return;
+  let rows, mode, name;
+  if (hasText) {
+    mode = $('#impMode').value === 'auto' ? res.mode : $('#impMode').value;
+    const color = ui.ph ? ui.ph.color : PAL[1][1];
+    rows = res.rows.map(r => ({ id: uid(), color, note: r.unknown.length ? `Check: ${r.unknown.join('; ')}`.slice(0, 200) : '', items: r.items }));
+    name = $('#impName').value.trim() || res.name || (ui.ph ? 'Chart from photo' : 'Imported pattern');
+  } else {
+    mode = 'round'; rows = ui.ph.chart.rows; name = $('#impName').value.trim() || 'Chart from photo';
+  }
+  const c = { id: uid(), name: name.slice(0, 60), mode, updated: Date.now(), rows };
   closeModal(); DB.charts.push(c); ui.chartId = c.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null;
-  save(); render(); window.scrollTo(0, 0); toast('Pattern imported. Check the rows against your source.');
+  save(); render(); window.scrollTo(0, 0);
+  toast(hasText ? 'Pattern imported. Check the rows against your source.' : 'Chart built from your photo. Compare it with your piece and adjust.');
 }
 
 /* ---------------------------------------------------------- chart from a photo */
@@ -900,38 +939,13 @@ function circleRows(st, N, color) {
   }
   return rows;
 }
-function photoModal() {
-  ui.ph = null;
-  openModal(`
-    <h2>Chart from a photo</h2>
-    <p class="muted small">Upload a photo of a flat, round piece (a coaster, a circle, a doily) taken from above. I find its edge and color and estimate the number of rounds, then build a starting chart. A photo can't show every stitch, so check the result against your piece.</p>
-    <input type="file" id="phFile" accept="image/*">
-    <p class="muted small" id="phHint">You can also paste an image (Ctrl/Cmd+V) or drop one here.</p>
-    <div id="phStage" hidden>
-      <canvas id="phCanvas" aria-label="Photo with the detected outline"></canvas>
-      <p class="muted small">Drag the dots so the outline hugs the piece. The thin rings show the rounds counted; slide them with Rounds until they match what you see.</p>
-      <div class="imp-opts">
-        <label for="phN">Rounds <span class="stepper"><button type="button" id="phMinus" aria-label="Fewer rounds">−</button><input id="phN" type="number" min="2" max="30" value="6"><button type="button" id="phPlus" aria-label="More rounds">+</button></span></label>
-        <label for="phSt">Stitch <select id="phSt"><option value="sc">Single crochet</option><option value="hdc">Half double</option><option value="dc">Double crochet</option></select></label>
-        <label for="phColor">Yarn <input type="color" id="phColor" value="#b7a6e0"></label>
-        <label for="phName">Name <input type="text" id="phName" maxlength="60" placeholder="Chart from photo"></label>
-      </div>
-      <div class="ph-prev"><div><div class="small muted">Brightness from the center outward</div><canvas id="phProf" width="320" height="60"></canvas></div><div id="phChart"></div></div>
-      <p class="muted small" id="phNote"></p>
-    </div>
-    <div class="actions"><button class="btn" data-act="closemodal">Cancel</button><button class="btn primary" id="phCreate" data-act="phcreate" disabled>Create chart</button></div>`);
-  $('#phFile').addEventListener('change', async e => {
-    const f = e.target.files[0]; if (!f) return;
-    try { await startPhoto(f); } catch (err) { toast('Could not open that image'); }
-  });
-}
 async function startPhoto(file) {
   const photo = await loadPhoto(file), e = detectPiece(photo);
   ui.ph = { photo, e, manual: false, rounds: 6, st: 'sc', color: pieceColor(photo, e), prof: [] };
   const cv = $('#phCanvas'); cv.width = photo.w; cv.height = photo.h;
-  $('#phStage').hidden = false; $('#phColor').value = ui.ph.color; $('#phCreate').disabled = false;
+  $('#phStage').hidden = false; $('#phColor').value = ui.ph.color;
   $('#phNote').textContent = e.found ? '' : "I couldn't find the piece on its own, so drag the dots to outline it.";
-  wirePhoto(cv); photoUpdate(true);
+  wirePhoto(cv); photoUpdate(true); importPreview();
 }
 function imageFrom(dt) {
   if (!dt) return null;
@@ -941,7 +955,7 @@ function imageFrom(dt) {
 }
 async function openPhotoFile(f) {
   if (!f) return;
-  if ($('#modal').hidden || !$('#phFile')) { if (!$('#modal').hidden) return; photoModal(); }
+  if ($('#modal').hidden || !$('#phFile')) { if (!$('#modal').hidden) return; importModal(); }
   try { await startPhoto(f); } catch (err) { toast('Could not open that image'); }
 }
 document.addEventListener('paste', e => {
@@ -998,14 +1012,8 @@ function photoUpdate(first, keepN) {
   p.forEach((v, i) => { const x = i / (p.length - 1) * pc.width, y = pc.height - 4 - (v - lo) / Math.max(1, hi - lo) * (pc.height - 8); i ? pg.lineTo(x, y) : pg.moveTo(x, y); }); pg.stroke();
   ph.chart = { mode: 'round', rows: circleRows(ph.st, ph.rounds, ph.color) };
   $('#phChart').innerHTML = chartSVG(ph.chart, { mini: true });
+  syncImport();
 }
-function photoCreate() {
-  const ph = ui.ph; if (!ph) return;
-  const c = { id: uid(), name: ($('#phName').value.trim() || 'Chart from photo').slice(0, 60), mode: 'round', updated: Date.now(), rows: ph.chart.rows };
-  closeModal(); DB.charts.push(c); ui.chartId = c.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null;
-  save(); render(); window.scrollTo(0, 0); toast('Chart built from your photo. Compare it with your piece and adjust.');
-}
-
 /* ------------------------------------------------------------------- events */
 function pngExport() {
   const c = chart();
@@ -1040,9 +1048,7 @@ document.addEventListener('click', e => {
     case 'tpl': ui.tpl = d.tpl; document.querySelectorAll('.tpl').forEach(b => b.setAttribute('aria-pressed', b.dataset.tpl === d.tpl)); break;
     case 'create': { const n = $('#newName').value.trim(); closeModal(); createChart(ui.tpl, n || TEMPLATES[ui.tpl].label); break; }
     case 'closemodal': closeModal(); break;
-    case 'paste': pasteModal(); break;
-    case 'photo': photoModal(); break;
-    case 'phcreate': photoCreate(); break;
+    case 'impopen': importModal(); break;
     case 'impexample': $('#impText').value = IMP_EXAMPLE; importPreview(); break;
     case 'impcreate': importCreate(); break;
     case 'open': ui.chartId = d.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null; render(); window.scrollTo(0, 0); break;
