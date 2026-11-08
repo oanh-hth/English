@@ -50,6 +50,23 @@ const monthName = d => d.toLocaleDateString('vi-VN',{month:'short'});
 const icon = (cat, cls='') => '<svg class="'+cls+'" viewBox="0 0 48 48" aria-hidden="true"><use href="#s-'+cat+'"/></svg>';
 
 /* ---------- state ---------- */
+/* A few things to start with, so the room is not empty the first time you open it */
+function starter(){
+  const t = today();
+  const S = [
+    ['Sữa tươi 1L','dairy',-2,5,36000,1,25,62],
+    ['Trứng gà (10 quả)','dairy',-3,12,38000,1,38,80],
+    ['Rau cải xanh','produce',-1,2,15000,1,52,66],
+    ['Nước cam ép','drinks',-5,6,28000,1,74,62],
+    ['Gạo ST25 5kg','pantry',-12,null,145000,1,72,16],
+    ['Vitamin C','meds',-9,180,120000,1,82,16],
+    ['Dầu gội','care',-20,300,95000,1,12,56],
+    ['Nước rửa chén','cleaning',-15,null,42000,1,88,60],
+    ['Áo thun trắng','clothes',-30,null,189000,1,22,86],
+    ['Quà sinh nhật cho bạn','gift',-3,null,250000,1,52,90]
+  ];
+  return S.map(r => ({id:uid(), name:r[0], cat:r[1], bought:iso(addDays(t,r[2])), exp:r[3]===null?'':iso(addDays(t,r[3])), price:r[4], qty:r[5], x:r[6], y:r[7], used:false}));
+}
 function seed(){
   const t = today();
   const S = [
@@ -91,7 +108,7 @@ function seed(){
 function load(){ try{ const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 let state = load();
-if(!state || !Array.isArray(state.items)) state = {items:[], win:3};
+if(!state || !Array.isArray(state.items)) state = {items:starter(), win:3};
 let sel = null, filter = null, justAdded = null, found = null;
 const byId = id => state.items.find(i => i.id === id);
 
@@ -455,6 +472,7 @@ function renderHistory(){
 function renderRoom(){
   room.querySelectorAll('.item').forEach(n => n.remove());
   $('#empty-room').hidden = state.items.some(i => !i.used);
+  if(state.view === '3d' && v3){ sync3D(); return; }
   state.items.filter(i => !i.used).forEach(it => {
     const st = status(it), d = daysLeft(it);
     const b = document.createElement('button');
@@ -1037,12 +1055,245 @@ function twoStep(btn, armedText, fn){
     t = setTimeout(() => { btn.dataset.armed = '0'; btn.textContent = orig; }, 3500);
   });
 }
+const addStarter = () => {
+  const have = new Set(state.items.filter(i => !i.used).map(i => unaccent(i.name)));
+  const add = starter().filter(i => !have.has(unaccent(i.name)));
+  if(!add.length){ toast('Mấy món có sẵn đã nằm trong phòng hết rồi nè.'); return; }
+  state.items = state.items.concat(add); save(); filter = null; renderAll(); toast('Đã thêm '+add.length+' món có sẵn vào phòng.');
+};
 const loadSample = () => { state.items = seed(); applyRebuy(state.items); sel = null; filter = null; save(); renderAll(); toast('Đã nạp dữ liệu mẫu nè.'); };
 twoStep($('#reset'), 'Bấm lần nữa để thay bằng dữ liệu mẫu', loadSample);
 twoStep($('#wipe'), 'Bấm lần nữa để xoá hết', () => { state.items = []; sel = null; filter = null; save(); renderAll(); toast('Đã xoá hết dữ liệu.'); });
-$('#load-sample').addEventListener('click', loadSample);
+$('#load-sample').addEventListener('click', addStarter);
+$('#add-starter').addEventListener('click', addStarter);
 $('#auto-rebuy').checked = state.autoRebuy !== false;
 $('#auto-rebuy').addEventListener('change', e => { state.autoRebuy = e.target.checked; save(); });
+
+/* ---------- 3D view: three.js, loaded the first time you ask for it ---------- */
+const THREE_URL = 'vendor/three.min.js';
+const RW = 10, RD = 7, RH = 4.2, FW = RW*0.96;
+let T = null, v3 = null;
+const iconCache = {};
+function loadThree(){
+  if(window.THREE) return Promise.resolve(window.THREE);
+  return new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = THREE_URL;
+    sc.onload = () => window.THREE ? res(window.THREE) : rej(new Error('three'));
+    sc.onerror = () => rej(new Error('load'));
+    document.head.appendChild(sc);
+  });
+}
+/* 2D room coordinates (x 0-100, y 0-100) <-> 3D: y >= 44 is floor, above that is the back wall and its shelf */
+function toWorld(it){
+  const x = (it.x/100 - 0.5)*FW;
+  if(it.y >= 44) return [x, 0, -RD/2 + 0.5 + (it.y-44)/52*(RD-0.9)];
+  return [x, clamp(2.4 + (16-it.y)*0.06, 0.3, 3.4), -RD/2 + 0.35];
+}
+const floorToItem = (x, z) => ({x:+clamp((x/FW + 0.5)*100, 4, 96).toFixed(2), y:+clamp(44 + (z - (-RD/2 + 0.5))/(RD-0.9)*52, 44, 96).toFixed(2)});
+const iconImg = cat => iconCache[cat] || (iconCache[cat] = new Promise(res => {
+  const sym = document.getElementById('s-'+cat);
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">'+(sym ? sym.innerHTML : '').replace(/currentColor/g, CAT[cat].color)+'</svg>';
+  const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null);
+  im.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}));
+function pill(x, c, text, fill, cx, cy){
+  c.font = '700 24px "DM Sans", system-ui, sans-serif';
+  const w = Math.max(40, c.measureText(text).width + 22), h = 38, l = cx - w/2, t = cy - h/2;
+  c.fillStyle = fill; c.beginPath(); c.moveTo(l+h/2,t); c.arcTo(l+w,t,l+w,t+h,h/2); c.arcTo(l+w,t+h,l,t+h,h/2); c.arcTo(l,t+h,l,t,h/2); c.arcTo(l,t,l+w,t,h/2); c.closePath(); c.fill();
+  c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, cx, cy+1);
+}
+function badgeOf(it){
+  const st = status(it), d = daysLeft(it);
+  return st === 'expired' ? {t:'!', c:'#c42b36'} : st === 'soon' ? {t:d === 0 ? 'Hôm nay' : d+'d', c:'#b26a00'} : null;
+}
+const itemSig = it => it.cat+'|'+(badgeOf(it) ? badgeOf(it).t : '')+'|'+(isDormant(it) ? 'z' : '');
+async function itemCanvas(it){
+  const im = await iconImg(it.cat), c = document.createElement('canvas'); c.width = 256; c.height = 320;
+  const x = c.getContext('2d'); if(im) x.drawImage(im, 28, 96, 200, 200);
+  const b = badgeOf(it); if(b) pill(x, x, b.t, b.c, 176, 84);
+  if(isDormant(it)) pill(x, x, 'zZ', '#6c86ad', 58, 292);
+  return c;
+}
+function canvasTex(w, h, draw){
+  const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h);
+  const t = new T.CanvasTexture(c); t.anisotropy = 4; return t;
+}
+function buildRoomMeshes(){
+  const r = roomLook(), p = ROOMS.find(x => x.id === r.preset) || ROOMS[0], V = p.v;
+  if(v3.group){ v3.scene.remove(v3.group); v3.group.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material){ if(o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
+  const g = new T.Group(), L = (c, o) => new T.MeshLambertMaterial(Object.assign({color:c}, o || {}));
+  const box = (w, h, d, c, x, y, z) => { const m = new T.Mesh(new T.BoxGeometry(w,h,d), L(c)); m.position.set(x,y,z); g.add(m); return m; };
+  const shade = (hex, k) => '#'+new T.Color(hex).multiplyScalar(k).getHexString();
+  // floor with planks
+  const floorTex = canvasTex(1024, 720, (x, w, h) => {
+    x.fillStyle = V['--floor']; x.fillRect(0,0,w,h); x.strokeStyle = V['--floor-line']; x.lineWidth = 3;
+    for(let i = 0; i <= 8; i++){ x.beginPath(); x.moveTo(0, i*h/8); x.lineTo(w, i*h/8); x.stroke(); }
+    for(let i = 0; i < 8; i++){ for(let j = 0; j < 4; j++){ const px = ((i % 2) ? 128 : 0) + j*256 + 128*0; x.beginPath(); x.moveTo(px, i*h/8); x.lineTo(px, (i+1)*h/8); x.stroke(); } }
+  });
+  const floor = new T.Mesh(new T.PlaneGeometry(RW, RD), L(0xffffff, {map:floorTex})); floor.rotation.x = -Math.PI/2; g.add(floor);
+  box(RW+0.3, 0.3, RD+0.3, shade(V['--floor-line'], 0.9), 0, -0.17, 0);
+  // walls
+  const wallTex = canvasTex(1024, 430, (x, w, h) => { x.fillStyle = V['--wall']; x.fillRect(0,0,w,h); x.fillStyle = V['--wall-2']; x.globalAlpha = 0.4; x.fillRect(0,0,w,h*0.17); x.globalAlpha = 1; });
+  const back = new T.Mesh(new T.PlaneGeometry(RW, RH), new T.MeshBasicMaterial({map:wallTex})); back.position.set(0, RH/2, -RD/2); g.add(back);
+  const sideMat = new T.MeshBasicMaterial({color:shade(V['--wall'], 0.88)});
+  const left = new T.Mesh(new T.PlaneGeometry(RD, RH), sideMat); left.rotation.y = Math.PI/2; left.position.set(-RW/2, RH/2, 0); g.add(left);
+  const right = new T.Mesh(new T.PlaneGeometry(RD, RH), sideMat); right.rotation.y = -Math.PI/2; right.position.set(RW/2, RH/2, 0); g.add(right);
+  box(RW, 0.2, 0.1, V['--base'], 0, 0.1, -RD/2+0.05); box(0.1, 0.2, RD, V['--base'], -RW/2+0.05, 0.1, 0); box(0.1, 0.2, RD, V['--base'], RW/2-0.05, 0.1, 0);
+  if(r.mode === 'image'){                       // your photo becomes the back wall
+    const img = lsGet(KEY_IMG);
+    if(img){ const im = new Image(); im.onload = () => {
+      const c = document.createElement('canvas'); c.width = 1600; c.height = Math.round(1600*RH/RW); const x = c.getContext('2d');
+      const k = Math.max(c.width/im.width, c.height/im.height), w = im.width*k, h = im.height*k; x.drawImage(im, (c.width-w)/2, (c.height-h)/2, w, h);
+      x.fillStyle = 'rgba(255,255,255,'+(r.veil/100)+')'; x.fillRect(0,0,c.width,c.height);
+      const t = new T.CanvasTexture(c); back.material.map.dispose(); back.material.map = t; back.material.needsUpdate = true; v3.needs = true;
+    }; im.src = img; }
+  }
+  // window, picture, shelf
+  box(2.3, 1.8, 0.08, V['--frame'], -3.1, 2.55, -RD/2+0.05);
+  const glass = new T.Mesh(new T.PlaneGeometry(2.0, 1.5), new T.MeshBasicMaterial({color:V['--glass']})); glass.position.set(-3.1, 2.55, -RD/2+0.1); g.add(glass);
+  box(0.07, 1.5, 0.05, V['--frame'], -3.1, 2.55, -RD/2+0.12); box(2.0, 0.07, 0.05, V['--frame'], -3.1, 2.55, -RD/2+0.12);
+  const beam = new T.Mesh(new T.PlaneGeometry(1.9, 3.2), new T.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.16})); beam.rotation.x = -Math.PI/2; beam.position.set(-3.0, 0.02, -1.3); g.add(beam);
+  box(1.3, 1.0, 0.06, V['--frame'], 0.5, 3.0, -RD/2+0.04);
+  const pic = new T.Mesh(new T.PlaneGeometry(1.1, 0.8), new T.MeshBasicMaterial({map:canvasTex(220,160,(x,w,h) => { x.fillStyle = V['--wall-2']; x.fillRect(0,0,w,h); x.fillStyle = V['--rug']; x.beginPath(); x.moveTo(0,h); x.lineTo(60,60); x.lineTo(105,105); x.lineTo(150,50); x.lineTo(w,h); x.fill(); })})); pic.position.set(0.5, 3.0, -RD/2+0.08); g.add(pic);
+  const shelfX = (0.795-0.5)*FW; box(2.5, 0.12, 0.55, V['--floor-line'], shelfX, 2.34, -RD/2+0.3); box(0.1, 0.5, 0.35, V['--floor-line'], shelfX-1.0, 2.05, -RD/2+0.2); box(0.1, 0.5, 0.35, V['--floor-line'], shelfX+1.0, 2.05, -RD/2+0.2);
+  // rug and plant
+  const rug = new T.Mesh(new T.CircleGeometry(1, 48), L(V['--rug'])); rug.rotation.x = -Math.PI/2; rug.scale.set(2.5, 1.5, 1); rug.position.set(0.2, 0.012, 0.9); g.add(rug);
+  const pot = new T.Mesh(new T.CylinderGeometry(0.35, 0.28, 0.6, 20), L(0xb96a4a)); pot.position.set(4.2, 0.3, -2.6); g.add(pot);
+  [[0,0.55,0,0.45],[0.2,0.9,0.1,0.38],[-0.2,0.85,-0.1,0.36],[0,1.2,0,0.3]].forEach(a => { const l = new T.Mesh(new T.SphereGeometry(a[3], 14, 10), L(0x4c9a3f)); l.position.set(4.2+a[0], 0.3+a[1], -2.6+a[2]); l.scale.y = 1.35; g.add(l); });
+  v3.group = g; v3.scene.add(g);
+  room.style.background = 'linear-gradient(180deg,'+V['--wall-2']+','+V['--base']+')';
+  v3.needs = true;
+}
+function placeCamera(){
+  const q = v3, cp = Math.cos(q.pitch);
+  q.camera.position.set(q.target.x + q.radius*Math.sin(q.yaw)*cp, q.target.y + q.radius*Math.sin(q.pitch), q.target.z + q.radius*Math.cos(q.yaw)*cp);
+  q.camera.lookAt(q.target); q.needs = true;
+}
+function resize3D(){
+  if(!v3) return;
+  const w = room.clientWidth, h = room.clientHeight; if(!w || !h) return;
+  v3.renderer.setSize(w, h, false); v3.camera.aspect = w/h; v3.camera.updateProjectionMatrix(); v3.needs = true;
+}
+function makeItemGroup(it){
+  const grp = new T.Group();
+  const shadow = new T.Mesh(new T.CircleGeometry(0.5, 20), new T.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.22, depthWrite:false}));
+  shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; shadow.scale.set(1, 0.6, 1); grp.add(shadow);
+  const sp = new T.Sprite(new T.SpriteMaterial({transparent:true})); sp.center.set(0.5, 0.1); sp.scale.set(1.4, 1.75, 1); sp.userData.id = it.id; grp.add(sp);
+  grp.userData = {id:it.id, sp, shadow, sig:''};
+  v3.items.add(grp); v3.map.set(it.id, grp); return grp;
+}
+function sync3D(){
+  if(!v3 || state.view !== '3d') return;
+  const live = state.items.filter(i => !i.used), keep = new Set();
+  live.forEach(it => {
+    keep.add(it.id);
+    const grp = v3.map.get(it.id) || makeItemGroup(it), u = grp.userData;
+    if(!(v3.drag && v3.drag.moved && v3.drag.id === it.id)){ const w = toWorld(it); grp.position.set(w[0], w[1], w[2]); u.shadow.position.y = 0.02 - w[1]; }
+    u.sp.material.opacity = ((filter && filter !== it.cat) || !inPeriod(it)) ? 0.25 : 1;
+    const sig = itemSig(it);
+    if(sig !== u.sig){ u.sig = sig; itemCanvas(it).then(c => { if(u.sig !== sig) return; const tex = new T.CanvasTexture(c); if(u.sp.material.map) u.sp.material.map.dispose(); u.sp.material.map = tex; u.sp.material.needsUpdate = true; v3.needs = true; }); }
+  });
+  v3.map.forEach((grp, id) => { if(!keep.has(id)){ v3.items.remove(grp); grp.userData.sp.material.dispose(); v3.map.delete(id); } });
+  const s = sel && byId(sel);
+  if(s && !s.used){ const w = toWorld(s); v3.ring.position.set(w[0], w[1]+0.03, w[2]); v3.ring.visible = true; } else v3.ring.visible = false;
+  v3.needs = true;
+}
+function ndc(e){
+  const r = v3.renderer.domElement.getBoundingClientRect();
+  return new T.Vector2(((e.clientX-r.left)/r.width)*2 - 1, -((e.clientY-r.top)/r.height)*2 + 1);
+}
+function pick3D(e){
+  v3.ray.setFromCamera(ndc(e), v3.camera);
+  const hits = v3.ray.intersectObjects(Array.from(v3.map.values()).map(g => g.userData.sp), false);
+  return hits.length ? hits[0].object.userData.id : null;
+}
+function floorPoint(e){
+  v3.ray.setFromCamera(ndc(e), v3.camera);
+  const pt = new T.Vector3(); return v3.ray.ray.intersectPlane(v3.plane, pt) ? pt : null;
+}
+function updateTag3D(){
+  const tag = $('#tag3d'), id = v3 && (v3.hover || sel), it = id && byId(id);
+  if(!it || it.used || !v3 || state.view !== '3d'){ tag.hidden = true; return; }
+  const w = toWorld(it), v = new T.Vector3(w[0], w[1] + 1.5, w[2]).project(v3.camera);
+  tag.hidden = false; tag.textContent = it.name; tag.style.left = ((v.x*0.5 + 0.5)*room.clientWidth)+'px'; tag.style.top = ((-v.y*0.5 + 0.5)*room.clientHeight)+'px';
+}
+function build3D(){
+  const host = $('#room3d'), canvas = host.querySelector('canvas');
+  const renderer = new T.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setClearColor(0x000000, 0);
+  const scene = new T.Scene(), camera = new T.PerspectiveCamera(38, 1.6, 0.1, 100);
+  scene.add(new T.AmbientLight(0xffffff, 0.64)); const dl = new T.DirectionalLight(0xffffff, 0.4); dl.position.set(-4, 8, 6); scene.add(dl);
+  v3 = {renderer, scene, camera, yaw:0, pitch:0.5, radius:12.5, target:new T.Vector3(0, 1.0, 0.3), ray:new T.Raycaster(), plane:new T.Plane(new T.Vector3(0,1,0), 0),
+        items:new T.Group(), map:new Map(), needs:true, drag:null, orbit:null, hover:null, raf:0, timer:0};
+  scene.add(v3.items);
+  v3.ring = new T.Mesh(new T.RingGeometry(0.5, 0.62, 40), new T.MeshBasicMaterial({color:0x07877d, side:T.DoubleSide, transparent:true, opacity:0.95, depthTest:false}));
+  v3.ring.rotation.x = -Math.PI/2; v3.ring.visible = false; v3.ring.renderOrder = 5; scene.add(v3.ring);
+  buildRoomMeshes(); placeCamera(); resize3D(); new ResizeObserver(resize3D).observe(room);
+
+  canvas.addEventListener('pointerdown', e => {
+    const id = pick3D(e); canvas.setPointerCapture(e.pointerId);
+    if(id){
+      const it = byId(id), d = v3.drag = {id, sx:e.clientX, sy:e.clientY, ox:it.x, oy:it.y, moved:false, pid:e.pointerId, over:false};
+      clearTimeout(v3.timer);
+      v3.timer = setTimeout(() => { if(v3.drag === d && !d.moved){ v3.drag = null; duplicateItem(id); } }, LONG_PRESS_MS);
+    }else v3.orbit = {sx:e.clientX, sy:e.clientY, yaw:v3.yaw, pitch:v3.pitch, pid:e.pointerId};
+  });
+  canvas.addEventListener('pointermove', e => {
+    const d = v3.drag, o = v3.orbit;
+    if(d && e.pointerId === d.pid){
+      if(!d.moved && Math.hypot(e.clientX-d.sx, e.clientY-d.sy) < 5) return;
+      if(!d.moved){ d.moved = true; clearTimeout(v3.timer); binEl.classList.add('armed'); }
+      const pt = floorPoint(e), it = byId(d.id);
+      if(pt && it){
+        const m = floorToItem(pt.x, pt.z); it.x = m.x; it.y = m.y;
+        const grp = v3.map.get(d.id), w = toWorld(it); grp.position.set(w[0], 0, w[2]); grp.userData.shadow.position.y = 0.02; v3.ring.position.set(w[0], 0.03, w[2]); v3.ring.visible = true; v3.needs = true;
+      }
+      const br = binEl.getBoundingClientRect(), pad = 12;
+      d.over = e.clientX >= br.left-pad && e.clientX <= br.right+pad && e.clientY >= br.top-pad && e.clientY <= br.bottom+pad;
+      binEl.classList.toggle('over', d.over);
+    }else if(o && e.pointerId === o.pid){
+      v3.yaw = clamp(o.yaw - (e.clientX-o.sx)*0.006, -0.75, 0.75); v3.pitch = clamp(o.pitch + (e.clientY-o.sy)*0.004, 0.2, 1.05); placeCamera();
+    }else{
+      const id = pick3D(e); if(id !== v3.hover){ v3.hover = id; canvas.style.cursor = id ? 'pointer' : 'grab'; }
+    }
+  });
+  const end = e => {
+    clearTimeout(v3.timer); const d = v3.drag; v3.drag = null; v3.orbit = null; binEl.classList.remove('armed','over');
+    if(!d || e.pointerId !== d.pid) return;
+    const it = byId(d.id); if(!it) return;
+    if(d.moved && d.over){ it.x = d.ox; it.y = d.oy; trashItem(d.id); return; }
+    if(d.moved) save();
+    select(d.id);
+  };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('wheel', e => { e.preventDefault(); v3.radius = clamp(v3.radius*(1 + Math.sign(e.deltaY)*0.08), 8, 16); placeCamera(); }, {passive:false});
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  const loop = () => { if(state.view !== '3d'){ v3.raf = 0; return; } v3.raf = requestAnimationFrame(loop); if(v3.needs){ v3.needs = false; v3.renderer.render(v3.scene, v3.camera); } updateTag3D(); };
+  v3.loop = loop;
+  return v3;
+}
+function show3D(on){
+  $('#room3d').hidden = !on; room.classList.toggle('is3d', on);
+  $('#v3d-btn').textContent = on ? 'Xem 2D' : 'Xem 3D'; $('#v3d-btn').setAttribute('aria-pressed', String(on));
+  $('#v3d-reset').hidden = !on; $('#tag3d').hidden = true;
+  room.querySelector('.hint').textContent = on ? 'Kéo vào chỗ trống để xoay phòng, cuộn để zoom. Kéo món để dời, nhấn giữ để nhân đôi.' : 'Kéo món đi đâu cũng được. Nhấn giữ để nhân đôi. Thả vào thùng rác để xoá.';
+  if(!on) room.style.background = '';
+}
+async function enter3D(){
+  const btn = $('#v3d-btn'); btn.disabled = true; btn.textContent = 'Đang tải 3D…';
+  try{
+    T = await loadThree();
+    if(!v3) build3D();
+  }catch(e){
+    v3 = null; state.view = '2d'; btn.disabled = false; btn.textContent = 'Xem 3D';
+    toast('Chưa mở được phòng 3D. Lần đầu bạn cần có mạng, và trình duyệt cần hỗ trợ WebGL nha.'); return;
+  }
+  btn.disabled = false; state.view = '3d'; save(); show3D(true); applyRoom(); resize3D(); renderRoom();
+  if(!v3.raf) v3.loop();
+}
+function leave3D(){ state.view = '2d'; save(); show3D(false); applyRoom(); renderRoom(); }
+$('#v3d-btn').addEventListener('click', () => { if(state.view === '3d') leave3D(); else enter3D(); });
+$('#v3d-reset').addEventListener('click', () => { if(!v3) return; v3.yaw = 0; v3.pitch = 0.5; v3.radius = 12.5; placeCamera(); });
 
 /* ---------- room look: ready-made rooms, or your own photo ---------- */
 const KEY_IMG = 'phongtrudo.roomimg';
@@ -1062,6 +1313,7 @@ function applyRoom(){
   const layer = $('#room-img'), veil = $('#room-veil'), bg = room.querySelector('svg.bg');
   if(img){ layer.style.backgroundImage = 'url("'+img+'")'; layer.hidden = false; veil.hidden = false; veil.style.opacity = r.veil/100; bg.style.visibility = 'hidden'; }
   else { layer.hidden = true; veil.hidden = true; layer.style.backgroundImage = ''; bg.style.visibility = ''; }
+  if(v3 && state.view === '3d') buildRoomMeshes();
   renderRoomStyle();
 }
 function renderRoomStyle(){
@@ -1116,6 +1368,7 @@ $('#rs-veil').addEventListener('change', save);
 function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); }
 applyRoom();
 renderAll();
+if(state.view === '3d') enter3D();
 dailyNotify();
 if('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

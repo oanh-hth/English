@@ -94,17 +94,23 @@
           <path d="M752 236l6 38h26l6-38z" fill="#b96a4a"/>
           <path d="M771 238c-22-10-26-34-14-52 12 14 18 32 14 52zM771 238c-2-30 8-46 26-56 4 22-6 42-26 56zM771 238c12-16 30-22 40-18-6 14-22 22-40 18z" fill="#4c9a3f"/>
         </svg>
+        <div class="room3d" id="room3d" hidden><canvas aria-label="Căn phòng 3D"></canvas></div>
         <div class="room-img" id="room-img" hidden></div>
         <div class="room-veil" id="room-veil" hidden></div>
         <button class="bin" id="bin" type="button" aria-label="Thùng rác. Xoá món đang chọn, hoặc kéo một món vào đây." title="Kéo món vào đây để xoá">
           <svg viewBox="0 0 48 48" aria-hidden="true"><path class="bdy" d="M11 17h26l-2 25a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2z"/><path d="M19 22v16M24 22v16M29 22v16" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/><g class="lid"><rect x="8" y="10" width="32" height="5.500" rx="2.500" fill="#5d6c80"/><rect x="19" y="6" width="10" height="5.500" rx="2" fill="#5d6c80"/></g></svg>
         </button>
-        <button class="rs-btn" id="rs-open" type="button" aria-expanded="false" aria-controls="room-style">Đổi phòng</button>
+        <div class="room-tools">
+          <button class="rs-btn" id="v3d-reset" type="button" hidden>Góc nhìn gốc</button>
+          <button class="rs-btn" id="v3d-btn" type="button" aria-pressed="false">Xem 3D</button>
+          <button class="rs-btn" id="rs-open" type="button" aria-expanded="false" aria-controls="room-style">Đổi phòng</button>
+        </div>
+        <span class="tag3d" id="tag3d" hidden></span>
         <span class="hint">Kéo món đi đâu cũng được. Nhấn giữ để nhân đôi. Thả vào thùng rác để xoá.</span>
         <div class="empty-room" id="empty-room" hidden>
           <p><strong>Phòng còn trống trơn nè!</strong></p>
-          <p class="small">Thêm món đầu tiên ở khung bên phải, hoặc xem thử với dữ liệu mẫu nhé.</p>
-          <button class="btn sm" id="load-sample" type="button">Xem thử với dữ liệu mẫu</button>
+          <p class="small">Thêm món đầu tiên ở khung bên phải, hoặc nạp vài món có sẵn nhé.</p>
+          <button class="btn sm" id="load-sample" type="button">Thêm vài món có sẵn</button>
         </div>
       </div>
 
@@ -221,7 +227,7 @@
   </div>
 
   <p class="footer-note"><label><input type="checkbox" id="auto-rebuy" checked> Mua lại món giống tháng trước thì tính món cũ là đã hết</label><br>"Giống" nghĩa là cùng tên (hoặc tên gần giống), hoặc cùng nhóm Đồ cho bé, Chăm sóc cá nhân, Đồ vệ sinh, như bỉm tã khác hãng.</p>
-  <p class="footer-note">Dữ liệu được lưu ngay trên máy của bạn. <button id="reset" type="button">Nạp dữ liệu mẫu</button> · <button id="wipe" type="button">Xoá hết dữ liệu</button></p>
+  <p class="footer-note">Dữ liệu được lưu ngay trên máy của bạn. <button id="add-starter" type="button">Thêm vài món có sẵn</button> · <button id="reset" type="button">Nạp dữ liệu mẫu đầy đủ</button> · <button id="wipe" type="button">Xoá hết dữ liệu</button></p>
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 <script type="module" src="app.js"></script>

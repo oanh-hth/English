@@ -271,7 +271,8 @@ details.paste summary{cursor:pointer; font-size:13.5px; color:var(--muted); padd
 /* room look */
 .room-img{position:absolute; inset:0; background-size:cover; background-position:center; pointer-events:none}
 .room-veil{position:absolute; inset:0; background:#fff; pointer-events:none}
-.rs-btn{position:absolute; top:10px; right:10px; z-index:7; border:1px solid var(--line); background:color-mix(in srgb, var(--surface) 90%, transparent); color:var(--ink); border-radius:999px; padding:6px 14px; font-size:13px; font-weight:500; cursor:pointer}
+.room-tools{position:absolute; top:10px; right:10px; z-index:7; display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; max-width:96%}
+.rs-btn{border:1px solid var(--line); background:color-mix(in srgb, var(--surface) 90%, transparent); color:var(--ink); border-radius:999px; padding:6px 14px; font-size:13px; font-weight:500; cursor:pointer}
 .swatches{display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px}
 .sw{display:flex; flex-direction:column; gap:6px; align-items:center; border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:6px; cursor:pointer; font-size:12.5px; min-width:0}
 .sw[aria-checked="true"]{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent)}
@@ -280,3 +281,11 @@ details.paste summary{cursor:pointer; font-size:13.5px; color:var(--muted); padd
 .rs-veil{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); flex:1 1 200px; min-width:0}
 .rs-veil input{width:auto; flex:1; padding:0; accent-color:var(--accent)}
 .room-style .small{margin-top:10px}
+
+/* 3D room */
+.room3d{position:absolute; inset:0; z-index:1; touch-action:none}
+.room3d canvas{width:100%; height:100%; display:block; cursor:grab; touch-action:none}
+.room.is3d svg.bg,.room.is3d .room-img,.room.is3d .room-veil{display:none}
+.tag3d{position:absolute; z-index:4; transform:translate(-50%,-100%); white-space:nowrap; font-size:12px; line-height:1.3; background:var(--surface); color:var(--ink); border:1px solid var(--line); padding:2px 9px; border-radius:999px; pointer-events:none}
+.room.is3d .bin{z-index:6}
+.room.is3d .hint{z-index:2}
