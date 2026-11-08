@@ -55,3 +55,8 @@ A separate, dependency-free app in [`crochet/`](crochet/index.html): build croch
 (pick a stitch, enter how many, group repeats like `(sc, inc) × 6`), preview them as a symbol chart
 (flat rows or in the round, with a "watch it grow" scrubber), and browse a library of crochet tips and stitches.
 Charts are saved in your browser and can be exported as JSON, PNG or printed.
+
+## Crochet apps
+
+* [`crochet/`](crochet/index.html): Cozy Hook Nook, a crochet chart maker (vanilla JS, no build step).
+* [`crochet-academy/`](crochet-academy/README.md): a self-learning course that rebuilds that app with React, TypeScript and Node, through tested exercises and a progress checklist.
