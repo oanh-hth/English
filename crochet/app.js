@@ -297,255 +297,6 @@ function roundSVG(c, o) {
   return wrapSVG(S, S, s + pills);
 }
 
-/* ---- realistic preview (canvas): plied yarn, lit from the top-left, real gaps for chains and skips ---- */
-function shade(hex, f) {
-  const n = parseInt(hex.slice(1), 16);
-  return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => clamp(Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1)), 0, 255).toString(16).padStart(2, '0')).join('');
-}
-function rgba(hex, a) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
-}
-function rng(seed) {
-  let t = (seed >>> 0) || 1;
-  return () => { t = (t + 0x6D2B79F5) >>> 0; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; };
-}
-/* how tall each stitch grows, in stitch-widths */
-const HT = { sc: 1, hdc: 1.4, dc: 1.9, tr: 2.4, dtr: 2.9, ch: 1, tch: 1, sl: .6, inc: 1, dec: 1, invdec: 1, cl: 1.9, shell: 1.9,
-  v: 1.9, picot: 1.2, bob: 1.5, puff: 1.5, pop: 1.6, fpdc: 1.9, bpdc: 1.9, sk: 1, mr: 0 };
-const WRAPS = { hdc: [.62], dc: [.55], tr: [.4, .68], dtr: [.3, .5, .72], fpdc: [.55], bpdc: [.55] };
-const BACK = '#2a211e';
-/* how much width a stitch takes along the row: chain spaces and skips are roomier */
-const WT = { ch: 1.8, sk: 1.8, tch: 1, shell: 1.5, v: 1.3, inc: 1.2, bob: 1.2, puff: 1.2, pop: 1.2 };
-const wt = id => WT[id] || 1;
-let LIGHT = [-.55, -.83], KS = 1;
-
-function setRot(rot) {
-  const x = -.55, y = -.83;
-  LIGHT = [x * Math.cos(rot) + y * Math.sin(rot), -x * Math.sin(rot) + y * Math.cos(rot)];
-}
-function softShadow(g, on, w) {
-  g.shadowColor = on ? 'rgba(0,0,0,.5)' : 'transparent';
-  g.shadowBlur = on ? w * .4 * KS : 0; g.shadowOffsetX = on ? 1 * KS : 0; g.shadowOffsetY = on ? 2 * KS : 0;
-}
-function strand(g, x0, y0, x1, y1, w, c) {
-  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || .01, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
-  const sd = nx * LIGHT[0] + ny * LIGHT[1], a = Math.min(1, .5 + Math.abs(sd)), h = w / 2;
-  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
-  const gr = g.createLinearGradient(mx - nx * h, my - ny * h, mx + nx * h, my + ny * h);
-  const lt = shade(c, 1 + .26 * a), dk = shade(c, 1 - .3 * a);
-  gr.addColorStop(0, sd < 0 ? lt : dk); gr.addColorStop(.5, c); gr.addColorStop(1, sd < 0 ? dk : lt);
-  g.lineCap = 'round'; g.setLineDash([]);
-  g.save(); softShadow(g, true, w);
-  g.strokeStyle = shade(c, .5); g.lineWidth = w + 1.4; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-  g.restore();
-  g.strokeStyle = gr; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
-  /* the twist of the plies */
-  const step = Math.max(3, w * .62), hw = w * .44, sk = w * .34;
-  g.beginPath();
-  for (let t = step * .6; t < L - 1; t += step) {
-    const px = x0 + ux * t, py = y0 + uy * t;
-    g.moveTo(px - nx * hw - ux * sk, py - ny * hw - uy * sk); g.lineTo(px + nx * hw + ux * sk, py + ny * hw + uy * sk);
-  }
-  g.strokeStyle = rgba(shade(c, .55), .3); g.lineWidth = Math.max(.7, w * .07); g.stroke();
-  g.beginPath();
-  for (let t = step * .6 + step * .3; t < L - 1; t += step) {
-    const px = x0 + ux * t, py = y0 + uy * t;
-    g.moveTo(px - nx * hw * .8 - ux * sk, py - ny * hw * .8 - uy * sk); g.lineTo(px + nx * hw * .8 + ux * sk, py + ny * hw * .8 + uy * sk);
-  }
-  g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = Math.max(.6, w * .06); g.stroke();
-}
-function ringStrand(g, cx, cy, rx, ry, w, c, rot = 0, half = false) {
-  g.save(); g.translate(cx, cy); g.rotate(rot); g.lineCap = 'round';
-  g.beginPath(); g.ellipse(0, 0, rx, ry, 0, half ? Math.PI : 0, Math.PI * 2);
-  g.save(); softShadow(g, true, w); g.setLineDash([]); g.strokeStyle = shade(c, .5); g.lineWidth = w + 1.4; g.stroke(); g.restore();
-  g.setLineDash([]); g.strokeStyle = c; g.lineWidth = w; g.stroke();
-  g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = w * .3; g.save(); g.translate(-w * .12, -w * .14); g.stroke(); g.restore();
-  g.setLineDash([w * .12, w * .5]); g.strokeStyle = rgba(shade(c, .55), .45); g.lineWidth = w * .9; g.stroke();
-  g.setLineDash([]); g.restore();
-}
-function blob(g, cx, cy, rx, ry, c) {
-  const gr = g.createRadialGradient(cx - rx * .35, cy - ry * .4, Math.min(rx, ry) * .1, cx, cy, Math.max(rx, ry));
-  gr.addColorStop(0, shade(c, 1.4)); gr.addColorStop(.55, c); gr.addColorStop(1, shade(c, .6));
-  g.save(); softShadow(g, true, rx * 2);
-  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.fillStyle = gr; g.fill();
-  g.restore();
-  g.lineWidth = .9; g.strokeStyle = shade(c, .5); g.stroke();
-  g.beginPath();
-  for (const k of [-1, 0, 1]) { g.moveTo(cx + k * rx * .5, cy - ry * .88); g.quadraticCurveTo(cx + k * rx * 1.05, cy, cx + k * rx * .5, cy + ry * .88); }
-  g.strokeStyle = rgba(shade(c, .5), .45); g.lineWidth = Math.max(.8, rx * .09); g.stroke();
-}
-
-/* one stitch in local space: base centre at 0,0, growing upward (-y); cw is the stitch width */
-function stitch(g, id, mod, c, cw, rnd, wd = 1) {
-  const pw = cw * .8, H = HT[id] * cw * .8, lean = (rnd() - .5) * .12;
-  const line = (x0, y0, x1, y1, w) => strand(g, x0, y0, x1, y1, w, c);
-  const head = (x, y, w = pw) => {
-    line(x - w * .06, y + w * .4, x - w * .36, y - w * .22, w * .5);
-    line(x + w * .06, y + w * .4, x + w * .36, y - w * .22, w * .5);
-  };
-  switch (id) {
-    case 'sc': case 'hdc': case 'dc': case 'tr': case 'dtr': case 'fpdc': case 'bpdc': {
-      const x1 = Math.sin(lean) * H, y1 = -Math.cos(lean) * H;
-      line(0, 0, x1, y1, pw);
-      (WRAPS[id] || []).forEach(f => line(-pw * .42 + x1 * f, y1 * f, pw * .42 + x1 * f, y1 * f - pw * .1, pw * .3));
-      if (id === 'fpdc' || id === 'bpdc') {
-        const d = id === 'fpdc' ? 1 : -1;
-        line(-pw * .5, -H * .25, pw * .5, -H * .25, pw * .34);
-        line(0, -H * .06, d * pw * .55, -H * .02, pw * .3);
-      }
-      head(x1, y1);
-      break;
-    }
-    case 'sl': blob(g, 0, -cw * .25, pw * .5, cw * .3, c); break;
-    case 'inc':
-      line(-cw * .2, 0, -cw * .2 - Math.sin(.4) * H, -Math.cos(.4) * H, pw * .66);
-      line(cw * .2, 0, cw * .2 + Math.sin(.4) * H, -Math.cos(.4) * H, pw * .66);
-      break;
-    case 'dec': case 'invdec':
-      line(-cw * .36, 0, -pw * .08, -H, pw * .66); line(cw * .36, 0, pw * .08, -H, pw * .66);
-      head(0, -H, pw * .9);
-      if (id === 'invdec') { g.beginPath(); g.arc(0, -H * .5, cw * .07, 0, Math.PI * 2); g.fillStyle = shade(c, .45); g.fill(); }
-      break;
-    case 'cl':
-      line(-cw * .4, 0, 0, -H, pw * .6); line(cw * .4, 0, 0, -H, pw * .6); line(0, 0, 0, -H, pw * .66);
-      head(0, -H, pw * .9);
-      break;
-    case 'shell':
-      [[-.8, .72], [.8, .72], [-.42, .9], [.42, .9], [0, 1]].forEach(([a, l]) => line(0, 0, Math.sin(a) * H * l, -Math.cos(a) * H * l, pw * .52));
-      break;
-    case 'v':
-      line(-cw * .1, 0, -cw * .1 - Math.sin(.42) * H, -Math.cos(.42) * H, pw * .66);
-      line(cw * .1, 0, cw * .1 + Math.sin(.42) * H, -Math.cos(.42) * H, pw * .66);
-      break;
-    case 'ch': ringStrand(g, 0, 0, Math.max(cw * .3, cw * .5 * wd - cw * .12), cw * .8, cw * .3, c, 0, true); break;
-    case 'tch': ringStrand(g, 0, 0, cw * .34, cw * .6, cw * .26, c, 0, true); break;
-    case 'picot': line(0, 0, 0, -cw * .55, pw * .45); ringStrand(g, 0, -cw * .85, cw * .26, cw * .26, cw * .22, c); break;
-    case 'bob': line(0, 0, 0, -cw * .4, pw * .4); blob(g, -cw * .22, -H * .6, cw * .3, H * .38, c); blob(g, cw * .22, -H * .6, cw * .3, H * .38, c); blob(g, 0, -H * .66, cw * .32, H * .4, c); break;
-    case 'puff': line(0, 0, 0, -cw * .4, pw * .4); blob(g, 0, -H * .62, cw * .44, H * .42, c); break;
-    case 'pop':
-      line(0, 0, 0, -cw * .4, pw * .4); blob(g, 0, -H * .62, cw * .44, H * .44, c);
-      [[-.18, -.78], [.18, -.78], [0, -.62], [-.18, -.46], [.18, -.46]].forEach(([x, y]) => { g.beginPath(); g.arc(x * cw * 1.3, y * H, cw * .08, 0, Math.PI * 2); g.fillStyle = shade(c, 1.35); g.fill(); });
-      break;
-    case 'mr': ringStrand(g, 0, -cw * .5, cw * .5, cw * .5, cw * .3, c); ringStrand(g, 0, -cw * .5, cw * .2, cw * .2, cw * .24, c); break;
-    default: break; /* sk: a gap */
-  }
-  if (mod === 'BLO' || mod === 'FLO') {
-    g.strokeStyle = shade(c, .4); g.lineWidth = Math.max(1, cw * .07); g.lineCap = 'round';
-    const y = mod === 'BLO' ? cw * .1 : -H - cw * .05;
-    g.beginPath(); g.moveTo(-pw * .4, y); g.lineTo(pw * .4, y); g.stroke();
-  }
-}
-
-function realGeo(c) {
-  const all = c.rows.map(r => expand(r.items));
-  if (c.mode === 'round') {
-    const rings = []; let r = 13;
-    all.forEach((cells, i) => {
-      const ring = cells.filter(x => x.st !== 'mr');
-      if (!ring.length) { rings[i] = null; return; }
-      const n = ring.length, mh = Math.max(1, ...ring.map(x => HT[x.st])), wsum = ring.reduce((a, x) => a + wt(x.st), 0);
-      let cw = 24;
-      for (let k = 0; k < 3; k++) cw = clamp(2 * Math.PI * (r + mh * cw * .4) / wsum * 1.04, 13, 30);
-      const th = mh * cw * .8;
-      rings[i] = { id: c.rows[i].id, cells: ring, n, wsum, cw, r0: r, th };
-      r += th * .88;
-    });
-    const R = r + 34;
-    return { mode: 'round', rings, R, W: 2 * R, H: 2 * R };
-  }
-  const cw = 30, padX = 46, padY = 26;
-  const maxC = Math.max(4, ...all.map(a => a.reduce((s, x) => s + wt(x.st), 0)));
-  const ths = all.map(cells => Math.max(1, ...cells.map(x => HT[x.st])) * cw * .8);
-  const H = padY * 2 + ths.reduce((a, b) => a + b * .88, 0) + cw * .5;
-  let yb = H - padY;
-  const rows = c.rows.map((r, i) => { const o = { id: r.id, cells: all[i], y0: yb, th: ths[i] }; yb -= ths[i] * .88; return o; });
-  return { mode: 'flat', rows, cw, padX, maxC, W: maxC * cw + padX * 2, H };
-}
-
-function pathRound(g, x, y, w, h, r) {
-  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
-}
-function drawReal(canvas, c, o = {}) {
-  const geo = realGeo(c), upTo = o.upTo == null ? c.rows.length : o.upTo;
-  const pxW = o.pxW || Math.min(1400, geo.W * 2), k = pxW / geo.W;
-  canvas.width = Math.round(pxW); canvas.height = Math.round(geo.H * k);
-  const g = canvas.getContext('2d');
-  g.setTransform(k, 0, 0, k, 0, 0); KS = k;
-  g.fillStyle = BACK; pathRound(g, 0, 0, geo.W, geo.H, 16); g.fill();
-  const label = (txt, x, y, align) => { g.font = '800 13px Nunito, system-ui, sans-serif'; g.fillStyle = 'rgba(255,240,225,.85)'; g.textAlign = align; g.fillText(txt, x, y); };
-  if (geo.mode === 'round') {
-    const cx = geo.R, cy = geo.R;
-    const firstC = c.rows[0] ? c.rows[0].color : PAL[0][1];
-    g.fillStyle = shade(firstC, .3); g.beginPath(); g.arc(cx, cy, 14, 0, Math.PI * 2); g.fill();
-    geo.rings.forEach((ring, i) => {
-      if (!ring || i >= upTo) return;
-      const col = c.rows[i].color;
-      g.fillStyle = shade(col, .38); g.beginPath(); g.arc(cx, cy, ring.r0 + ring.th * .92, 0, Math.PI * 2); g.arc(cx, cy, Math.max(0, ring.r0 - 2), 0, Math.PI * 2, true); g.fill('evenodd');
-      let acc = 0;
-      ring.cells.forEach((cell, j) => {
-        const span = Math.PI * 2 * wt(cell.st) / ring.wsum, th = -Math.PI / 2 - acc - span / 2, rb = ring.r0 - ring.cw * .1;
-        acc += span;
-        g.save(); g.translate(cx + rb * Math.cos(th), cy + rb * Math.sin(th)); g.rotate(th + Math.PI / 2); setRot(th + Math.PI / 2);
-        stitch(g, cell.st, cell.mod, col, ring.cw, rng(i * 977 + j * 131 + 7), wt(cell.st));
-        g.restore();
-      });
-    });
-    if (o.active) geo.rings.forEach((ring, i) => {
-      if (!ring || i >= upTo || ring.id !== o.active) return;
-      g.beginPath(); g.arc(cx, cy, ring.r0 + ring.th * .45, 0, Math.PI * 2); g.strokeStyle = 'rgba(255,225,205,.2)'; g.lineWidth = ring.th; g.stroke();
-    });
-    if (!o.mini) geo.rings.forEach((ring, i) => {
-      if (!ring || i >= upTo) return;
-      const y = cy - (ring.r0 + ring.th * .45);
-      g.fillStyle = 'rgba(42,33,30,.85)'; pathRound(g, cx - 8, y - 6.5, 16, 13, 6.5); g.fill();
-      g.font = '800 10px Nunito, system-ui, sans-serif'; g.fillStyle = '#fff1e4'; g.textAlign = 'center'; g.fillText(String(i + 1), cx, y + 3.6);
-    });
-  } else {
-    geo.rows.forEach((row, i) => {
-      if (i >= upTo) return;
-      const col = c.rows[i].color, sum = row.cells.reduce((a, x) => a + wt(x.st), 0), x0 = geo.padX + (geo.maxC - sum) * geo.cw / 2, n = sum;
-      g.fillStyle = shade(col, .38); g.fillRect(x0, row.y0 - row.th, sum * geo.cw, row.th);
-      const fromRight = i % 2 === 0;
-      let acc = 0;
-      row.cells.forEach((cell, j) => {
-        const w = wt(cell.st), mid = acc + w / 2; acc += w;
-        g.save(); g.translate(x0 + (fromRight ? sum - mid : mid) * geo.cw, row.y0); setRot(0);
-        stitch(g, cell.st, cell.mod, col, geo.cw, rng(i * 977 + j * 131 + 7), w);
-        g.restore();
-      });
-      if (o.active === row.id) { g.fillStyle = 'rgba(255,225,205,.2)'; g.fillRect(x0 - 6, row.y0 - row.th, n * geo.cw + 12, row.th); }
-      if (!o.mini) {
-        const ty = row.y0 - row.th / 2 + 5;
-        if (fromRight) label(`${i + 1} ←`, geo.padX + geo.maxC * geo.cw + 8, ty, 'left'); else label(`→ ${i + 1}`, geo.padX - 8, ty, 'right');
-      }
-    });
-  }
-  canvas._geo = geo; canvas._rows = c.rows.map(r => r.id);
-  return canvas;
-}
-/* which row is at this point of the realistic preview? */
-function realRowAt(canvas, e) {
-  const geo = canvas._geo; if (!geo) return null;
-  const rect = canvas.getBoundingClientRect();
-  const sc = Math.min(rect.width / geo.W, rect.height / geo.H);
-  const x = (e.clientX - rect.left - (rect.width - geo.W * sc) / 2) / sc, y = (e.clientY - rect.top - (rect.height - geo.H * sc) / 2) / sc;
-  if (geo.mode === 'round') {
-    const d = Math.hypot(x - geo.R, y - geo.R);
-    const hit = geo.rings.find(r => r && d >= r.r0 - 4 && d <= r.r0 + r.th);
-    return hit ? hit.id : null;
-  }
-  const hit = geo.rows.find(r => y <= r.y0 && y >= r.y0 - r.th);
-  return hit ? hit.id : null;
-}
-function drawSprite(cv, id) {
-  const g = cv.getContext('2d'), k = cv.width / 56;
-  g.setTransform(k, 0, 0, k, 0, 0); KS = k;
-  g.fillStyle = BACK; pathRound(g, 0, 0, 56, 56, 14); g.fill();
-  g.translate(28, 47); setRot(0);
-  stitch(g, id, '', PAL[1][1], 15, rng(3));
-}
-
 /* ------------------------------------------------------------------- render */
 const app = $('#app');
 
@@ -564,7 +315,7 @@ function render() {
 function renderList() {
   const cards = DB.charts.slice().sort((a, b) => b.updated - a.updated).map(c => `
     <button class="card chart-card" data-act="open" data-id="${c.id}">
-      <div class="thumb">${DB.look !== 'real' ? chartSVG(c, { mini: true }) : `<canvas class="thumbc" data-id="${c.id}" aria-hidden="true"></canvas>`}</div>
+      <div class="thumb">${chartSVG(c, { mini: true })}</div>
       <h3>${esc(c.name)}</h3>
       <div class="muted small">${c.rows.length} ${c.mode === 'round' ? 'rounds' : 'rows'} · ${c.mode === 'round' ? 'in the round' : 'flat'} · ${new Date(c.updated).toLocaleDateString()}</div>
     </button>`).join('');
@@ -581,7 +332,6 @@ function renderList() {
         <p class="muted">Start a chart and it will be saved right here in your browser.</p>
         <button class="btn primary" data-act="new">+ New chart</button></div>`}
     <input type="file" id="importFile" accept="application/json,.json" hidden>`;
-  document.querySelectorAll('.thumbc').forEach(cv => drawReal(cv, DB.charts.find(x => x.id === cv.dataset.id), { pxW: 360, mini: true }));
 }
 
 function renderEditor() {
@@ -610,10 +360,6 @@ function renderEditor() {
         <button class="btn sage" data-act="addrow">+ Add ${c.mode === 'round' ? 'round' : 'row'}</button>
       </div>
       <div class="card viz-pane">
-        <div class="viz-head"><h2>Preview</h2>
-          <div class="seg" role="group" aria-label="Preview style">
-            <button data-act="look" data-look="symbols" aria-pressed="${DB.look !== 'real'}">Chart</button>
-            <button data-act="look" data-look="real" aria-pressed="${DB.look === 'real'}">Realistic</button></div></div>
         <div class="viz" id="viz"></div>
         <div class="viz-controls" id="scrub"></div>
         <div class="written" id="written"></div>
@@ -688,13 +434,7 @@ function renderRows() {
 function renderViz(keepScrub) {
   const el = $('#viz'); if (!el) return;
   const c = chart();
-  const real = DB.look === 'real';
-  if (!c.rows.length) el.innerHTML = '<p class="muted">Add a row to see your chart.</p>';
-  else if (real) {
-    let cv = el.querySelector('canvas');
-    if (!cv) { el.innerHTML = '<canvas class="real" aria-label="Realistic preview of the crochet chart"></canvas>'; cv = el.firstChild; }
-    drawReal(cv, c, { upTo: ui.upTo, active: ui.activeRow });
-  } else el.innerHTML = chartSVG(c, { upTo: ui.upTo, active: ui.activeRow });
+  el.innerHTML = c.rows.length ? chartSVG(c, { upTo: ui.upTo, active: ui.activeRow }) : '<p class="muted">Add a row to see your chart.</p>';
   const n = c.rows.length;
   if (keepScrub) { const l = $('#scrubLabel'); if (l) l.textContent = `${ui.upTo} / ${n}`; return; }
   $('#scrub').innerHTML = n ? `
@@ -749,7 +489,7 @@ function renderTipList() {
 }
 function renderStitches() {
   const block = cat => `<h2 class="cat-title">${cat}</h2><div class="grid">${STITCHES.filter(s => s.cat === cat).map(s => `
-    <div class="card st-card"><div class="glyph">${miniGlyph(s.id, 36)}<canvas class="sprite" data-st="${s.id}" width="112" height="112" aria-hidden="true"></canvas></div>
+    <div class="card st-card"><div class="glyph">${miniGlyph(s.id, 36)}</div>
       <div><h3>${esc(sname(s.id))} <span class="muted">· ${esc(abbr(s.id))}</span></h3><p>${esc(s.desc)}</p>
       <div class="meta">leaves ${s.makes} · works into ${s.uses}</div></div></div>`).join('')}</div>`;
   app.innerHTML = `
@@ -758,7 +498,6 @@ function renderStitches() {
     <h2 class="cat-title">Loop markers</h2>
     <div class="grid"><div class="card st-card"><div class="glyph">${miniGlyph('sc', 40, 'BLO')}</div><div><h3>BLO</h3><p>Back loop only: work through the back loop of the stitch. The line sits below the symbol.</p></div></div>
     <div class="card st-card"><div class="glyph">${miniGlyph('sc', 40, 'FLO')}</div><div><h3>FLO</h3><p>Front loop only: work through the front loop. The line sits above the symbol.</p></div></div></div>`;
-  document.querySelectorAll('.sprite').forEach(cv => drawSprite(cv, cv.dataset.st));
 }
 
 /* ------------------------------------------------------------- misc helpers */
@@ -809,11 +548,6 @@ function createChart(tpl, name) {
 /* ------------------------------------------------------------------- events */
 function pngExport() {
   const c = chart();
-  if (DB.look === 'real') {
-    const cv = drawReal(document.createElement('canvas'), c, {});
-    cv.toBlob(b => b ? download(fileName(c) + '.png', b) : toast('Could not make the picture'), 'image/png');
-    return;
-  }
   const svg = chartSVG(c, {});
   const w = +svg.match(/width="(\d+)"/)[1], h = +svg.match(/height="(\d+)"/)[1];
   const img = new Image();
@@ -827,11 +561,6 @@ function pngExport() {
 }
 
 document.addEventListener('click', e => {
-  if (e.target.matches('#viz canvas')) {
-    const id = realRowAt(e.target, e);
-    if (id) { ui.activeRow = id; ui.target = null; renderRows(); renderViz(true); renderPicker(); }
-    return;
-  }
   const svgRow = e.target.closest('#viz [data-row]');
   if (svgRow) { ui.activeRow = svgRow.dataset.row; ui.target = null; renderRows(); renderViz(); renderPicker(); return; }
   const rowCard = e.target.closest('.row-card');
@@ -912,7 +641,6 @@ document.addEventListener('click', e => {
       const text = `${c.name}\n\n` + c.rows.map((r, i) => `${rowLabel(c, i)}: ${rowText(r)}${r.note ? '  // ' + r.note : ''}`).join('\n');
       (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('Pattern copied'), () => toast('Copy is blocked here; select the text instead')); break;
     }
-    case 'look': DB.look = d.look; document.querySelectorAll('[data-act=look]').forEach(b => b.setAttribute('aria-pressed', b.dataset.look === d.look)); renderViz(true); save(); break;
     case 'png': pngExport(); break;
     case 'print': window.print(); break;
     case 'export': download(fileName(c) + '.json', new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' })); break;
