@@ -17,6 +17,13 @@ export class UserRepo {
     return Number(result.lastInsertRowid);
   }
 
+  findById(id: number): UserRow | null {
+    const row = this.db.prepare('SELECT id, username, password_hash FROM users WHERE id = ?').get(id) as
+      | { id: number; username: string; password_hash: string }
+      | undefined;
+    return row ? { id: row.id, username: row.username, passwordHash: row.password_hash } : null;
+  }
+
   findByUsername(username: string): UserRow | null {
     const row = this.db.prepare('SELECT id, username, password_hash FROM users WHERE username = ?').get(username) as
       | { id: number; username: string; password_hash: string }
