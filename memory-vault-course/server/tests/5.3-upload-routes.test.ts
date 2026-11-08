@@ -156,8 +156,8 @@ describe('5.3 GET /api/media/:id/file (cloud-style storage)', () => {
     const id = seedMedia(ctx.db, ctx.alice, { storageKey: 'k-123456789' });
     const res = await ctx.as(ctx.alice).get(`/api/media/${id}/file?download=1`).redirects(0);
     expect(res.status).toBe(302);
+    expect(res.headers.location).toMatch(/^memory:\/\/view\/k-123456789\?/);
     const url = new URL(res.headers.location);
-    expect(url.origin + url.pathname).toBe('memory://view/k-123456789'.replace('memory://view', 'memory://view'));
     expect(url.searchParams.get('download')).toBe('true');
     expect(url.searchParams.get('type')).toBe('image/jpeg');
     expect((await ctx.as(ctx.bob).get(`/api/media/${id}/file`).redirects(0)).status).toBe(404);

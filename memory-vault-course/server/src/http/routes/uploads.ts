@@ -42,7 +42,8 @@ export interface UploadsRouterDeps {
  *      filename = item.originalName with \r, \n and " replaced by _.   download = req.query.download === '1'
  *      1. url = await storage.getUrl(key, { mime, filename, download }). If it is a string: res.redirect(302, url).
  *      2. Otherwise stream from disk. size = await storage.head(key) (null -> 404). range = parseRange(req.headers.range, size).
- *         status 416: respond 416 with header "Content-Range: bytes */size" (no space before the slash) and no body.
+ *         status 416: respond 416 with the header Content-Range set to the text `bytes ` + a star + `/` + the size
+ *                     (for a 5000 byte file that is: bytes, space, star, slash, 5000) and no body.
  *         Otherwise respond with range.status and these headers:
  *           Content-Type: item.mime
  *           Content-Disposition: `${download ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(filename)}`
