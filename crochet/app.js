@@ -102,7 +102,7 @@ const sname = id => (DB.uk && ST[id].uk ? ST[id].uk[1] : ST[id].name);
 
 /* ------------------------------------------------------------ yarn colors */
 const PAL = [
-  ['Oatmeal', '#f1e2cc'], ['Rose', '#f4c2bb'], ['Butter', '#f8dc9b'], ['Sage', '#c3d8b4'],
+  ['Oatmeal', '#f1e2cc'], ['Rose', '#f2a3b8'], ['Butter', '#f8dc9b'], ['Sage', '#c3d8b4'],
   ['Sky', '#b8d4e3'], ['Lavender', '#d6c8ea'], ['Coral', '#ea9f90'], ['Cocoa', '#8d6e58']
 ];
 function inkOn(hex) {
@@ -145,6 +145,7 @@ const S = (st, n = 1, mod = '') => ({ kind: 'st', st, n, mod });
 const G = (rep, ...items) => ({ kind: 'grp', rep, items });
 const R = (color, note, ...items) => ({ id: uid(), color: color || PAL[0][1], note: note || '', items });
 const NC = row => { row.skipCheck = true; return row; };
+
 const TEMPLATES = {
   blank: { label: 'Blank chart', icon: '🧺', mode: 'flat', desc: 'One empty row. Add the rest as you go.',
     rows: () => [R()] },
@@ -159,6 +160,12 @@ const TEMPLATES = {
       R(PAL[1][1], '', G(6, S('sc'), S('inc'))),
       R(PAL[1][1], '', G(6, S('sc', 2), S('inc'))),
       R(PAL[3][1], '', G(6, S('sc', 3), S('inc')))] },
+  flower: { label: 'Pink flower coaster', icon: '🌸', mode: 'round', desc: 'Lacy rounds with chain spaces and a shell scallop edge.',
+    rows: () => [
+      R(PAL[1][1], 'Start with a magic ring', S('mr'), S('dc', 12)),
+      R(PAL[1][1], 'The chains leave the little holes', G(12, S('dc'), S('ch'))),
+      R(PAL[1][1], '', G(12, S('dc', 2), S('ch'))),
+      NC(R(PAL[1][1], 'Shells make the scalloped edge', G(12, S('shell'), S('sc', 3))))] },
   leaf: { label: 'Pointed leaf', icon: '🍃', mode: 'flat', desc: 'Staircase stitches and a shell for a sharp tip.',
     rows: () => [
       R(PAL[3][1], 'Foundation chain', S('ch', 8)),
@@ -177,7 +184,7 @@ function load() {
   } catch (e) { /* first visit or storage blocked */ }
   return {
     uk: false,
-    charts: [newChart('Cozy coaster', 'circle')]
+    charts: [newChart('Pink flower coaster', 'flower')]
   };
 }
 function newChart(name, tpl) {
@@ -200,120 +207,49 @@ const findRow = id => (chart() ? chart().rows.find(r => r.id === id) : null);
 const PAPER = '#fffaf3', LINE = '#5a4636';
 
 function chartSVG(c, o = {}) {
-  const look = o.look || DB.look || 'yarn';
-  return c.mode === 'round' ? roundSVG(c, { ...o, look }) : flatSVG(c, { ...o, look });
+  return c.mode === 'round' ? roundSVG(c, o) : flatSVG(c, o);
 }
-function wrapSVG(w, h, inner, look) {
-  const defs = look === 'yarn'
-    ? '<defs><filter id="fz" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.7"/></filter></defs>' : '';
+function wrapSVG(w, h, inner) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" font-family="Nunito, system-ui, sans-serif" role="img" aria-label="Crochet chart">` +
-    `${defs}<rect width="${w}" height="${h}" rx="14" fill="${PAPER}"/>${inner}</svg>`;
+    `<rect width="${w}" height="${h}" rx="14" fill="${PAPER}"/>${inner}</svg>`;
 }
 function cellTitle(c) {
   return `${sname(c.st)}${c.mod ? ' (' + c.mod + ')' : ''}`;
 }
 
-/* ---- yarn textures: each stitch drawn as plied yarn, in the same 24x24 space as the symbols ---- */
-function shade(hex, f) {
-  const n = parseInt(hex.slice(1), 16);
-  return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => clamp(Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1)), 0, 255).toString(16).padStart(2, '0')).join('');
-}
-function cap(x, y, w, h, rot, c) {
-  const dk = shade(c, .68);
-  let plies = '';
-  for (let yy = -h / 2 + w / 2 + 0.5; yy <= h / 2 - w / 2; yy += 2.7) plies += `M${(-w / 2 + 1).toFixed(1)} ${yy.toFixed(1)}L${(w / 2 - 1).toFixed(1)} ${(yy - 2).toFixed(1)}`;
-  return `<g transform="translate(${x} ${y}) rotate(${rot})">` +
-    `<rect x="${-w / 2 + .5}" y="${-h / 2 + 1.2}" width="${w}" height="${h}" rx="${w / 2}" fill="#000" opacity=".16"/>` +
-    `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${w / 2}" fill="${c}" stroke="${dk}" stroke-width=".8"/>` +
-    `<path d="${plies}" stroke="${dk}" stroke-opacity=".42" stroke-width=".9" fill="none"/>` +
-    `<path d="M${-w / 4} ${-h / 2 + w / 2}V${h / 2 - w / 2}" stroke="#fff" stroke-opacity=".38" stroke-width="1.3" stroke-linecap="round"/></g>`;
-}
-function band(y, c, w = 10) {
-  const dk = shade(c, .66);
-  return `<path d="M${-w / 2} ${y}H${w / 2}" stroke="${dk}" stroke-width="2.4" stroke-linecap="round"/>` +
-    `<path d="M${-w / 2 + 1} ${y - .6}H${w / 2 - 1}" stroke="${c}" stroke-width="1.4" stroke-linecap="round"/>` +
-    `<path d="M${-w / 2 + 1.5} ${y - 1.1}H0" stroke="#fff" stroke-opacity=".45" stroke-width=".7"/>`;
-}
-function yarn(id, mod, c) {
-  const dk = shade(c, .66), lt = shade(c, 1.4);
-  const head = (x, y) => cap(x - 2.7, y + 0.5, 4.6, 9.5, -36, c) + cap(x + 2.7, y + 0.5, 4.6, 9.5, 36, c);
-  const post = (h, wraps) => cap(0, 1.5, 10, h - 2, 0, c) + wraps.map(y => band(y, c, 12)).join('') + head(0, -h / 2 + 2);
-  const ring = (rx, ry, rot = 0, cx = 0, cy = 0) => `<g transform="translate(${cx} ${cy}) rotate(${rot})">` +
-    `<ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${dk}" stroke-width="4.4"/><ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${c}" stroke-width="3.2"/>` +
-    `<ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${lt}" stroke-width=".9" stroke-dasharray="3 2.5" opacity=".7"/></g>`;
-  const ell = (cx, cy, rx, ry) => `<ellipse cx="${cx}" cy="${cy + 1.2}" rx="${rx}" ry="${ry}" fill="#000" opacity=".16"/>` +
-    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${c}" stroke="${dk}" stroke-width=".8"/>`;
-  let g = '';
-  switch (id) {
-    case 'sc': g = post(14, []); break;
-    case 'hdc': g = post(18, [-5]); break;
-    case 'dc': g = post(22, [-3]); break;
-    case 'tr': g = post(25, [-6, 0]); break;
-    case 'dtr': g = post(27, [-8, -3, 2]); break;
-    case 'ch': g = ring(6.5, 3.8, -8); break;
-    case 'tch': g = ring(5, 3, -8); break;
-    case 'sl': g = ell(0, 0, 6.2, 3.5) + `<path d="M-4 -1L-2 1M-1 -1.5L1 1.5M2 -1.5L4 1" stroke="${dk}" stroke-opacity=".5" stroke-width=".9"/><path d="M-4 -1.6Q0 -3 4 -1.6" stroke="#fff" stroke-opacity=".45" fill="none" stroke-width="1"/>`; break;
-    case 'mr': g = ring(7.5, 7.5) + ring(3.4, 3.4); break;
-    case 'inc': g = cap(-4.2, 1, 7.5, 18, -20, c) + cap(4.2, 1, 7.5, 18, 20, c); break;
-    case 'dec': g = cap(-4, 2, 7.5, 16, 20, c) + cap(4, 2, 7.5, 16, -20, c) + head(0, -7); break;
-    case 'invdec': g = cap(-4, 2, 7.5, 16, 20, c) + cap(4, 2, 7.5, 16, -20, c) + head(0, -7) + `<circle cx="0" cy="-2" r="1.6" fill="${dk}"/>`; break;
-    case 'cl': g = cap(-4.5, 1, 6.5, 17, 24, c) + cap(4.5, 1, 6.5, 17, -24, c) + cap(0, 0, 7, 19, 0, c) + head(0, -8); break;
-    case 'shell': g = [-56, -28, 28, 56, 0].map(a => `<g transform="translate(0 10) rotate(${a})">${cap(0, -8.5, 5, 17, 0, c)}</g>`).join(''); break;
-    case 'v': g = cap(-4.2, 1, 7.5, 18, -22, c) + cap(4.2, 1, 7.5, 18, 22, c); break;
-    case 'picot': g = ring(4.2, 4.2, 0, 0, -4) + cap(0, 5.5, 4.5, 9, 0, c); break;
-    case 'bob': g = ell(-3, -3, 4.6, 7.5) + ell(3, -3, 4.6, 7.5) + ell(0, -5, 4.6, 8) + cap(0, 7, 4.5, 8, 0, c); break;
-    case 'puff': g = ell(0, -3, 6.8, 8.5) + `<path d="M-3.5 -9Q-5.5 -3 -3 3M0 -11.5V5.5M3.5 -9Q5.5 -3 3 3" stroke="${dk}" stroke-opacity=".5" fill="none" stroke-width="1"/><path d="M-4.5 -7Q-5 -3 -4 -1" stroke="#fff" stroke-opacity=".45" fill="none" stroke-width="1.3"/>` + cap(0, 7.5, 4.5, 7, 0, c); break;
-    case 'pop': g = ell(0, -3, 7, 8.5) + [[-3, -6], [3, -6], [0, -2], [-3, 2], [3, 2]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="${lt}" stroke="${dk}" stroke-opacity=".6" stroke-width=".7"/>`).join('') + cap(0, 8, 4.5, 6, 0, c); break;
-    case 'fpdc': g = post(22, [-3]) + band(6, c, 12) + `<path d="M-1 11Q0 14.5 5 13" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-1 11Q0 14.5 5 13" stroke="${c}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`; break;
-    case 'bpdc': g = post(22, [-3]) + band(6, c, 12) + `<path d="M1 11Q0 14.5 -5 13" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M1 11Q0 14.5 -5 13" stroke="${c}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`; break;
-    case 'sk': g = `<path d="M-5 0H5" stroke="${dk}" stroke-width="1.4" stroke-dasharray="2 3" opacity=".5" stroke-linecap="round"/>`; break;
-  }
-  if (mod === 'BLO') g += `<path d="M-6 13H6" stroke="${dk}" stroke-width="2" stroke-linecap="round"/>`;
-  if (mod === 'FLO') g += `<path d="M-6 -13.5H6" stroke="${dk}" stroke-width="2" stroke-linecap="round"/>`;
-  return g;
-}
-function art(tf, scale, cell, c, ink, look) {
-  return look === 'symbols'
-    ? `<g transform="${tf} scale(${scale})" color="${ink}">${glyph(cell.st, cell.mod)}</g>`
-    : `<g transform="${tf} scale(${scale * 1.06})">${yarn(cell.st, cell.mod, c)}</g>`;
-}
-function miniYarn(id, size = 40, c = PAL[3][1], mod = '') {
-  return `<svg viewBox="-15 -15 30 30" width="${size}" height="${size}" aria-hidden="true">${yarn(id, mod, c)}</svg>`;
-}
-
+/* ---- symbol chart (SVG) ---- */
 function flatSVG(c, o) {
   const upTo = o.upTo == null ? c.rows.length : o.upTo;
-  const N = c.rows.length, yv = o.look === 'yarn';
+  const N = c.rows.length;
   const W = 40, H = 46, padX = o.mini ? 10 : 50, padY = 12;
   const all = c.rows.map(r => expand(r.items));
   const maxC = Math.max(4, ...all.map(a => a.length));
   const w = maxC * W + padX * 2, h = N * H + padY * 2;
-  let band_ = '', s = '', lab = '';
+  let s = '';
   c.rows.forEach((r, i) => {
     if (i >= upTo) return;
     const cells = all[i], y = padY + (N - 1 - i) * H;
     const off = (maxC - cells.length) * W / 2;
     const fromRight = i % 2 === 0;
-    if (o.active === r.id) band_ += `<rect x="${padX - 4}" y="${y}" width="${maxC * W + 8}" height="${H}" rx="12" fill="#f2b8ad" opacity=".45"/>`;
+    const ink = inkOn(r.color);
+    if (o.active === r.id) s += `<rect x="${padX - 4}" y="${y}" width="${maxC * W + 8}" height="${H}" rx="12" fill="#f2b8ad" opacity=".45"/>`;
     cells.forEach((cell, k) => {
       const x = padX + off + (fromRight ? (cells.length - 1 - k) : k) * W;
-      const base = yv
-        ? `<rect x="${x + 1}" y="${y + 2}" width="${W - 2}" height="${H - 4}" rx="7" fill="${shade(r.color, .93)}"/>`
-        : `<rect x="${x + 2}" y="${y + 3}" width="${W - 4}" height="${H - 6}" rx="9" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5"/>`;
-      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>${base}${art(`translate(${x + W / 2} ${y + H / 2})`, yv ? 1.45 : 1.35, cell, r.color, inkOn(r.color), o.look)}</g>`;
+      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>` +
+        `<rect x="${x + 2}" y="${y + 3}" width="${W - 4}" height="${H - 6}" rx="9" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5"/>` +
+        `<g transform="translate(${x + W / 2} ${y + H / 2}) scale(1.35)" color="${ink}">${glyph(cell.st, cell.mod)}</g></g>`;
     });
     if (!o.mini) {
       const left = !fromRight;
       const lx = left ? padX - 8 : padX + maxC * W + 8;
-      lab += `<text x="${lx}" y="${y + H / 2 + 4}" font-size="12" font-weight="800" fill="${LINE}" text-anchor="${left ? 'end' : 'start'}">${left ? '→ ' : ''}${i + 1}${left ? '' : ' ←'}</text>`;
+      s += `<text x="${lx}" y="${y + H / 2 + 4}" font-size="12" font-weight="800" fill="${LINE}" text-anchor="${left ? 'end' : 'start'}">${left ? '→ ' : ''}${i + 1}${left ? '' : ' ←'}</text>`;
     }
   });
-  return wrapSVG(w, h, band_ + (yv ? `<g filter="url(#fz)">${s}</g>` : s) + lab, o.look);
+  return wrapSVG(w, h, s);
 }
 
 function roundSVG(c, o) {
   const upTo = o.upTo == null ? c.rows.length : o.upTo;
-  const yv = o.look === 'yarn';
   const hub = 26, ringH = 36, pad = 16;
   const rings = [];
   let hasMR = false, idx = 0;
@@ -333,25 +269,24 @@ function roundSVG(c, o) {
     return `M${f(x0)} ${f(y0)}A${r1} ${r1} 0 ${large} 0 ${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}A${r0} ${r0} 0 ${large} 1 ${f(x3)} ${f(y3)}Z`;
   }
   const first = c.rows[0] ? c.rows[0].color : PAL[0][1];
-  let band_ = '', s = '', pills = '';
-  let hubArt = `<circle cx="${cx}" cy="${cy}" r="${hub - 1}" fill="${yv ? shade(first, .8) : first}" opacity="${yv ? 1 : .55}" stroke="${PAPER}" stroke-width="2"/>`;
-  if (hasMR && upTo > 0) hubArt += yv ? `<g transform="translate(${cx} ${cy}) scale(1.2)">${yarn('mr', '', first)}</g>` : `<g transform="translate(${cx} ${cy}) scale(1.1)" color="${LINE}">${glyph('mr')}</g>`;
+  let s = `<circle cx="${cx}" cy="${cy}" r="${hub - 1}" fill="${first}" opacity=".55" stroke="${PAPER}" stroke-width="2"/>`;
+  if (hasMR && upTo > 0) s += `<g transform="translate(${cx} ${cy}) scale(1.1)" color="${LINE}">${glyph('mr')}</g>`;
+  let pills = '';
   c.rows.forEach((r, i) => {
     const ring = rings[i];
     if (!ring || i >= upTo) return;
     const r0 = hub + ring.idx * ringH + 1.5, r1 = r0 + ringH - 3, rm = (r0 + r1) / 2;
-    const n = ring.cells.length;
-    if (o.active === r.id) band_ += `<circle cx="${cx}" cy="${cy}" r="${rm}" fill="none" stroke="#f2b8ad" stroke-width="${ringH + 4}" opacity=".5"/>`;
+    const n = ring.cells.length, ink = inkOn(r.color);
+    if (o.active === r.id) s += `<circle cx="${cx}" cy="${cy}" r="${rm}" fill="none" stroke="#f2b8ad" stroke-width="${ringH + 4}" opacity=".5"/>`;
     ring.cells.forEach((cell, k) => {
       const span = n === 1 ? Math.PI * 2 - 0.001 : (Math.PI * 2) / n;
       const t0 = -Math.PI / 2 - k * span, t1 = t0 - span, tm = (t0 + t1) / 2;
       const [gx, gy] = P(rm, tm);
       const k2 = clamp(Math.min(ringH * 0.62, span * rm * 0.72) / 17, 0.3, 1.3);
       const rot = (tm + Math.PI / 2) * 180 / Math.PI;
-      const base = yv
-        ? `<path d="${sector(r0, r1, t0, t1)}" fill="${shade(r.color, .93)}"/>`
-        : `<path d="${sector(r0, r1, t0, t1)}" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5" stroke-linejoin="round"/>`;
-      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>${base}${art(`translate(${f(gx)} ${f(gy)}) rotate(${f(rot)})`, f(k2 * (yv ? 1.08 : 1)), cell, r.color, inkOn(r.color), o.look)}</g>`;
+      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>` +
+        `<path d="${sector(r0, r1, t0, t1)}" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5" stroke-linejoin="round"/>` +
+        `<g transform="translate(${f(gx)} ${f(gy)}) rotate(${f(rot)}) scale(${f(k2)})" color="${ink}">${glyph(cell.st, cell.mod)}</g></g>`;
     });
     if (!o.mini) {
       const [px, py] = P(rm, -Math.PI / 2);
@@ -359,7 +294,256 @@ function roundSVG(c, o) {
         `<text x="${f(px)}" y="${f(py + 4)}" font-size="10.5" font-weight="800" text-anchor="middle" fill="${LINE}">${i + 1}</text></g>`;
     }
   });
-  return wrapSVG(S, S, band_ + (yv ? `<g filter="url(#fz)">${hubArt}${s}</g>` : hubArt + s) + pills, o.look);
+  return wrapSVG(S, S, s + pills);
+}
+
+/* ---- realistic preview (canvas): plied yarn, lit from the top-left, real gaps for chains and skips ---- */
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => clamp(Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1)), 0, 255).toString(16).padStart(2, '0')).join('');
+}
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+}
+function rng(seed) {
+  let t = (seed >>> 0) || 1;
+  return () => { t = (t + 0x6D2B79F5) >>> 0; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; };
+}
+/* how tall each stitch grows, in stitch-widths */
+const HT = { sc: 1, hdc: 1.4, dc: 1.9, tr: 2.4, dtr: 2.9, ch: 1, tch: 1, sl: .6, inc: 1, dec: 1, invdec: 1, cl: 1.9, shell: 1.9,
+  v: 1.9, picot: 1.2, bob: 1.5, puff: 1.5, pop: 1.6, fpdc: 1.9, bpdc: 1.9, sk: 1, mr: 0 };
+const WRAPS = { hdc: [.62], dc: [.55], tr: [.4, .68], dtr: [.3, .5, .72], fpdc: [.55], bpdc: [.55] };
+const BACK = '#2a211e';
+/* how much width a stitch takes along the row: chain spaces and skips are roomier */
+const WT = { ch: 1.8, sk: 1.8, tch: 1, shell: 1.5, v: 1.3, inc: 1.2, bob: 1.2, puff: 1.2, pop: 1.2 };
+const wt = id => WT[id] || 1;
+let LIGHT = [-.55, -.83], KS = 1;
+
+function setRot(rot) {
+  const x = -.55, y = -.83;
+  LIGHT = [x * Math.cos(rot) + y * Math.sin(rot), -x * Math.sin(rot) + y * Math.cos(rot)];
+}
+function softShadow(g, on, w) {
+  g.shadowColor = on ? 'rgba(0,0,0,.5)' : 'transparent';
+  g.shadowBlur = on ? w * .4 * KS : 0; g.shadowOffsetX = on ? 1 * KS : 0; g.shadowOffsetY = on ? 2 * KS : 0;
+}
+function strand(g, x0, y0, x1, y1, w, c) {
+  const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || .01, ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+  const sd = nx * LIGHT[0] + ny * LIGHT[1], a = Math.min(1, .5 + Math.abs(sd)), h = w / 2;
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  const gr = g.createLinearGradient(mx - nx * h, my - ny * h, mx + nx * h, my + ny * h);
+  const lt = shade(c, 1 + .26 * a), dk = shade(c, 1 - .3 * a);
+  gr.addColorStop(0, sd < 0 ? lt : dk); gr.addColorStop(.5, c); gr.addColorStop(1, sd < 0 ? dk : lt);
+  g.lineCap = 'round'; g.setLineDash([]);
+  g.save(); softShadow(g, true, w);
+  g.strokeStyle = shade(c, .5); g.lineWidth = w + 1.4; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+  g.restore();
+  g.strokeStyle = gr; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+  /* the twist of the plies */
+  const step = Math.max(3, w * .62), hw = w * .44, sk = w * .34;
+  g.beginPath();
+  for (let t = step * .6; t < L - 1; t += step) {
+    const px = x0 + ux * t, py = y0 + uy * t;
+    g.moveTo(px - nx * hw - ux * sk, py - ny * hw - uy * sk); g.lineTo(px + nx * hw + ux * sk, py + ny * hw + uy * sk);
+  }
+  g.strokeStyle = rgba(shade(c, .55), .3); g.lineWidth = Math.max(.7, w * .07); g.stroke();
+  g.beginPath();
+  for (let t = step * .6 + step * .3; t < L - 1; t += step) {
+    const px = x0 + ux * t, py = y0 + uy * t;
+    g.moveTo(px - nx * hw * .8 - ux * sk, py - ny * hw * .8 - uy * sk); g.lineTo(px + nx * hw * .8 + ux * sk, py + ny * hw * .8 + uy * sk);
+  }
+  g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = Math.max(.6, w * .06); g.stroke();
+}
+function ringStrand(g, cx, cy, rx, ry, w, c, rot = 0, half = false) {
+  g.save(); g.translate(cx, cy); g.rotate(rot); g.lineCap = 'round';
+  g.beginPath(); g.ellipse(0, 0, rx, ry, 0, half ? Math.PI : 0, Math.PI * 2);
+  g.save(); softShadow(g, true, w); g.setLineDash([]); g.strokeStyle = shade(c, .5); g.lineWidth = w + 1.4; g.stroke(); g.restore();
+  g.setLineDash([]); g.strokeStyle = c; g.lineWidth = w; g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = w * .3; g.save(); g.translate(-w * .12, -w * .14); g.stroke(); g.restore();
+  g.setLineDash([w * .12, w * .5]); g.strokeStyle = rgba(shade(c, .55), .45); g.lineWidth = w * .9; g.stroke();
+  g.setLineDash([]); g.restore();
+}
+function blob(g, cx, cy, rx, ry, c) {
+  const gr = g.createRadialGradient(cx - rx * .35, cy - ry * .4, Math.min(rx, ry) * .1, cx, cy, Math.max(rx, ry));
+  gr.addColorStop(0, shade(c, 1.4)); gr.addColorStop(.55, c); gr.addColorStop(1, shade(c, .6));
+  g.save(); softShadow(g, true, rx * 2);
+  g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.fillStyle = gr; g.fill();
+  g.restore();
+  g.lineWidth = .9; g.strokeStyle = shade(c, .5); g.stroke();
+  g.beginPath();
+  for (const k of [-1, 0, 1]) { g.moveTo(cx + k * rx * .5, cy - ry * .88); g.quadraticCurveTo(cx + k * rx * 1.05, cy, cx + k * rx * .5, cy + ry * .88); }
+  g.strokeStyle = rgba(shade(c, .5), .45); g.lineWidth = Math.max(.8, rx * .09); g.stroke();
+}
+
+/* one stitch in local space: base centre at 0,0, growing upward (-y); cw is the stitch width */
+function stitch(g, id, mod, c, cw, rnd, wd = 1) {
+  const pw = cw * .8, H = HT[id] * cw * .8, lean = (rnd() - .5) * .12;
+  const line = (x0, y0, x1, y1, w) => strand(g, x0, y0, x1, y1, w, c);
+  const head = (x, y, w = pw) => {
+    line(x - w * .06, y + w * .4, x - w * .36, y - w * .22, w * .5);
+    line(x + w * .06, y + w * .4, x + w * .36, y - w * .22, w * .5);
+  };
+  switch (id) {
+    case 'sc': case 'hdc': case 'dc': case 'tr': case 'dtr': case 'fpdc': case 'bpdc': {
+      const x1 = Math.sin(lean) * H, y1 = -Math.cos(lean) * H;
+      line(0, 0, x1, y1, pw);
+      (WRAPS[id] || []).forEach(f => line(-pw * .42 + x1 * f, y1 * f, pw * .42 + x1 * f, y1 * f - pw * .1, pw * .3));
+      if (id === 'fpdc' || id === 'bpdc') {
+        const d = id === 'fpdc' ? 1 : -1;
+        line(-pw * .5, -H * .25, pw * .5, -H * .25, pw * .34);
+        line(0, -H * .06, d * pw * .55, -H * .02, pw * .3);
+      }
+      head(x1, y1);
+      break;
+    }
+    case 'sl': blob(g, 0, -cw * .25, pw * .5, cw * .3, c); break;
+    case 'inc':
+      line(-cw * .2, 0, -cw * .2 - Math.sin(.4) * H, -Math.cos(.4) * H, pw * .66);
+      line(cw * .2, 0, cw * .2 + Math.sin(.4) * H, -Math.cos(.4) * H, pw * .66);
+      break;
+    case 'dec': case 'invdec':
+      line(-cw * .36, 0, -pw * .08, -H, pw * .66); line(cw * .36, 0, pw * .08, -H, pw * .66);
+      head(0, -H, pw * .9);
+      if (id === 'invdec') { g.beginPath(); g.arc(0, -H * .5, cw * .07, 0, Math.PI * 2); g.fillStyle = shade(c, .45); g.fill(); }
+      break;
+    case 'cl':
+      line(-cw * .4, 0, 0, -H, pw * .6); line(cw * .4, 0, 0, -H, pw * .6); line(0, 0, 0, -H, pw * .66);
+      head(0, -H, pw * .9);
+      break;
+    case 'shell':
+      [[-.8, .72], [.8, .72], [-.42, .9], [.42, .9], [0, 1]].forEach(([a, l]) => line(0, 0, Math.sin(a) * H * l, -Math.cos(a) * H * l, pw * .52));
+      break;
+    case 'v':
+      line(-cw * .1, 0, -cw * .1 - Math.sin(.42) * H, -Math.cos(.42) * H, pw * .66);
+      line(cw * .1, 0, cw * .1 + Math.sin(.42) * H, -Math.cos(.42) * H, pw * .66);
+      break;
+    case 'ch': ringStrand(g, 0, 0, Math.max(cw * .3, cw * .5 * wd - cw * .12), cw * .8, cw * .3, c, 0, true); break;
+    case 'tch': ringStrand(g, 0, 0, cw * .34, cw * .6, cw * .26, c, 0, true); break;
+    case 'picot': line(0, 0, 0, -cw * .55, pw * .45); ringStrand(g, 0, -cw * .85, cw * .26, cw * .26, cw * .22, c); break;
+    case 'bob': line(0, 0, 0, -cw * .4, pw * .4); blob(g, -cw * .22, -H * .6, cw * .3, H * .38, c); blob(g, cw * .22, -H * .6, cw * .3, H * .38, c); blob(g, 0, -H * .66, cw * .32, H * .4, c); break;
+    case 'puff': line(0, 0, 0, -cw * .4, pw * .4); blob(g, 0, -H * .62, cw * .44, H * .42, c); break;
+    case 'pop':
+      line(0, 0, 0, -cw * .4, pw * .4); blob(g, 0, -H * .62, cw * .44, H * .44, c);
+      [[-.18, -.78], [.18, -.78], [0, -.62], [-.18, -.46], [.18, -.46]].forEach(([x, y]) => { g.beginPath(); g.arc(x * cw * 1.3, y * H, cw * .08, 0, Math.PI * 2); g.fillStyle = shade(c, 1.35); g.fill(); });
+      break;
+    case 'mr': ringStrand(g, 0, -cw * .5, cw * .5, cw * .5, cw * .3, c); ringStrand(g, 0, -cw * .5, cw * .2, cw * .2, cw * .24, c); break;
+    default: break; /* sk: a gap */
+  }
+  if (mod === 'BLO' || mod === 'FLO') {
+    g.strokeStyle = shade(c, .4); g.lineWidth = Math.max(1, cw * .07); g.lineCap = 'round';
+    const y = mod === 'BLO' ? cw * .1 : -H - cw * .05;
+    g.beginPath(); g.moveTo(-pw * .4, y); g.lineTo(pw * .4, y); g.stroke();
+  }
+}
+
+function realGeo(c) {
+  const all = c.rows.map(r => expand(r.items));
+  if (c.mode === 'round') {
+    const rings = []; let r = 13;
+    all.forEach((cells, i) => {
+      const ring = cells.filter(x => x.st !== 'mr');
+      if (!ring.length) { rings[i] = null; return; }
+      const n = ring.length, mh = Math.max(1, ...ring.map(x => HT[x.st])), wsum = ring.reduce((a, x) => a + wt(x.st), 0);
+      let cw = 24;
+      for (let k = 0; k < 3; k++) cw = clamp(2 * Math.PI * (r + mh * cw * .4) / wsum * 1.04, 13, 30);
+      const th = mh * cw * .8;
+      rings[i] = { id: c.rows[i].id, cells: ring, n, wsum, cw, r0: r, th };
+      r += th * .88;
+    });
+    const R = r + 34;
+    return { mode: 'round', rings, R, W: 2 * R, H: 2 * R };
+  }
+  const cw = 30, padX = 46, padY = 26;
+  const maxC = Math.max(4, ...all.map(a => a.reduce((s, x) => s + wt(x.st), 0)));
+  const ths = all.map(cells => Math.max(1, ...cells.map(x => HT[x.st])) * cw * .8);
+  const H = padY * 2 + ths.reduce((a, b) => a + b * .88, 0) + cw * .5;
+  let yb = H - padY;
+  const rows = c.rows.map((r, i) => { const o = { id: r.id, cells: all[i], y0: yb, th: ths[i] }; yb -= ths[i] * .88; return o; });
+  return { mode: 'flat', rows, cw, padX, maxC, W: maxC * cw + padX * 2, H };
+}
+
+function pathRound(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function drawReal(canvas, c, o = {}) {
+  const geo = realGeo(c), upTo = o.upTo == null ? c.rows.length : o.upTo;
+  const pxW = o.pxW || Math.min(1400, geo.W * 2), k = pxW / geo.W;
+  canvas.width = Math.round(pxW); canvas.height = Math.round(geo.H * k);
+  const g = canvas.getContext('2d');
+  g.setTransform(k, 0, 0, k, 0, 0); KS = k;
+  g.fillStyle = BACK; pathRound(g, 0, 0, geo.W, geo.H, 16); g.fill();
+  const label = (txt, x, y, align) => { g.font = '800 13px Nunito, system-ui, sans-serif'; g.fillStyle = 'rgba(255,240,225,.85)'; g.textAlign = align; g.fillText(txt, x, y); };
+  if (geo.mode === 'round') {
+    const cx = geo.R, cy = geo.R;
+    const firstC = c.rows[0] ? c.rows[0].color : PAL[0][1];
+    g.fillStyle = shade(firstC, .3); g.beginPath(); g.arc(cx, cy, 14, 0, Math.PI * 2); g.fill();
+    geo.rings.forEach((ring, i) => {
+      if (!ring || i >= upTo) return;
+      const col = c.rows[i].color;
+      g.fillStyle = shade(col, .38); g.beginPath(); g.arc(cx, cy, ring.r0 + ring.th * .92, 0, Math.PI * 2); g.arc(cx, cy, Math.max(0, ring.r0 - 2), 0, Math.PI * 2, true); g.fill('evenodd');
+      let acc = 0;
+      ring.cells.forEach((cell, j) => {
+        const span = Math.PI * 2 * wt(cell.st) / ring.wsum, th = -Math.PI / 2 - acc - span / 2, rb = ring.r0 - ring.cw * .1;
+        acc += span;
+        g.save(); g.translate(cx + rb * Math.cos(th), cy + rb * Math.sin(th)); g.rotate(th + Math.PI / 2); setRot(th + Math.PI / 2);
+        stitch(g, cell.st, cell.mod, col, ring.cw, rng(i * 977 + j * 131 + 7), wt(cell.st));
+        g.restore();
+      });
+    });
+    if (o.active) geo.rings.forEach((ring, i) => {
+      if (!ring || i >= upTo || ring.id !== o.active) return;
+      g.beginPath(); g.arc(cx, cy, ring.r0 + ring.th * .45, 0, Math.PI * 2); g.strokeStyle = 'rgba(255,225,205,.2)'; g.lineWidth = ring.th; g.stroke();
+    });
+    if (!o.mini) geo.rings.forEach((ring, i) => {
+      if (!ring || i >= upTo) return;
+      const y = cy - (ring.r0 + ring.th * .45);
+      g.fillStyle = 'rgba(42,33,30,.85)'; pathRound(g, cx - 8, y - 6.5, 16, 13, 6.5); g.fill();
+      g.font = '800 10px Nunito, system-ui, sans-serif'; g.fillStyle = '#fff1e4'; g.textAlign = 'center'; g.fillText(String(i + 1), cx, y + 3.6);
+    });
+  } else {
+    geo.rows.forEach((row, i) => {
+      if (i >= upTo) return;
+      const col = c.rows[i].color, sum = row.cells.reduce((a, x) => a + wt(x.st), 0), x0 = geo.padX + (geo.maxC - sum) * geo.cw / 2, n = sum;
+      g.fillStyle = shade(col, .38); g.fillRect(x0, row.y0 - row.th, sum * geo.cw, row.th);
+      const fromRight = i % 2 === 0;
+      let acc = 0;
+      row.cells.forEach((cell, j) => {
+        const w = wt(cell.st), mid = acc + w / 2; acc += w;
+        g.save(); g.translate(x0 + (fromRight ? sum - mid : mid) * geo.cw, row.y0); setRot(0);
+        stitch(g, cell.st, cell.mod, col, geo.cw, rng(i * 977 + j * 131 + 7), w);
+        g.restore();
+      });
+      if (o.active === row.id) { g.fillStyle = 'rgba(255,225,205,.2)'; g.fillRect(x0 - 6, row.y0 - row.th, n * geo.cw + 12, row.th); }
+      if (!o.mini) {
+        const ty = row.y0 - row.th / 2 + 5;
+        if (fromRight) label(`${i + 1} ←`, geo.padX + geo.maxC * geo.cw + 8, ty, 'left'); else label(`→ ${i + 1}`, geo.padX - 8, ty, 'right');
+      }
+    });
+  }
+  canvas._geo = geo; canvas._rows = c.rows.map(r => r.id);
+  return canvas;
+}
+/* which row is at this point of the realistic preview? */
+function realRowAt(canvas, e) {
+  const geo = canvas._geo; if (!geo) return null;
+  const rect = canvas.getBoundingClientRect();
+  const sc = Math.min(rect.width / geo.W, rect.height / geo.H);
+  const x = (e.clientX - rect.left - (rect.width - geo.W * sc) / 2) / sc, y = (e.clientY - rect.top - (rect.height - geo.H * sc) / 2) / sc;
+  if (geo.mode === 'round') {
+    const d = Math.hypot(x - geo.R, y - geo.R);
+    const hit = geo.rings.find(r => r && d >= r.r0 - 4 && d <= r.r0 + r.th);
+    return hit ? hit.id : null;
+  }
+  const hit = geo.rows.find(r => y <= r.y0 && y >= r.y0 - r.th);
+  return hit ? hit.id : null;
+}
+function drawSprite(cv, id) {
+  const g = cv.getContext('2d'), k = cv.width / 56;
+  g.setTransform(k, 0, 0, k, 0, 0); KS = k;
+  g.fillStyle = BACK; pathRound(g, 0, 0, 56, 56, 14); g.fill();
+  g.translate(28, 47); setRot(0);
+  stitch(g, id, '', PAL[1][1], 15, rng(3));
 }
 
 /* ------------------------------------------------------------------- render */
@@ -380,7 +564,7 @@ function render() {
 function renderList() {
   const cards = DB.charts.slice().sort((a, b) => b.updated - a.updated).map(c => `
     <button class="card chart-card" data-act="open" data-id="${c.id}">
-      <div class="thumb">${chartSVG(c, { mini: true })}</div>
+      <div class="thumb">${DB.look === 'symbols' ? chartSVG(c, { mini: true }) : `<canvas class="thumbc" data-id="${c.id}" aria-hidden="true"></canvas>`}</div>
       <h3>${esc(c.name)}</h3>
       <div class="muted small">${c.rows.length} ${c.mode === 'round' ? 'rounds' : 'rows'} · ${c.mode === 'round' ? 'in the round' : 'flat'} · ${new Date(c.updated).toLocaleDateString()}</div>
     </button>`).join('');
@@ -397,6 +581,7 @@ function renderList() {
         <p class="muted">Start a chart and it will be saved right here in your browser.</p>
         <button class="btn primary" data-act="new">+ New chart</button></div>`}
     <input type="file" id="importFile" accept="application/json,.json" hidden>`;
+  document.querySelectorAll('.thumbc').forEach(cv => drawReal(cv, DB.charts.find(x => x.id === cv.dataset.id), { pxW: 360, mini: true }));
 }
 
 function renderEditor() {
@@ -427,7 +612,7 @@ function renderEditor() {
       <div class="card viz-pane">
         <div class="viz-head"><h2>Preview</h2>
           <div class="seg" role="group" aria-label="Preview style">
-            <button data-act="look" data-look="yarn" aria-pressed="${(DB.look || 'yarn') === 'yarn'}">Yarn</button>
+            <button data-act="look" data-look="real" aria-pressed="${DB.look !== 'symbols'}">Realistic</button>
             <button data-act="look" data-look="symbols" aria-pressed="${DB.look === 'symbols'}">Symbols</button></div></div>
         <div class="viz" id="viz"></div>
         <div class="viz-controls" id="scrub"></div>
@@ -503,7 +688,13 @@ function renderRows() {
 function renderViz(keepScrub) {
   const el = $('#viz'); if (!el) return;
   const c = chart();
-  el.innerHTML = c.rows.length ? chartSVG(c, { upTo: ui.upTo, active: ui.activeRow }) : '<p class="muted">Add a row to see your chart.</p>';
+  const real = DB.look !== 'symbols';
+  if (!c.rows.length) el.innerHTML = '<p class="muted">Add a row to see your chart.</p>';
+  else if (real) {
+    let cv = el.querySelector('canvas');
+    if (!cv) { el.innerHTML = '<canvas class="real" aria-label="Realistic preview of the crochet chart"></canvas>'; cv = el.firstChild; }
+    drawReal(cv, c, { upTo: ui.upTo, active: ui.activeRow });
+  } else el.innerHTML = chartSVG(c, { upTo: ui.upTo, active: ui.activeRow });
   const n = c.rows.length;
   if (keepScrub) { const l = $('#scrubLabel'); if (l) l.textContent = `${ui.upTo} / ${n}`; return; }
   $('#scrub').innerHTML = n ? `
@@ -558,7 +749,7 @@ function renderTipList() {
 }
 function renderStitches() {
   const block = cat => `<h2 class="cat-title">${cat}</h2><div class="grid">${STITCHES.filter(s => s.cat === cat).map(s => `
-    <div class="card st-card"><div class="glyph">${miniGlyph(s.id, 38)}${miniYarn(s.id, 44)}</div>
+    <div class="card st-card"><div class="glyph">${miniGlyph(s.id, 36)}<canvas class="sprite" data-st="${s.id}" width="112" height="112" aria-hidden="true"></canvas></div>
       <div><h3>${esc(sname(s.id))} <span class="muted">· ${esc(abbr(s.id))}</span></h3><p>${esc(s.desc)}</p>
       <div class="meta">leaves ${s.makes} · works into ${s.uses}</div></div></div>`).join('')}</div>`;
   app.innerHTML = `
@@ -567,6 +758,7 @@ function renderStitches() {
     <h2 class="cat-title">Loop markers</h2>
     <div class="grid"><div class="card st-card"><div class="glyph">${miniGlyph('sc', 40, 'BLO')}</div><div><h3>BLO</h3><p>Back loop only: work through the back loop of the stitch. The line sits below the symbol.</p></div></div>
     <div class="card st-card"><div class="glyph">${miniGlyph('sc', 40, 'FLO')}</div><div><h3>FLO</h3><p>Front loop only: work through the front loop. The line sits above the symbol.</p></div></div></div>`;
+  document.querySelectorAll('.sprite').forEach(cv => drawSprite(cv, cv.dataset.st));
 }
 
 /* ------------------------------------------------------------- misc helpers */
@@ -617,6 +809,11 @@ function createChart(tpl, name) {
 /* ------------------------------------------------------------------- events */
 function pngExport() {
   const c = chart();
+  if (DB.look !== 'symbols') {
+    const cv = drawReal(document.createElement('canvas'), c, {});
+    cv.toBlob(b => b ? download(fileName(c) + '.png', b) : toast('Could not make the picture'), 'image/png');
+    return;
+  }
   const svg = chartSVG(c, {});
   const w = +svg.match(/width="(\d+)"/)[1], h = +svg.match(/height="(\d+)"/)[1];
   const img = new Image();
@@ -630,6 +827,11 @@ function pngExport() {
 }
 
 document.addEventListener('click', e => {
+  if (e.target.matches('#viz canvas')) {
+    const id = realRowAt(e.target, e);
+    if (id) { ui.activeRow = id; ui.target = null; renderRows(); renderViz(true); renderPicker(); }
+    return;
+  }
   const svgRow = e.target.closest('#viz [data-row]');
   if (svgRow) { ui.activeRow = svgRow.dataset.row; ui.target = null; renderRows(); renderViz(); renderPicker(); return; }
   const rowCard = e.target.closest('.row-card');
