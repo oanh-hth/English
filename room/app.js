@@ -1044,8 +1044,77 @@ $('#load-sample').addEventListener('click', loadSample);
 $('#auto-rebuy').checked = state.autoRebuy !== false;
 $('#auto-rebuy').addEventListener('change', e => { state.autoRebuy = e.target.checked; save(); });
 
+/* ---------- room look: ready-made rooms, or your own photo ---------- */
+const KEY_IMG = 'phongtrudo.roomimg';
+const ROOMS = [
+  {id:'sang',     name:'Phòng sáng',    v:{'--wall':'#c4e5ff','--wall-2':'#aedaff','--base':'#ffffff','--floor':'#f6dcae','--floor-line':'#e8c690','--rug':'#7fd6c8','--glass':'#e3f4ff','--frame':'#ffffff','--shadow':'rgba(110,70,20,.22)'}},
+  {id:'bacha',    name:'Bạc hà mát',    v:{'--wall':'#cdf0e1','--wall-2':'#b6e6d1','--base':'#ffffff','--floor':'#ead9b6','--floor-line':'#dac79a','--rug':'#f4a5b8','--glass':'#e3f7ff','--frame':'#ffffff','--shadow':'rgba(80,70,30,.22)'}},
+  {id:'hong',     name:'Hồng kẹo',      v:{'--wall':'#ffd9e6','--wall-2':'#ffc6da','--base':'#ffffff','--floor':'#f4dcc8','--floor-line':'#e6c6ae','--rug':'#b9a7f5','--glass':'#fde9f3','--frame':'#ffffff','--shadow':'rgba(120,60,70,.22)'}},
+  {id:'go',       name:'Gỗ ấm',         v:{'--wall':'#ecd0a8','--wall-2':'#dfbc8e','--base':'#fff5e6','--floor':'#bb8050','--floor-line':'#a46b3b','--rug':'#c9605a','--glass':'#d9eefa','--frame':'#fff5e6','--shadow':'rgba(60,30,10,.32)'}},
+  {id:'hoanghon', name:'Hoàng hôn',     v:{'--wall':'#ffd3a6','--wall-2':'#ffb98a','--base':'#fff3e3','--floor':'#e6bb92','--floor-line':'#d3a579','--rug':'#8f74d6','--glass':'#ffd9a8','--frame':'#fff3e3','--shadow':'rgba(110,50,20,.28)'}},
+  {id:'dem',      name:'Đêm yên tĩnh',  v:{'--wall':'#2f3a63','--wall-2':'#252e52','--base':'#46538a','--floor':'#4a3d33','--floor-line':'#3a2f27','--rug':'#7a63d6','--glass':'#1c2650','--frame':'#5d6aa0','--shadow':'rgba(0,0,0,.45)'}}
+];
+const roomLook = () => Object.assign({mode:'preset', preset:'sang', veil:25}, state.room || {});
+function applyRoom(){
+  const r = roomLook(), p = ROOMS.find(x => x.id === r.preset) || ROOMS[0];
+  Object.keys(p.v).forEach(k => room.style.setProperty(k, p.v[k]));
+  const img = r.mode === 'image' ? lsGet(KEY_IMG) : '';
+  const layer = $('#room-img'), veil = $('#room-veil'), bg = room.querySelector('svg.bg');
+  if(img){ layer.style.backgroundImage = 'url("'+img+'")'; layer.hidden = false; veil.hidden = false; veil.style.opacity = r.veil/100; bg.style.visibility = 'hidden'; }
+  else { layer.hidden = true; veil.hidden = true; layer.style.backgroundImage = ''; bg.style.visibility = ''; }
+  renderRoomStyle();
+}
+function renderRoomStyle(){
+  const r = roomLook(), img = lsGet(KEY_IMG), box = $('#swatches');
+  box.innerHTML = '';
+  const mk = (id, name, paint, checked) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'sw'; b.dataset.id = id;
+    b.setAttribute('role','radio'); b.setAttribute('aria-checked', String(checked));
+    const prev = document.createElement('span'); prev.className = 'sw-prev'; prev.style.background = paint;
+    const lab = document.createElement('span'); lab.textContent = name;
+    b.append(prev, lab);
+    b.addEventListener('click', () => {
+      state.room = id === '_img' ? Object.assign(roomLook(), {mode:'image'}) : Object.assign(roomLook(), {mode:'preset', preset:id});
+      save(); applyRoom();
+    });
+    box.appendChild(b);
+  };
+  ROOMS.forEach(p => mk(p.id, p.name, 'linear-gradient(180deg,'+p.v['--wall']+' 0 52%,'+p.v['--floor']+' 52% 100%)', r.mode === 'preset' && r.preset === p.id));
+  if(img) mk('_img', 'Ảnh của bạn', 'center / cover url("'+img+'")', r.mode === 'image');
+  $('#rs-remove').hidden = !img; $('#rs-veil-wrap').hidden = !(img && r.mode === 'image'); $('#rs-veil').value = r.veil;
+}
+const rsStatus = t => { $('#rs-status').textContent = t || ''; };
+$('#rs-open').addEventListener('click', () => {
+  const panel = $('#room-style'), open = panel.hidden;
+  panel.hidden = !open; $('#rs-open').setAttribute('aria-expanded', String(open));
+  if(open) panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+$('#rs-close').addEventListener('click', () => { $('#room-style').hidden = true; $('#rs-open').setAttribute('aria-expanded','false'); $('#rs-open').focus(); });
+$('#rs-pick').addEventListener('click', () => $('#rs-file').click());
+$('#rs-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  if(!/^image\//.test(f.type)){ rsStatus('Tệp này không phải ảnh. Bạn chọn ảnh JPG, PNG hoặc WebP nha.'); return; }
+  try{
+    const bmp = await createImageBitmap(f), sc = Math.min(1, 1600/Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width*sc); c.height = Math.round(bmp.height*sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const data = c.toDataURL('image/jpeg', 0.82);
+    try{ localStorage.setItem(KEY_IMG, data); }catch(err){ rsStatus('Ảnh hơi nặng để lưu trên máy này. Bạn thử ảnh nhỏ hơn nha.'); return; }
+    state.room = Object.assign(roomLook(), {mode:'image'}); save(); applyRoom();
+    rsStatus('Đã đổi nền phòng sang ảnh của bạn. Kéo thanh "Làm dịu ảnh" nếu đồ trong phòng khó nhìn nha.');
+  }catch(err){ rsStatus('Chưa đọc được ảnh này. Bạn thử ảnh JPG hoặc PNG khác nha.'); }
+});
+$('#rs-remove').addEventListener('click', () => {
+  try{ localStorage.removeItem(KEY_IMG); }catch(e){}
+  if(roomLook().mode === 'image') state.room = Object.assign(roomLook(), {mode:'preset'});
+  save(); applyRoom(); rsStatus('Đã xoá ảnh.');
+});
+$('#rs-veil').addEventListener('input', e => { state.room = Object.assign(roomLook(), {veil:+e.target.value}); $('#room-veil').style.opacity = state.room.veil/100; });
+$('#rs-veil').addEventListener('change', save);
+
 /* ---------- boot ---------- */
 function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); }
+applyRoom();
 renderAll();
 dailyNotify();
 if('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});

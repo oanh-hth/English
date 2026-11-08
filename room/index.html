@@ -94,9 +94,12 @@
           <path d="M752 236l6 38h26l6-38z" fill="#b96a4a"/>
           <path d="M771 238c-22-10-26-34-14-52 12 14 18 32 14 52zM771 238c-2-30 8-46 26-56 4 22-6 42-26 56zM771 238c12-16 30-22 40-18-6 14-22 22-40 18z" fill="#4c9a3f"/>
         </svg>
+        <div class="room-img" id="room-img" hidden></div>
+        <div class="room-veil" id="room-veil" hidden></div>
         <button class="bin" id="bin" type="button" aria-label="Thùng rác. Xoá món đang chọn, hoặc kéo một món vào đây." title="Kéo món vào đây để xoá">
           <svg viewBox="0 0 48 48" aria-hidden="true"><path class="bdy" d="M11 17h26l-2 25a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2z"/><path d="M19 22v16M24 22v16M29 22v16" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round" fill="none"/><g class="lid"><rect x="8" y="10" width="32" height="5.500" rx="2.500" fill="#5d6c80"/><rect x="19" y="6" width="10" height="5.500" rx="2" fill="#5d6c80"/></g></svg>
         </button>
+        <button class="rs-btn" id="rs-open" type="button" aria-expanded="false" aria-controls="room-style">Đổi phòng</button>
         <span class="hint">Kéo món đi đâu cũng được. Nhấn giữ để nhân đôi. Thả vào thùng rác để xoá.</span>
         <div class="empty-room" id="empty-room" hidden>
           <p><strong>Phòng còn trống trơn nè!</strong></p>
@@ -104,6 +107,18 @@
           <button class="btn sm" id="load-sample" type="button">Xem thử với dữ liệu mẫu</button>
         </div>
       </div>
+
+      <section class="card room-style" id="room-style" aria-labelledby="h-rs" hidden>
+        <div class="card-head"><h2 id="h-rs">Đổi giao diện phòng</h2><button class="btn ghost sm" id="rs-close" type="button">Xong</button></div>
+        <div class="swatches" id="swatches" role="radiogroup" aria-label="Kiểu phòng"></div>
+        <div class="rs-upload">
+          <input type="file" id="rs-file" accept="image/*" hidden>
+          <button class="btn ghost sm" id="rs-pick" type="button">Tải ảnh của bạn lên</button>
+          <button class="btn ghost sm" id="rs-remove" type="button" hidden>Xoá ảnh</button>
+          <label class="rs-veil" id="rs-veil-wrap" for="rs-veil" hidden>Làm dịu ảnh <input id="rs-veil" type="range" min="0" max="70" step="5" value="25"></label>
+        </div>
+        <p class="small muted" id="rs-status" role="status">Ảnh được thu nhỏ rồi lưu ngay trên máy bạn, không gửi đi đâu cả.</p>
+      </section>
 
       <div class="critic" id="critic" aria-live="polite"></div>
 

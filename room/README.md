@@ -15,6 +15,7 @@ Thư mục `room/` dùng chung `../vendor/anthropic-sdk.js` với app tiếng An
 
 ## Tính năng
 - **Căn phòng**: kéo thả món đi đâu cũng được, phím mũi tên để nhích, thùng rác để xoá (có Hoàn tác). Lọc theo nhóm.
+- **Đổi giao diện phòng**: nút **Đổi phòng** ở góc trên bên phải căn phòng mở bảng chọn 6 kiểu làm sẵn (Phòng sáng, Bạc hà mát, Hồng kẹo, Gỗ ấm, Hoàng hôn, Đêm yên tĩnh) hoặc **Tải ảnh của bạn lên** để làm nền phòng. Ảnh được thu nhỏ còn tối đa 1600px rồi lưu trong `localStorage` của máy này (không gửi đi đâu), có thanh "Làm dịu ảnh" phủ lớp trắng nhẹ để đồ trong phòng dễ nhìn, và nút Xoá ảnh. Chọn lại một kiểu làm sẵn thì ảnh vẫn được giữ, bấm "Ảnh của bạn" để quay lại. Thêm kiểu mới thì thêm một dòng vào `ROOMS` trong `app.js`.
 - **Nhân đôi**: nhấn giữ một món khoảng nửa giây (hoặc bấm phím D, hoặc nút Nhân đôi ở chi tiết món) để mua thêm một món y chang. Bản sao có ngày mua là hôm nay, hạn dùng giữ nguyên thời gian sử dụng so với món gốc, và tiền mua được tính thêm vào chi tiêu. Có Hoàn tác. Nhân đôi không kích hoạt rule "mua lại thì món cũ coi như hết", vì bạn muốn có hai món.
 - **Thêm món**: nhập tay (tên, nhóm, hạn dùng, giá, ngày mua, số lượng) hoặc từ hoá đơn.
 - **Hoá đơn**: chụp ảnh hoặc ảnh màn hình rồi để Claude đọc, hoặc dán chữ. Có sẵn bộ đọc cho đơn Shopee, bill quán cà phê (STT / Tên món / SL / Đơn giá / Thành tiền) và hoá đơn siêu thị. Số tiền tính là "Thành tiền" cuối cùng. Luôn có bước xem lại trước khi thêm.

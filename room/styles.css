@@ -267,3 +267,16 @@ details.paste summary{cursor:pointer; font-size:13.5px; color:var(--muted); padd
 .item.holding .ico{animation:hold .6s ease-in forwards}
 @keyframes hold{0%{transform:scale(1)}100%{transform:scale(1.28) translateY(-4px)}}
 @media (prefers-reduced-motion:reduce){ .item.holding .ico{animation:none} }
+
+/* room look */
+.room-img{position:absolute; inset:0; background-size:cover; background-position:center; pointer-events:none}
+.room-veil{position:absolute; inset:0; background:#fff; pointer-events:none}
+.rs-btn{position:absolute; top:10px; right:10px; z-index:7; border:1px solid var(--line); background:color-mix(in srgb, var(--surface) 90%, transparent); color:var(--ink); border-radius:999px; padding:6px 14px; font-size:13px; font-weight:500; cursor:pointer}
+.swatches{display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px}
+.sw{display:flex; flex-direction:column; gap:6px; align-items:center; border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:6px; cursor:pointer; font-size:12.5px; min-width:0}
+.sw[aria-checked="true"]{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 1px var(--accent)}
+.sw-prev{display:block; width:100%; height:46px; border-radius:8px; border:1px solid var(--line)}
+.rs-upload{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px}
+.rs-veil{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); flex:1 1 200px; min-width:0}
+.rs-veil input{width:auto; flex:1; padding:0; accent-color:var(--accent)}
+.room-style .small{margin-top:10px}
