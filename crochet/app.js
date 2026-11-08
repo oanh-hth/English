@@ -564,7 +564,7 @@ function render() {
 function renderList() {
   const cards = DB.charts.slice().sort((a, b) => b.updated - a.updated).map(c => `
     <button class="card chart-card" data-act="open" data-id="${c.id}">
-      <div class="thumb">${DB.look === 'symbols' ? chartSVG(c, { mini: true }) : `<canvas class="thumbc" data-id="${c.id}" aria-hidden="true"></canvas>`}</div>
+      <div class="thumb">${DB.look !== 'real' ? chartSVG(c, { mini: true }) : `<canvas class="thumbc" data-id="${c.id}" aria-hidden="true"></canvas>`}</div>
       <h3>${esc(c.name)}</h3>
       <div class="muted small">${c.rows.length} ${c.mode === 'round' ? 'rounds' : 'rows'} · ${c.mode === 'round' ? 'in the round' : 'flat'} · ${new Date(c.updated).toLocaleDateString()}</div>
     </button>`).join('');
@@ -612,8 +612,8 @@ function renderEditor() {
       <div class="card viz-pane">
         <div class="viz-head"><h2>Preview</h2>
           <div class="seg" role="group" aria-label="Preview style">
-            <button data-act="look" data-look="real" aria-pressed="${DB.look !== 'symbols'}">Realistic</button>
-            <button data-act="look" data-look="symbols" aria-pressed="${DB.look === 'symbols'}">Symbols</button></div></div>
+            <button data-act="look" data-look="symbols" aria-pressed="${DB.look !== 'real'}">Chart</button>
+            <button data-act="look" data-look="real" aria-pressed="${DB.look === 'real'}">Realistic</button></div></div>
         <div class="viz" id="viz"></div>
         <div class="viz-controls" id="scrub"></div>
         <div class="written" id="written"></div>
@@ -688,7 +688,7 @@ function renderRows() {
 function renderViz(keepScrub) {
   const el = $('#viz'); if (!el) return;
   const c = chart();
-  const real = DB.look !== 'symbols';
+  const real = DB.look === 'real';
   if (!c.rows.length) el.innerHTML = '<p class="muted">Add a row to see your chart.</p>';
   else if (real) {
     let cv = el.querySelector('canvas');
@@ -809,7 +809,7 @@ function createChart(tpl, name) {
 /* ------------------------------------------------------------------- events */
 function pngExport() {
   const c = chart();
-  if (DB.look !== 'symbols') {
+  if (DB.look === 'real') {
     const cv = drawReal(document.createElement('canvas'), c, {});
     cv.toBlob(b => b ? download(fileName(c) + '.png', b) : toast('Could not make the picture'), 'image/png');
     return;
