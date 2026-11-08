@@ -1,0 +1,25 @@
+{
+  "name": "memory-vault-course",
+  "private": true,
+  "type": "module",
+  "description": "A self-paced course: learn React, TypeScript and Node.js by building Memory Vault, one tested exercise at a time.",
+  "engines": { "node": ">=22.9" },
+  "workspaces": ["shared", "server", "web"],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ex": "tsx scripts/ex.ts",
+    "progress": "tsx scripts/progress.ts",
+    "solution": "tsx scripts/solution.ts",
+    "typecheck": "tsc -p shared --noEmit && tsc -p server --noEmit && tsc -p web --noEmit",
+    "verify:solutions": "tsx scripts/verify-solutions.ts",
+    "dev:server": "npm run dev -w server",
+    "dev:web": "npm run dev -w web"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}
