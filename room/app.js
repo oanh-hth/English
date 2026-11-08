@@ -10,22 +10,22 @@ const CATS = [
   {id:'produce',     name:'Rau củ quả',  color:'#ff5a47', kw:/banana|apple|spinach|lettuce|tomato(?!.*can)|fruit|veg|berry|berries|carrot|onion|potato|salad|orange\b/i},
   {id:'dairy',       name:'Sữa & trứng',   color:'#3d9bff', kw:/milk|cheese|yogh?urt|butter|egg|cream(?!.*hand)/i},
   {id:'drinks',      name:'Đồ uống',         color:'#ff9a1f', kw:/juice|water|soda|cola|beer|wine|tea\b|coffee|drink/i},
-  {id:'pantry',      name:'Đồ khô',         color:'#bd8c4a', kw:/pasta|rice|bread|flour|sugar|oil|sauce|cereal|noodle|snack|canned|beans/i},
+  {id:'pantry',      name:'Đồ khô',         color:'#bd8c4a', kw:/pasta|rice|bread|flour|sugar|oil|sauce|cereal|noodle|canned|beans/i},
   {id:'meds',        name:'Thuốc',       color:'#1fbf8a', kw:/vitamin|ibuprofen|paracetamol|tablet|medicine|syrup|pill|supplement/i},
-  {id:'care',        name:'Chăm sóc cá nhân',  color:'#c76bf0', kw:/shampoo|soap|lotion|hand cream|toothpaste|deodorant|conditioner|sunscreen/i},
+  {id:'care',        name:'Chăm sóc & mỹ phẩm', color:'#c76bf0', kw:/shampoo|soap|lotion|hand cream|toothpaste|deodorant|conditioner|sunscreen|lipstick|makeup|make-up|perfume|foundation|mascara|serum|eyeliner|(^|[^\p{L}])(son|phấn|nước hoa|toner|tẩy trang|mặt nạ|cushion|má hồng|kẻ mày|dưỡng da|kem nền|kem lót|chống nắng|mỹ phẩm)([^\p{L}]|$)/iu},
   {id:'cleaning',    name:'Đồ vệ sinh',       color:'#19c3e0', kw:/detergent|cleaner|spray|bleach|sponge|dish|laundry/i},
   {id:'electronics', name:'Đồ điện tử',    color:'#6f86ad', kw:/cable|batter|earbud|charger|mouse|usb|phone|lamp|speaker/i},
-  {id:'baby',        name:'Đồ cho bé',           color:'#ff6f9f', kw:/b[ỉi]m|\btã\b|diaper|sữa bột|em bé|baby|trẻ em|khăn ướt/i},
+  {id:'baby',        name:'Đồ cho bé',           color:'#ff6f9f', kw:/bỉm|(^|[^\p{L}])bim(?! ?bim)([^\p{L}]|$)|(^|[^\p{L}])tã([^\p{L}]|$)|diaper|sữa bột|em bé|baby|trẻ em|khăn ướt/iu},
   {id:'clothes',     name:'Quần áo',        color:'#5b6ee1', kw:/(^|[^\p{L}])(áo|quần|váy|đầm|giày|dép|tất|vớ|nón|mũ|găng tay|khẩu trang)([^\p{L}]|$)|\b(t-?shirts?|shirts?|dress|jeans|shoes?|sneakers?|jacket|hoodie|socks?|pants)\b/iu},
   {id:'gift',        name:'Mua tặng',       color:'#f2b705', kw:/$^/},
-  {id:'cosmetics',   name:'Mỹ phẩm',        color:'#e64980', kw:/(^|[^\p{L}])(son|phấn|nước hoa|serum|toner|tẩy trang|mặt nạ|cushion|má hồng|kẻ mày|dưỡng da|kem nền|kem lót|chống nắng|mỹ phẩm)([^\p{L}]|$)|lipstick|makeup|make-up|perfume|foundation|mascara|serum|eyeliner/iu},
   {id:'tools',       name:'Dụng cụ',        color:'#f76707', kw:/(^|[^\p{L}])(búa|kìm|tua vít|tô vít|cờ lê|mỏ lết|khoan|cưa|thước dây|đinh|ốc vít|băng keo|keo dán|dụng cụ|đồ nghề)([^\p{L}]|$)|hammer|wrench|screwdriver|drill|pliers|tape measure|toolbox/iu},
   {id:'stationery',  name:'Văn phòng phẩm', color:'#74b816', kw:/(^|[^\p{L}])(bút|vở|sổ|giấy|kẹp giấy|ghim|bìa|tẩy|thước kẻ|thước|bút chì|bút bi|bút lông|băng dính|bấm kim|văn phòng phẩm)([^\p{L}]|$)|notebook|pencil|\bpens?\b|stapler|highlighter|marker|sticky note/iu},
   {id:'yarn',        name:'Len',            color:'#7950f2', kw:/(^|[^\p{L}])(len|sợi len|kim đan|móc len|kim móc|đan len|cuộn len|sợi bông|sợi cotton)([^\p{L}]|$)|yarn|knitting|crochet/iu},
+  {id:'snack',       name:'Đồ ăn vặt',      color:'#e64980', kw:/(^|[^\p{L}])(bim ?bim|snack|kẹo|socola|sô cô la|bánh quy|bánh gạo|bánh snack|bánh kẹo|bánh ngọt|bánh bông lan|hạt điều|hạt hướng dương|hạt dẻ|mứt|rong biển sấy|khô bò|khô gà|khoai tây chiên|trái cây sấy)([^\p{L}]|$)|cookies?|biscuits?|chocolate|candy|chips?|nuts|cracker|wafer|gummy|popcorn/iu},
   {id:'other',       name:'Khác',          color:'#c4925f', kw:/$^/}
 ];
 const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
-const GUESS_ORDER = ['baby','clothes','cosmetics','care','cleaning','meds','electronics','tools','stationery','yarn','drinks','dairy','produce','pantry'];
+const GUESS_ORDER = ['snack','baby','clothes','care','cleaning','meds','electronics','tools','stationery','yarn','drinks','dairy','produce','pantry'];
 const VN = {
   care:/sữa tắm|dầu gội|dầu xả|kem đánh răng|xà phòng|sữa rửa mặt|kem dưỡng/i,
   cleaning:/nước rửa|nước lau|nước giặt|tẩy|xịt|giấy vệ sinh|giấy ăn|khăn giấy/i,
@@ -68,7 +68,8 @@ function starter(){
     ['Nước rửa chén','cleaning',-15,null,42000,1,88,60],
     ['Áo thun trắng','clothes',-30,null,189000,1,22,86],
     ['Quà sinh nhật cho bạn','gift',-3,null,250000,1,52,90],
-    ['Son dưỡng môi','cosmetics',-8,365,89000,1,16,70],
+    ['Son dưỡng môi','care',-8,365,89000,1,16,70],
+    ['Bánh quy bơ','snack',-5,70,52000,1,60,90],
     ['Bộ tua vít','tools',-10,null,135000,1,64,88],
     ['Bút gel (hộp 10 cây)','stationery',-6,null,45000,1,44,88],
     ['Len cotton 200g','yarn',-14,null,60000,2,34,92]
@@ -110,7 +111,8 @@ function seed(){
     ['Áo thun cotton','clothes',-100,null,16,1,24,76],
     ['Áo khoác mỏng','clothes',-60,null,32,1,70,84],
     ['Quà sinh nhật cho mẹ','gift',-45,null,20,1,50,92],
-    ['Son dưỡng môi','cosmetics',-8,365,3.5,1,16,70],
+    ['Son dưỡng môi','care',-8,365,3.5,1,16,70],
+    ['Bánh quy bơ','snack',-5,70,2.1,1,60,90],
     ['Bộ tua vít','tools',-50,null,5.4,1,64,88],
     ['Bút gel (hộp 10 cây)','stationery',-6,null,1.8,1,44,88],
     ['Len cotton 200g','yarn',-14,null,2.4,2,34,92]
@@ -121,6 +123,7 @@ function load(){ try{ const s = localStorage.getItem(KEY); return s ? JSON.parse
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 let state = load();
 if(!state || !Array.isArray(state.items)){ state = {items:starter(), win:3}; save(); }
+if(state.items.some(i => i.cat === 'cosmetics')){ state.items.forEach(i => { if(i.cat === 'cosmetics') i.cat = 'care'; }); save(); }   // Mỹ phẩm merged into Chăm sóc & mỹ phẩm
 let sel = null, filter = null, justAdded = null, found = null;
 const byId = id => state.items.find(i => i.id === id);
 
@@ -133,7 +136,7 @@ function status(it){
   return 'ok';
 }
 /* ---------- rebuy rule: buying the same thing again means last month's one is finished ---------- */
-const REBUY_CATS = new Set(['baby','care','cleaning']);   // one-at-a-time things: a new diaper pack replaces the old one, whatever the brand
+const REBUY_CATS = new Set(['baby','cleaning']);   // one-at-a-time things: a new diaper pack replaces the old one, whatever the brand
 const monthKey = d => String(d).slice(0,7);
 const unaccent = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
 const NAME_STOP = new Set(['combo','tang','tui','mini','size','goi','mieng','hop','chai','lon','thung','set','pack']);
@@ -164,9 +167,9 @@ function announceRebuy(hit){
     {label:'Hoàn tác', fn:() => { hit.forEach(h => { h.a.used = false; delete h.a.replacedBy; }); save(); renderAll(); }});
 }
 
-/* Misu reminds about things nobody has touched for a while: 30 days, 90 days for clothes, never for things bought as gifts */
-const DORMANT_DAYS = 30, DORMANT_DAYS_CLOTHES = 90;
-const dormantAfter = it => it.cat === 'clothes' ? DORMANT_DAYS_CLOTHES : DORMANT_DAYS;
+/* Misu reminds about things nobody has touched for a while: 30 days, 90 days for clothes, yarn, tools and stationery, never for things bought as gifts */
+const DORMANT_DAYS = 30, DORMANT_DAYS_LONG = 90, LONG_IDLE = new Set(['clothes','yarn','tools','stationery']);
+const dormantAfter = it => LONG_IDLE.has(it.cat) ? DORMANT_DAYS_LONG : DORMANT_DAYS;
 /* Still in date? Then Misu only asks "have you used it yet?" instead of nagging; "Chưa dùng" snoozes the question for 30 days */
 const inDate = it => !!it.exp && daysLeft(it) >= 0;
 const snoozeActive = it => !!it.snoozed && (today() - parseISO(it.snoozed))/864e5 <= DORMANT_DAYS;
@@ -256,8 +259,8 @@ const HABIT = {
           mild:['{hdays} ngày trong tuần bạn mua đồ khô. Kệ bếp thở không nổi nữa rồi.','Đồ khô mua đều quá. Bạn tích trữ hả?']},
   meds:{strong:['Ngày nào cũng mua thuốc và vitamin... Bạn khoẻ không vậy? Tui hơi lo đó.','7/7 ngày mua thuốc. Bạn nhớ đi khám nha, đừng tự mua hoài.'],
         mild:['{hdays} ngày trong tuần mua thuốc, vitamin. Bạn nhớ uống đúng liều nha.','Thuốc men mua đều ghê. Bạn có khoẻ không đó?']},
-  care:{strong:['Ngày nào cũng mua đồ chăm sóc cá nhân. Bạn đẹp thêm cỡ nào nữa vậy trời?','7/7 ngày mua đồ chăm sóc cá nhân. Chai lọ trong phòng nhiều hơn cả tui rồi.'],
-        mild:['{hdays} ngày trong tuần mua đồ chăm sóc cá nhân. Đẹp vừa thôi nha.','Dầu gội, kem dưỡng mua đều ghê. Dùng hết cái cũ chưa?']},
+  care:{strong:['Ngày nào cũng mua mỹ phẩm, đồ chăm sóc. Bàn trang điểm của bạn sắp thành cửa hàng rồi.','Ngày nào cũng mua đồ chăm sóc cá nhân. Bạn đẹp thêm cỡ nào nữa vậy trời?','7/7 ngày mua đồ chăm sóc cá nhân. Chai lọ trong phòng nhiều hơn cả tui rồi.'],
+        mild:['{hdays} ngày trong tuần mua mỹ phẩm. Son nào cũng đẹp, nhưng môi chỉ có một cặp thôi nha.','{hdays} ngày trong tuần mua đồ chăm sóc cá nhân. Đẹp vừa thôi nha.','Dầu gội, kem dưỡng mua đều ghê. Dùng hết cái cũ chưa?']},
   cleaning:{strong:['Ngày nào cũng mua đồ vệ sinh. Bạn dọn nhà mỗi ngày hay mua để ngắm vậy?','7/7 ngày mua đồ vệ sinh. Nhà sạch bóng rồi, tha cho nó đi.'],
             mild:['{hdays} ngày trong tuần mua đồ vệ sinh. Chăm dọn dẹp ghê, hay mua dư rồi?','Nước giặt, nước lau mua đều quá. Dùng hết cái cũ chưa?']},
   electronics:{strong:['Ngày nào cũng mua đồ điện tử. Ví bạn kêu cứu rồi nè.','7/7 ngày mua đồ điện tử. Bạn mở cửa hàng công nghệ hả?'],
@@ -266,12 +269,12 @@ const HABIT = {
         mild:['{hdays} ngày trong tuần mua đồ cho bé. Bé được cưng ghê.','Đồ cho bé mua đều. Nhớ kiểm tra còn dư bao nhiêu trước khi mua thêm nha.']},
   clothes:{strong:['Ngày nào cũng mua quần áo. Tủ đồ của bạn sắp tràn ra phòng rồi nè.','7/7 ngày mua quần áo. Bạn mặc kịp hết không đó?'],
            mild:['{hdays} ngày trong tuần mua quần áo. Tủ đồ than thở rồi đó.','Quần áo mua đều ghê. Mặc cái cũ chưa?']},
-  cosmetics:{strong:['Ngày nào cũng mua mỹ phẩm. Mặt bạn có đủ chỗ để thoa hết không vậy?','7/7 ngày mua mỹ phẩm. Bàn trang điểm của bạn sắp thành cửa hàng rồi.'],
-             mild:['{hdays} ngày trong tuần mua mỹ phẩm. Son nào cũng đẹp, nhưng môi chỉ có một cặp thôi nha.','Mỹ phẩm về đều ghê. Dùng hết cây son cũ chưa bạn?']},
   tools:{strong:['Ngày nào cũng mua dụng cụ. Bạn đang xây nhà hay sửa nhà vậy?','7/7 ngày mua dụng cụ. Hộp đồ nghề của bạn nặng hơn cả tui rồi.'],
          mild:['{hdays} ngày trong tuần mua dụng cụ. Cái búa cũ còn chưa dùng mà.','Dụng cụ mua đều ghê. Có việc gì cần sửa hả bạn?']},
   stationery:{strong:['Ngày nào cũng mua văn phòng phẩm. Bút trong nhà nhiều hơn chữ bạn viết rồi.','7/7 ngày mua văn phòng phẩm. Bạn mở tiệm giấy bút hả?'],
               mild:['{hdays} ngày trong tuần mua văn phòng phẩm. Cây bút cũ còn mực đó nha.','Giấy bút mua đều ghê. Viết hết chưa mà mua thêm?']},
+  snack:{strong:['Ngày nào cũng mua đồ ăn vặt. Bạn ăn vặt hay ăn chính vậy?','7/7 ngày mua đồ ăn vặt. Bụng bạn có ngăn riêng cho bim bim hả?'],
+         mild:['{hdays} ngày trong tuần mua đồ ăn vặt. Nhớ ăn cơm trước nha.','Đồ ăn vặt về đều ghê. Tui cũng thích, nhưng vừa thôi nha.']},
   yarn:{strong:['Ngày nào cũng mua len. Bạn đan áo cho cả xóm hả?','7/7 ngày mua len. Cuộn len nhiều hơn thời gian bạn có để đan đó.'],
         mild:['{hdays} ngày trong tuần mua len. Cuộn cũ còn đan dở kìa bạn.','Len mua đều ghê. Đan xong cái khăn trước đã nha.']},
   other:{strong:['Ngày nào cũng mua đồ linh tinh. Nhóm "Khác" mà nhiều thế này thì hết là khác rồi.','7/7 ngày mua đồ nhóm Khác. Bạn mua gì mà tui không phân loại nổi vậy?'],
@@ -295,14 +298,14 @@ const DAILY = {
   produce:['Rau củ quả hôm nay mua {dcount} lần rồi. Chăm ghê, nhưng ăn cho hết nha.','{dcount} lần mua rau củ trong một ngày. Bạn đi chợ hay đi dạo vậy?'],
   pantry:['Đồ khô mua {dcount} lần trong hôm nay rồi. Mua một lần cho đủ đi bạn ơi.','{dcount} lần đồ khô trong một ngày. Kệ bếp sắp hết chỗ rồi nè.'],
   meds:['Hôm nay mua thuốc, vitamin {dcount} lần rồi. Bạn khoẻ không đó? Tui hơi lo.','{dcount} lần mua thuốc trong một ngày. Nhớ đọc kỹ liều dùng nha.'],
-  care:['Đồ chăm sóc cá nhân hôm nay mua {dcount} lần rồi. Đẹp vừa thôi nha.','{dcount} lần dầu gội, kem dưỡng trong một ngày. Bạn mở spa hả?'],
+  care:['Hôm nay mua mỹ phẩm, đồ chăm sóc {dcount} lần rồi. Đẹp vừa thôi nha bạn.','Đồ chăm sóc cá nhân hôm nay mua {dcount} lần rồi. Đẹp vừa thôi nha.','{dcount} lần dầu gội, kem dưỡng trong một ngày. Bạn mở spa hả?'],
   cleaning:['Đồ vệ sinh hôm nay mua {dcount} lần rồi. Nhà có sạch quá đâu mà.','{dcount} lần mua nước giặt, nước lau trong một ngày. Dùng hết cái cũ chưa?'],
   electronics:['Đồ điện tử hôm nay mua {dcount} lần rồi. Ví bạn kêu cứu rồi nè.','{dcount} lần mua đồ điện tử trong một ngày. Bạn bị cuốn vào giỏ hàng rồi.'],
   baby:['Đồ cho bé hôm nay mua {dcount} lần rồi. Thương bé vừa thôi, thương ví bạn nữa.','{dcount} lần mua đồ cho bé trong một ngày. Kiểm tra còn dư bao nhiêu chưa?'],
   clothes:['Quần áo hôm nay mua {dcount} lần rồi. Tủ đồ than thở rồi đó.','{dcount} lần mua quần áo trong một ngày. Mặc kịp hết không bạn?'],
-  cosmetics:['Hôm nay mua mỹ phẩm {dcount} lần rồi. Đẹp vừa thôi nha bạn.','{dcount} lần mua mỹ phẩm trong một ngày. Ví bạn đang phai màu rồi đó.'],
   tools:['Hôm nay mua dụng cụ {dcount} lần rồi. Sửa gì mà nhiều dữ vậy?','{dcount} lần mua dụng cụ trong một ngày. Bạn quên mua đủ một lần hả?'],
   stationery:['Hôm nay mua văn phòng phẩm {dcount} lần rồi. Bút nào cũng viết ra cùng một chữ thôi.','{dcount} lần mua văn phòng phẩm trong một ngày. Bạn học bài hay sưu tầm vậy?'],
+  snack:['Hôm nay mua đồ ăn vặt {dcount} lần rồi. Bim bim không tự sinh sôi khi bạn mua thêm đâu nha.','{dcount} lần đồ ăn vặt trong một ngày. Ví bạn đang rỗng như túi bim bim đó.'],
   yarn:['Hôm nay mua len {dcount} lần rồi. Tui sợ bạn bị quấn trong đống len mất.','{dcount} lần mua len trong một ngày. Mèo chỉ muốn lăn len thôi á.'],
   other:['Đồ nhóm Khác hôm nay mua {dcount} lần rồi. Mua gì mà tui không phân loại nổi vậy?','{dcount} lần mua đồ linh tinh trong một ngày. Dừng tay lại nào bạn.']
 };
@@ -413,7 +416,7 @@ function renderDormant(){
   el.innerHTML =
     '<div class="card-head"><h2 id="h-dormant">Nằm im lâu rồi</h2><span class="small muted">'+(list.length ? list.length+' món' : 'Chưa có món nào')+'</span></div>'+
     '<div class="critic misu"><button class="av" type="button" id="misu-av" aria-label="Nhờ Misu nhắc tiếp">'+misuSvg(mood)+'</button>'+
-      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Đồ thường hơn 1 tháng, quần áo hơn 3 tháng, đồ mua tặng thì Misu không nhắc. Món còn hạn dùng thì Misu chỉ hỏi bạn đã dùng chưa.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
+      '<div class="bubble" lang="vi"><div class="eyebrow">Misu, bé cún hay lo xa</div><p>'+esc(line)+'</p><div class="meta"><span>Đồ thường hơn 1 tháng; quần áo, len, dụng cụ, văn phòng phẩm hơn 3 tháng; đồ mua tặng thì Misu không nhắc. Món còn hạn dùng thì Misu chỉ hỏi bạn đã dùng chưa.</span><button class="btn ghost sm" id="misu-more" type="button">Nhắc tiếp đi</button></div></div></div>'+
     (list.length ? '<ul class="dlist">'+rows.map(i => {
       const ask = needsAsk(i);
       const info = ask
@@ -1158,10 +1161,14 @@ function buildModel(cat){
   }else if(cat === 'meds'){                    // pill bottle
     cyl(0.32, 0.32, 0.8, col, 0.4); cyl(0.36, 0.36, 0.25, 0xf1f3f5, 0.93); cyl(0.325, 0.325, 0.42, WHITE, 0.4);
     box(0.28, 0.07, 0.02, col, 0, 0.4, 0.335); box(0.07, 0.28, 0.02, col, 0, 0.4, 0.335);
-  }else if(cat === 'care'){                    // pump bottle
-    cyl(0.32, 0.32, 0.78, col, 0.39); cyl(0.16, 0.32, 0.15, col, 0.855); cyl(0.07, 0.07, 0.18, DARK, 1.0);
-    box(0.3, 0.1, 0.14, DARK, 0.05, 1.12, 0); box(0.16, 0.05, 0.05, DARK, 0.22, 1.14, 0);
-    plane(0.4, 0.32, WHITE, 0, 0.4, 0.325);
+  }else if(cat === 'care'){                    // pump bottle + lipstick + compact
+    const bt = new T.Group(); bt.position.set(0.25, 0, -0.05); bt.scale.setScalar(0.88); g.add(bt);
+    const bm = (geo, c, x, y, z) => { const o = new T.Mesh(geo, new T.MeshLambertMaterial({color:c})); o.position.set(x, y, z); bt.add(o); return o; };
+    bm(new T.CylinderGeometry(0.32, 0.32, 0.78, 28), col, 0, 0.39, 0); bm(new T.CylinderGeometry(0.16, 0.32, 0.15, 28), col, 0, 0.855, 0); bm(new T.CylinderGeometry(0.07, 0.07, 0.18, 16), DARK, 0, 1.0, 0);
+    bm(new T.BoxGeometry(0.3, 0.1, 0.14), DARK, 0.05, 1.12, 0); bm(new T.BoxGeometry(0.16, 0.05, 0.05), DARK, 0.22, 1.14, 0); bm(new T.PlaneGeometry(0.4, 0.32), WHITE, 0, 0.4, 0.325);
+    cyl(0.12, 0.12, 0.4, DARK, 0.2, -0.52, -0.02); cyl(0.127, 0.127, 0.1, 0xf2b705, 0.45, -0.52, -0.02);
+    cyl(0.095, 0.095, 0.24, 0xe64980, 0.62, -0.52, -0.02); add(new T.ConeGeometry(0.095, 0.13, 16), 0xe64980, -0.52, 0.8, -0.02);
+    cyl(0.3, 0.3, 0.1, 0xe64980, 0.05, -0.15, 0.42); cyl(0.25, 0.25, 0.03, 0xffffff, 0.115, -0.15, 0.42);
   }else if(cat === 'cleaning'){                // spray bottle
     box(0.6, 0.75, 0.42, col, 0, 0.375, 0); cyl(0.1, 0.12, 0.18, DARK, 0.84, 0.05, 0);
     box(0.55, 0.28, 0.3, DARK, 0.05, 1.07, 0); const tr = box(0.07, 0.3, 0.07, DARK, 0.32, 0.92, 0); tr.rotation.z = 0.4;
@@ -1186,10 +1193,6 @@ function buildModel(cat){
     const b1 = add(new T.SphereGeometry(0.16, 14, 10), WHITE, -0.14, 1.0, 0); b1.scale.set(1.3, 0.75, 0.7); b1.rotation.z = 0.5;
     const b2 = add(new T.SphereGeometry(0.16, 14, 10), WHITE, 0.14, 1.0, 0); b2.scale.set(1.3, 0.75, 0.7); b2.rotation.z = -0.5;
     add(new T.SphereGeometry(0.07, 10, 8), WHITE, 0, 0.98, 0);
-  }else if(cat === 'cosmetics'){               // compact + lipstick
-    cyl(0.42, 0.42, 0.14, col, 0.07, 0.14, 0.05); cyl(0.36, 0.36, 0.03, 0xffffff, 0.155, 0.14, 0.05);
-    cyl(0.13, 0.13, 0.42, DARK, 0.21, -0.45, -0.05); cyl(0.137, 0.137, 0.1, 0xf2b705, 0.47, -0.45, -0.05);
-    cyl(0.1, 0.1, 0.26, col, 0.65, -0.45, -0.05); add(new T.ConeGeometry(0.1, 0.14, 16), col, -0.45, 0.85, -0.05);
   }else if(cat === 'tools'){                   // toolbox
     box(0.95, 0.42, 0.5, col, 0, 0.21, 0); box(0.97, 0.14, 0.52, light(col, 0.2), 0, 0.49, 0);
     add(new T.TorusGeometry(0.2, 0.04, 8, 16, Math.PI), DARK, 0, 0.56, 0);
@@ -1205,6 +1208,11 @@ function buildModel(cat){
     add(new T.SphereGeometry(0.45, 24, 18), col, 0, 0.45, 0);
     [0.2, 0.8, 1.4].forEach(r => { const t = add(new T.TorusGeometry(0.455, 0.02, 6, 32), light(col, 0.45), 0, 0.45, 0); t.rotation.set(r, r*0.7, 0); });
     const n1 = cyl(0.025, 0.025, 1.15, 0xc8a572, 0.85, 0.12, 0); n1.rotation.z = 0.55; const n2 = cyl(0.025, 0.025, 1.15, 0xc8a572, 0.85, 0.12, 0); n2.rotation.z = -0.2;
+  }else if(cat === 'snack'){                   // bag of chips + a wrapped sweet
+    box(0.78, 1.0, 0.3, col, 0, 0.5, 0); box(0.8, 0.1, 0.34, new T.Color(col).multiplyScalar(0.72).getHex(), 0, 0.96, 0); box(0.8, 0.08, 0.34, new T.Color(col).multiplyScalar(0.72).getHex(), 0, 0.04, 0);
+    disc(0.21, WHITE, 0, 0.5, 0.152); disc(0.12, light(col, 0.15), 0, 0.5, 0.154);
+    const sw = add(new T.SphereGeometry(0.11, 12, 10), 0xffd43b, 0.62, 0.11, 0.18); sw.scale.x = 1.3;
+    add(new T.ConeGeometry(0.08, 0.14, 10), 0xffd43b, 0.76, 0.11, 0.18).rotation.z = -Math.PI/2; add(new T.ConeGeometry(0.08, 0.14, 10), 0xffd43b, 0.48, 0.11, 0.18).rotation.z = Math.PI/2;
   }else{                                       // other: a parcel
     box(0.9, 0.9, 0.9, col, 0, 0.45, 0); box(0.22, 0.02, 0.92, light(col, 0.55), 0, 0.905, 0); box(0.22, 0.9, 0.02, light(col, 0.55), 0, 0.45, 0.451);
   }
