@@ -200,48 +200,120 @@ const findRow = id => (chart() ? chart().rows.find(r => r.id === id) : null);
 const PAPER = '#fffaf3', LINE = '#5a4636';
 
 function chartSVG(c, o = {}) {
-  return c.mode === 'round' ? roundSVG(c, o) : flatSVG(c, o);
+  const look = o.look || DB.look || 'yarn';
+  return c.mode === 'round' ? roundSVG(c, { ...o, look }) : flatSVG(c, { ...o, look });
 }
-function wrapSVG(w, h, inner) {
+function wrapSVG(w, h, inner, look) {
+  const defs = look === 'yarn'
+    ? '<defs><filter id="fz" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.7"/></filter></defs>' : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" font-family="Nunito, system-ui, sans-serif" role="img" aria-label="Crochet chart">` +
-    `<rect width="${w}" height="${h}" rx="14" fill="${PAPER}"/>${inner}</svg>`;
+    `${defs}<rect width="${w}" height="${h}" rx="14" fill="${PAPER}"/>${inner}</svg>`;
 }
 function cellTitle(c) {
   return `${sname(c.st)}${c.mod ? ' (' + c.mod + ')' : ''}`;
 }
 
+/* ---- yarn textures: each stitch drawn as plied yarn, in the same 24x24 space as the symbols ---- */
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  return '#' + [n >> 16, (n >> 8) & 255, n & 255].map(v => clamp(Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1)), 0, 255).toString(16).padStart(2, '0')).join('');
+}
+function cap(x, y, w, h, rot, c) {
+  const dk = shade(c, .68);
+  let plies = '';
+  for (let yy = -h / 2 + w / 2 + 0.5; yy <= h / 2 - w / 2; yy += 2.7) plies += `M${(-w / 2 + 1).toFixed(1)} ${yy.toFixed(1)}L${(w / 2 - 1).toFixed(1)} ${(yy - 2).toFixed(1)}`;
+  return `<g transform="translate(${x} ${y}) rotate(${rot})">` +
+    `<rect x="${-w / 2 + .5}" y="${-h / 2 + 1.2}" width="${w}" height="${h}" rx="${w / 2}" fill="#000" opacity=".16"/>` +
+    `<rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${w / 2}" fill="${c}" stroke="${dk}" stroke-width=".8"/>` +
+    `<path d="${plies}" stroke="${dk}" stroke-opacity=".42" stroke-width=".9" fill="none"/>` +
+    `<path d="M${-w / 4} ${-h / 2 + w / 2}V${h / 2 - w / 2}" stroke="#fff" stroke-opacity=".38" stroke-width="1.3" stroke-linecap="round"/></g>`;
+}
+function band(y, c, w = 10) {
+  const dk = shade(c, .66);
+  return `<path d="M${-w / 2} ${y}H${w / 2}" stroke="${dk}" stroke-width="2.4" stroke-linecap="round"/>` +
+    `<path d="M${-w / 2 + 1} ${y - .6}H${w / 2 - 1}" stroke="${c}" stroke-width="1.4" stroke-linecap="round"/>` +
+    `<path d="M${-w / 2 + 1.5} ${y - 1.1}H0" stroke="#fff" stroke-opacity=".45" stroke-width=".7"/>`;
+}
+function yarn(id, mod, c) {
+  const dk = shade(c, .66), lt = shade(c, 1.4);
+  const head = (x, y) => cap(x - 2.7, y + 0.5, 4.6, 9.5, -36, c) + cap(x + 2.7, y + 0.5, 4.6, 9.5, 36, c);
+  const post = (h, wraps) => cap(0, 1.5, 10, h - 2, 0, c) + wraps.map(y => band(y, c, 12)).join('') + head(0, -h / 2 + 2);
+  const ring = (rx, ry, rot = 0, cx = 0, cy = 0) => `<g transform="translate(${cx} ${cy}) rotate(${rot})">` +
+    `<ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${dk}" stroke-width="4.4"/><ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${c}" stroke-width="3.2"/>` +
+    `<ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${lt}" stroke-width=".9" stroke-dasharray="3 2.5" opacity=".7"/></g>`;
+  const ell = (cx, cy, rx, ry) => `<ellipse cx="${cx}" cy="${cy + 1.2}" rx="${rx}" ry="${ry}" fill="#000" opacity=".16"/>` +
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${c}" stroke="${dk}" stroke-width=".8"/>`;
+  let g = '';
+  switch (id) {
+    case 'sc': g = post(14, []); break;
+    case 'hdc': g = post(18, [-5]); break;
+    case 'dc': g = post(22, [-3]); break;
+    case 'tr': g = post(25, [-6, 0]); break;
+    case 'dtr': g = post(27, [-8, -3, 2]); break;
+    case 'ch': g = ring(6.5, 3.8, -8); break;
+    case 'tch': g = ring(5, 3, -8); break;
+    case 'sl': g = ell(0, 0, 6.2, 3.5) + `<path d="M-4 -1L-2 1M-1 -1.5L1 1.5M2 -1.5L4 1" stroke="${dk}" stroke-opacity=".5" stroke-width=".9"/><path d="M-4 -1.6Q0 -3 4 -1.6" stroke="#fff" stroke-opacity=".45" fill="none" stroke-width="1"/>`; break;
+    case 'mr': g = ring(7.5, 7.5) + ring(3.4, 3.4); break;
+    case 'inc': g = cap(-4.2, 1, 7.5, 18, -20, c) + cap(4.2, 1, 7.5, 18, 20, c); break;
+    case 'dec': g = cap(-4, 2, 7.5, 16, 20, c) + cap(4, 2, 7.5, 16, -20, c) + head(0, -7); break;
+    case 'invdec': g = cap(-4, 2, 7.5, 16, 20, c) + cap(4, 2, 7.5, 16, -20, c) + head(0, -7) + `<circle cx="0" cy="-2" r="1.6" fill="${dk}"/>`; break;
+    case 'cl': g = cap(-4.5, 1, 6.5, 17, 24, c) + cap(4.5, 1, 6.5, 17, -24, c) + cap(0, 0, 7, 19, 0, c) + head(0, -8); break;
+    case 'shell': g = [-56, -28, 28, 56, 0].map(a => `<g transform="translate(0 10) rotate(${a})">${cap(0, -8.5, 5, 17, 0, c)}</g>`).join(''); break;
+    case 'v': g = cap(-4.2, 1, 7.5, 18, -22, c) + cap(4.2, 1, 7.5, 18, 22, c); break;
+    case 'picot': g = ring(4.2, 4.2, 0, 0, -4) + cap(0, 5.5, 4.5, 9, 0, c); break;
+    case 'bob': g = ell(-3, -3, 4.6, 7.5) + ell(3, -3, 4.6, 7.5) + ell(0, -5, 4.6, 8) + cap(0, 7, 4.5, 8, 0, c); break;
+    case 'puff': g = ell(0, -3, 6.8, 8.5) + `<path d="M-3.5 -9Q-5.5 -3 -3 3M0 -11.5V5.5M3.5 -9Q5.5 -3 3 3" stroke="${dk}" stroke-opacity=".5" fill="none" stroke-width="1"/><path d="M-4.5 -7Q-5 -3 -4 -1" stroke="#fff" stroke-opacity=".45" fill="none" stroke-width="1.3"/>` + cap(0, 7.5, 4.5, 7, 0, c); break;
+    case 'pop': g = ell(0, -3, 7, 8.5) + [[-3, -6], [3, -6], [0, -2], [-3, 2], [3, 2]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2" fill="${lt}" stroke="${dk}" stroke-opacity=".6" stroke-width=".7"/>`).join('') + cap(0, 8, 4.5, 6, 0, c); break;
+    case 'fpdc': g = post(22, [-3]) + band(6, c, 12) + `<path d="M-1 11Q0 14.5 5 13" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-1 11Q0 14.5 5 13" stroke="${c}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`; break;
+    case 'bpdc': g = post(22, [-3]) + band(6, c, 12) + `<path d="M1 11Q0 14.5 -5 13" stroke="${dk}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M1 11Q0 14.5 -5 13" stroke="${c}" stroke-width="1.7" fill="none" stroke-linecap="round"/>`; break;
+    case 'sk': g = `<path d="M-5 0H5" stroke="${dk}" stroke-width="1.4" stroke-dasharray="2 3" opacity=".5" stroke-linecap="round"/>`; break;
+  }
+  if (mod === 'BLO') g += `<path d="M-6 13H6" stroke="${dk}" stroke-width="2" stroke-linecap="round"/>`;
+  if (mod === 'FLO') g += `<path d="M-6 -13.5H6" stroke="${dk}" stroke-width="2" stroke-linecap="round"/>`;
+  return g;
+}
+function art(tf, scale, cell, c, ink, look) {
+  return look === 'symbols'
+    ? `<g transform="${tf} scale(${scale})" color="${ink}">${glyph(cell.st, cell.mod)}</g>`
+    : `<g transform="${tf} scale(${scale * 1.06})">${yarn(cell.st, cell.mod, c)}</g>`;
+}
+function miniYarn(id, size = 40, c = PAL[3][1], mod = '') {
+  return `<svg viewBox="-15 -15 30 30" width="${size}" height="${size}" aria-hidden="true">${yarn(id, mod, c)}</svg>`;
+}
+
 function flatSVG(c, o) {
   const upTo = o.upTo == null ? c.rows.length : o.upTo;
-  const N = c.rows.length;
+  const N = c.rows.length, yv = o.look === 'yarn';
   const W = 40, H = 46, padX = o.mini ? 10 : 50, padY = 12;
   const all = c.rows.map(r => expand(r.items));
   const maxC = Math.max(4, ...all.map(a => a.length));
   const w = maxC * W + padX * 2, h = N * H + padY * 2;
-  let s = '';
+  let band_ = '', s = '', lab = '';
   c.rows.forEach((r, i) => {
     if (i >= upTo) return;
     const cells = all[i], y = padY + (N - 1 - i) * H;
     const off = (maxC - cells.length) * W / 2;
     const fromRight = i % 2 === 0;
-    const ink = inkOn(r.color);
-    if (o.active === r.id) s += `<rect x="${padX - 4}" y="${y}" width="${maxC * W + 8}" height="${H}" rx="12" fill="#f2b8ad" opacity=".45"/>`;
+    if (o.active === r.id) band_ += `<rect x="${padX - 4}" y="${y}" width="${maxC * W + 8}" height="${H}" rx="12" fill="#f2b8ad" opacity=".45"/>`;
     cells.forEach((cell, k) => {
       const x = padX + off + (fromRight ? (cells.length - 1 - k) : k) * W;
-      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>` +
-        `<rect x="${x + 2}" y="${y + 3}" width="${W - 4}" height="${H - 6}" rx="9" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5"/>` +
-        `<g transform="translate(${x + W / 2} ${y + H / 2}) scale(1.35)" color="${ink}">${glyph(cell.st, cell.mod)}</g></g>`;
+      const base = yv
+        ? `<rect x="${x + 1}" y="${y + 2}" width="${W - 2}" height="${H - 4}" rx="7" fill="${shade(r.color, .93)}"/>`
+        : `<rect x="${x + 2}" y="${y + 3}" width="${W - 4}" height="${H - 6}" rx="9" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5"/>`;
+      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>${base}${art(`translate(${x + W / 2} ${y + H / 2})`, yv ? 1.45 : 1.35, cell, r.color, inkOn(r.color), o.look)}</g>`;
     });
     if (!o.mini) {
       const left = !fromRight;
       const lx = left ? padX - 8 : padX + maxC * W + 8;
-      s += `<text x="${lx}" y="${y + H / 2 + 4}" font-size="12" font-weight="800" fill="${LINE}" text-anchor="${left ? 'end' : 'start'}">${left ? '→ ' : ''}${i + 1}${left ? '' : ' ←'}</text>`;
+      lab += `<text x="${lx}" y="${y + H / 2 + 4}" font-size="12" font-weight="800" fill="${LINE}" text-anchor="${left ? 'end' : 'start'}">${left ? '→ ' : ''}${i + 1}${left ? '' : ' ←'}</text>`;
     }
   });
-  return wrapSVG(w, h, s);
+  return wrapSVG(w, h, band_ + (yv ? `<g filter="url(#fz)">${s}</g>` : s) + lab, o.look);
 }
 
 function roundSVG(c, o) {
   const upTo = o.upTo == null ? c.rows.length : o.upTo;
+  const yv = o.look === 'yarn';
   const hub = 26, ringH = 36, pad = 16;
   const rings = [];
   let hasMR = false, idx = 0;
@@ -261,24 +333,25 @@ function roundSVG(c, o) {
     return `M${f(x0)} ${f(y0)}A${r1} ${r1} 0 ${large} 0 ${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}A${r0} ${r0} 0 ${large} 1 ${f(x3)} ${f(y3)}Z`;
   }
   const first = c.rows[0] ? c.rows[0].color : PAL[0][1];
-  let s = `<circle cx="${cx}" cy="${cy}" r="${hub - 1}" fill="${first}" opacity=".55" stroke="${PAPER}" stroke-width="2"/>`;
-  if (hasMR && upTo > 0) s += `<g transform="translate(${cx} ${cy}) scale(1.1)" color="${LINE}">${glyph('mr')}</g>`;
-  let pills = '';
+  let band_ = '', s = '', pills = '';
+  let hubArt = `<circle cx="${cx}" cy="${cy}" r="${hub - 1}" fill="${yv ? shade(first, .8) : first}" opacity="${yv ? 1 : .55}" stroke="${PAPER}" stroke-width="2"/>`;
+  if (hasMR && upTo > 0) hubArt += yv ? `<g transform="translate(${cx} ${cy}) scale(1.2)">${yarn('mr', '', first)}</g>` : `<g transform="translate(${cx} ${cy}) scale(1.1)" color="${LINE}">${glyph('mr')}</g>`;
   c.rows.forEach((r, i) => {
     const ring = rings[i];
     if (!ring || i >= upTo) return;
     const r0 = hub + ring.idx * ringH + 1.5, r1 = r0 + ringH - 3, rm = (r0 + r1) / 2;
-    const n = ring.cells.length, ink = inkOn(r.color);
-    if (o.active === r.id) s += `<circle cx="${cx}" cy="${cy}" r="${rm}" fill="none" stroke="#f2b8ad" stroke-width="${ringH + 4}" opacity=".5"/>`;
+    const n = ring.cells.length;
+    if (o.active === r.id) band_ += `<circle cx="${cx}" cy="${cy}" r="${rm}" fill="none" stroke="#f2b8ad" stroke-width="${ringH + 4}" opacity=".5"/>`;
     ring.cells.forEach((cell, k) => {
       const span = n === 1 ? Math.PI * 2 - 0.001 : (Math.PI * 2) / n;
       const t0 = -Math.PI / 2 - k * span, t1 = t0 - span, tm = (t0 + t1) / 2;
       const [gx, gy] = P(rm, tm);
       const k2 = clamp(Math.min(ringH * 0.62, span * rm * 0.72) / 17, 0.3, 1.3);
       const rot = (tm + Math.PI / 2) * 180 / Math.PI;
-      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>` +
-        `<path d="${sector(r0, r1, t0, t1)}" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5" stroke-linejoin="round"/>` +
-        `<g transform="translate(${f(gx)} ${f(gy)}) rotate(${f(rot)}) scale(${f(k2)})" color="${ink}">${glyph(cell.st, cell.mod)}</g></g>`;
+      const base = yv
+        ? `<path d="${sector(r0, r1, t0, t1)}" fill="${shade(r.color, .93)}"/>`
+        : `<path d="${sector(r0, r1, t0, t1)}" fill="${r.color}" stroke="${PAPER}" stroke-width="1.5" stroke-linejoin="round"/>`;
+      s += `<g data-row="${r.id}"><title>${esc(cellTitle(cell))}</title>${base}${art(`translate(${f(gx)} ${f(gy)}) rotate(${f(rot)})`, f(k2 * (yv ? 1.08 : 1)), cell, r.color, inkOn(r.color), o.look)}</g>`;
     });
     if (!o.mini) {
       const [px, py] = P(rm, -Math.PI / 2);
@@ -286,7 +359,7 @@ function roundSVG(c, o) {
         `<text x="${f(px)}" y="${f(py + 4)}" font-size="10.5" font-weight="800" text-anchor="middle" fill="${LINE}">${i + 1}</text></g>`;
     }
   });
-  return wrapSVG(S, S, s + pills);
+  return wrapSVG(S, S, band_ + (yv ? `<g filter="url(#fz)">${hubArt}${s}</g>` : hubArt + s) + pills, o.look);
 }
 
 /* ------------------------------------------------------------------- render */
@@ -352,6 +425,10 @@ function renderEditor() {
         <button class="btn sage" data-act="addrow">+ Add ${c.mode === 'round' ? 'round' : 'row'}</button>
       </div>
       <div class="card viz-pane">
+        <div class="viz-head"><h2>Preview</h2>
+          <div class="seg" role="group" aria-label="Preview style">
+            <button data-act="look" data-look="yarn" aria-pressed="${(DB.look || 'yarn') === 'yarn'}">Yarn</button>
+            <button data-act="look" data-look="symbols" aria-pressed="${DB.look === 'symbols'}">Symbols</button></div></div>
         <div class="viz" id="viz"></div>
         <div class="viz-controls" id="scrub"></div>
         <div class="written" id="written"></div>
@@ -481,7 +558,7 @@ function renderTipList() {
 }
 function renderStitches() {
   const block = cat => `<h2 class="cat-title">${cat}</h2><div class="grid">${STITCHES.filter(s => s.cat === cat).map(s => `
-    <div class="card st-card"><div class="glyph">${miniGlyph(s.id, 40)}</div>
+    <div class="card st-card"><div class="glyph">${miniGlyph(s.id, 38)}${miniYarn(s.id, 44)}</div>
       <div><h3>${esc(sname(s.id))} <span class="muted">· ${esc(abbr(s.id))}</span></h3><p>${esc(s.desc)}</p>
       <div class="meta">leaves ${s.makes} · works into ${s.uses}</div></div></div>`).join('')}</div>`;
   app.innerHTML = `
@@ -633,6 +710,7 @@ document.addEventListener('click', e => {
       const text = `${c.name}\n\n` + c.rows.map((r, i) => `${rowLabel(c, i)}: ${rowText(r)}${r.note ? '  // ' + r.note : ''}`).join('\n');
       (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('Pattern copied'), () => toast('Copy is blocked here; select the text instead')); break;
     }
+    case 'look': DB.look = d.look; document.querySelectorAll('[data-act=look]').forEach(b => b.setAttribute('aria-pressed', b.dataset.look === d.look)); renderViz(true); save(); break;
     case 'png': pngExport(); break;
     case 'print': window.print(); break;
     case 'export': download(fileName(c) + '.json', new Blob([JSON.stringify(c, null, 2)], { type: 'application/json' })); break;
