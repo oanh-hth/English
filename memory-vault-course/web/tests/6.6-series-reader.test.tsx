@@ -79,7 +79,7 @@ describe('6.6 SeriesReader: changing the series', () => {
     expect(onMove).toHaveBeenCalledWith('b', 1);
     expect(screen.getByText('3 / 3')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Move earlier' }));
-    expect(onMove).toHaveBeenLastCalledWith('b'.replace('b', 'c'), -1);
+    expect(onMove).toHaveBeenLastCalledWith('c', -1);
   });
 
   it('disables moving past the ends', () => {
