@@ -114,7 +114,9 @@
         </div>
       </div>
 
-      <section class="card room-style" id="room-style" aria-labelledby="h-rs" hidden>
+      <div class="sheet" id="sh-rs">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card room-style" id="room-style" aria-labelledby="h-rs" hidden>
         <div class="card-head"><h2 id="h-rs">Đổi giao diện phòng</h2><button class="btn ghost sm" id="rs-close" type="button">Xong</button></div>
         <div class="swatches" id="swatches" role="radiogroup" aria-label="Kiểu phòng"></div>
         <div class="rs-upload">
@@ -125,24 +127,42 @@
         </div>
         <p class="small muted" id="rs-status" role="status">Ảnh được thu nhỏ rồi lưu ngay trên máy bạn, không gửi đi đâu cả.</p>
       </section>
+      </div>
 
       <div class="critic" id="critic" aria-live="polite"></div>
 
       <div class="legend" id="legend" role="group" aria-label="Lọc theo nhóm"></div>
 
-      <div class="card" id="inspector" aria-live="polite"></div>
+      <div class="sheet" id="sh-insp">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <div class="card" id="inspector" aria-live="polite"></div>
+      </div>
 
-      <section class="card" id="dormant" aria-labelledby="h-dormant"></section>
+      <div class="sheet" id="sh-dormant">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card" id="dormant" aria-labelledby="h-dormant"></section>
+      </div>
 
-      <section class="card" id="history" aria-labelledby="h-hist"></section>
+      <div class="sheet" id="sh-history">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card" id="history" aria-labelledby="h-hist"></section>
+      </div>
     </section>
 
     <aside class="side">
-      <section class="card" id="spend" aria-labelledby="h-spend"></section>
+      <div class="sheet" id="sh-spend">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card" id="spend" aria-labelledby="h-spend"></section>
+      </div>
 
-      <section class="card" id="alerts" aria-labelledby="h-alerts"></section>
+      <div class="sheet" id="sh-alerts">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card" id="alerts" aria-labelledby="h-alerts"></section>
+      </div>
 
-      <section class="card" id="add" aria-labelledby="h-add">
+      <div class="sheet" id="sh-add">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card" id="add" aria-labelledby="h-add">
         <div class="card-head"><h2 id="h-add">Thêm vào phòng</h2></div>
         <div class="tabs" role="tablist">
           <button class="tab" role="tab" id="tab-hand" aria-selected="true" aria-controls="pane-hand" type="button">Nhập tay</button>
@@ -223,12 +243,21 @@
           <div id="bill-preview"></div>
         </div>
       </section>
+      </div>
     </aside>
   </div>
 
   <p class="footer-note"><label><input type="checkbox" id="auto-rebuy" checked> Mua lại món giống tháng trước thì tính món cũ là đã hết</label><br>"Giống" nghĩa là cùng tên (hoặc tên gần giống), hoặc cùng nhóm Đồ cho bé, Chăm sóc cá nhân, Đồ vệ sinh, như bỉm tã khác hãng.</p>
   <p class="footer-note">Dữ liệu được lưu ngay trên máy của bạn. <button id="add-starter" type="button">Thêm vài món có sẵn</button> · <button id="reset" type="button">Nạp dữ liệu mẫu đầy đủ</button> · <button id="wipe" type="button">Xoá hết dữ liệu</button></p>
 </div>
+<div class="scrim" id="scrim" hidden></div>
+<nav class="dock" id="dock" aria-label="Lối tắt">
+  <button type="button" data-sheet="alerts" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#s-bell"/></svg><span>Nhắc hạn</span><i class="dn" id="dock-n-alerts" hidden>0</i></button>
+  <button type="button" data-sheet="spend" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V10M12 19V5M19 19v-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Chi tiêu</span></button>
+  <button type="button" class="fab" data-sheet="add" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>Thêm</span></button>
+  <button type="button" data-sheet="history" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4.2l3 1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Lịch sử</span></button>
+  <button type="button" data-sheet="dormant" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.500 9C4.500 10 3.500 13 4.500 16c2 0 3-2 3-4zM17.500 9c2 1 3 4 2 7-2 0-3-2-3-4z" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linejoin="round"/><circle cx="12" cy="13" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="12.500" r="0.900" fill="currentColor"/><circle cx="14" cy="12.500" r="0.900" fill="currentColor"/></svg><span>Misu</span><i class="dn" id="dock-n-dormant" hidden>0</i></button>
+</nav>
 <div class="toast" id="toast" role="status" hidden></div>
 <script type="module" src="app.js"></script>
 </body>

@@ -43,3 +43,6 @@ Lưu trong `localStorage` (khoá `phongtrudo.v1`), chỉ trên máy này. Chưa 
 ## Nhóm đặc biệt
 - **Mua tặng**: đồ bạn mua để tặng người khác, không phải để tự xài. Misu không nhắc về nhóm này, và rule "mua lại thì món cũ coi như hết" cũng bỏ qua nhóm này. Tiền mua vẫn được tính trong chi tiêu, và nhắc hạn dùng vẫn chạy nếu món có hạn. App không tự đoán nhóm này; bạn chọn tay (khi đọc hoá đơn bằng Claude, Claude chỉ chọn khi hoá đơn ghi rõ là quà).
 - **Quần áo**: tự nhận diện qua từ như áo, quần, váy, giày, dép, nón. Riêng "bỉm tã quần" vẫn là Đồ cho bé.
+
+## Trên điện thoại
+Màn hình hẹp (từ 820px trở xuống) không xếp mọi khung dọc theo trang nữa. Trang chỉ còn căn phòng, Miso và các nhóm lọc, còn mọi khung khác nằm trong các **bảng trượt từ dưới lên**, mở bằng thanh lối tắt cố định ở đáy màn hình: **Nhắc hạn** (có số món cần chú ý), **Chi tiêu**, **Thêm** (nút tròn ở giữa: nhập tay hoặc từ hoá đơn), **Lịch sử** và **Misu** (có số món nằm im). Nút **Đổi phòng** và chuông ở đầu trang cũng mở bảng tương ứng. Chạm vào một món trong phòng thì bảng chi tiết món tự trượt lên. Bảng nằm phía trên thanh lối tắt nên chuyển qua lại giữa các bảng bằng một chạm. Đóng bảng bằng nút Xong, chạm vào vùng mờ hoặc phím Esc. Thêm món xong, hoặc bấm Tìm, thì bảng tự đóng để bạn thấy căn phòng. Trên máy tính bố cục hai cột vẫn như cũ.

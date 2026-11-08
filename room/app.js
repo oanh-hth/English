@@ -403,13 +403,14 @@ function renderDormant(){
         '<div class="dacts">'+btns+'<button class="btn ghost sm" type="button" data-done="'+i.id+'">Dùng hết rồi</button><button class="btn ghost sm" type="button" data-dfind="'+i.id+'">Tìm</button></div></li>';
     }).join('')+'</ul>'+
       (list.length>5 ? '<button type="button" class="btn ghost sm more" id="d-more">'+(showAllDormant?'Thu gọn':'Xem hết '+list.length+' món')+'</button>' : '') : '');
+  { const dn = $('#dock-n-dormant'); dn.textContent = list.length; dn.hidden = !list.length; }
   const again = () => { misuTick++; misuReaction = null; renderDormant(); const b = $('#misu-more'); if(b) b.focus(); };
   $('#misu-more').addEventListener('click', again); $('#misu-av').addEventListener('click', again);
   const more = $('#d-more'); if(more) more.addEventListener('click', () => { showAllDormant = !showAllDormant; renderDormant(); });
   el.querySelectorAll('[data-touch]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.touch); it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); }));
   el.querySelectorAll('[data-snooze]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.snooze); it.snoozed = iso(today()); misuReaction = {kind:'snooze', name:it.name}; save(); renderAll(); toast('Ok, Misu sẽ hỏi lại về '+it.name+' sau 30 ngày nha.'); }));
   el.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.done); it.used = true; if(sel===it.id) sel = null; misuReaction = {kind:'done', name:it.name}; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); }));
-  el.querySelectorAll('[data-dfind]').forEach(b => b.addEventListener('click', () => { sel = b.dataset.dfind; found = sel; renderRoom(); renderInspector(); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
+  el.querySelectorAll('[data-dfind]').forEach(b => b.addEventListener('click', () => { sel = b.dataset.dfind; found = sel; renderRoom(); renderInspector(); closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
 }
 
 /* ---------- period ---------- */
@@ -465,7 +466,7 @@ function renderHistory(){
   }));
   ['from','to'].forEach(k => { const f = $('#p-'+k); if(f) f.addEventListener('change', e => { period[k] = e.target.value; refocus = 'p-'+k; renderRoom(); renderHistory(); }); });
   const more = $('#h-more'); if(more) more.addEventListener('click', () => { showAllRows = !showAllRows; renderHistory(); });
-  el.querySelectorAll('.hrow:not(:disabled)').forEach(b => b.addEventListener('click', () => { select(b.dataset.id); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
+  el.querySelectorAll('.hrow:not(:disabled)').forEach(b => b.addEventListener('click', () => { select(b.dataset.id); closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
   if(refocus){ const f = document.getElementById(refocus); refocus = null; if(f) f.focus(); }
 }
 
@@ -526,6 +527,7 @@ function endDrag(e){
   if(d.moved && d.over){ d.it.x = d.ox; d.it.y = d.oy; trashItem(d.it.id); return; }
   if(d.moved) save();
   select(d.it.id);
+  if(!d.moved) openSheet('insp');
 }
 room.addEventListener('contextmenu', e => { if(e.target.closest('.item')) e.preventDefault(); });
 room.addEventListener('pointerup', endDrag);
@@ -582,6 +584,7 @@ function renderInspector(){
   const el = $('#inspector'); const it = sel && byId(sel);
   if(!it || it.used){
     el.innerHTML = '<p class="muted">Chạm vào một món trong phòng để xem chi tiết nhé. Kéo để dời sang chỗ khác.</p>';
+    if(isMobile() && $('#sh-insp').classList.contains('open')) closeSheets();
     return;
   }
   const d = daysLeft(it), st = status(it);
@@ -611,6 +614,7 @@ function renderAlerts(){
   const list = attention();
   const exp = list.filter(i => status(i)==='expired').length, soon = list.length-exp;
   $('#bell-count').textContent = list.length;
+  { const dn = $('#dock-n-alerts'); dn.textContent = list.length; dn.hidden = !list.length; }
   $('#bell-count').dataset.zero = list.length ? 'false' : 'true';
 
   const bn = $('#banner');
@@ -637,11 +641,11 @@ function renderAlerts(){
     '<div class="alert-foot"><span class="small muted" id="notif-note"></span><button class="btn ghost sm" id="enable-notif" type="button">Bật thông báo</button></div>';
   el.querySelectorAll('[data-find]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.find; sel = id; found = id; renderRoom(); renderInspector();
-    room.scrollIntoView({behavior:'smooth', block:'center'});
+    closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'});
   }));
   setupNotifButton();
 }
-function jumpAlerts(){ $('#alerts').scrollIntoView({behavior:'smooth', block:'start'}); }
+function jumpAlerts(){ if(openSheet('alerts')) return; $('#alerts').scrollIntoView({behavior:'smooth', block:'start'}); }
 $('#bell').addEventListener('click', jumpAlerts);
 const NOTIF_KEY = 'phongtrudo.lastNotify';
 const canNotify = () => 'Notification' in window;
@@ -754,7 +758,7 @@ $('#pane-hand').addEventListener('submit', e => {
   renderAll();
   $('#f-name').value = ''; $('#f-exp').value = ''; $('#f-price').value = ''; $('#f-qty').value = '1';
   if(hit.length) announceRebuy(hit); else toast(name+' đã vào phòng rồi. Kéo nó tới chỗ bạn thích nha.');
-  room.scrollIntoView({behavior:'smooth', block:'center'});
+  closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'});
 });
 
 /* ---------- add: from a bill ---------- */
@@ -1034,7 +1038,7 @@ function renderBill(){
     save(); filter = null; sel = null; billRows = []; files = []; renderThumbs(); $('#bill-preview').innerHTML = ''; $('#bill-text').value = '';
     renderAll();
     if(hit.length) announceRebuy(hit); else toast(chosen.length+' món '+(consumed?'đã được tính vào chi tiêu.':'đã thêm từ hoá đơn.'));
-    room.scrollIntoView({behavior:'smooth', block:'center'});
+    closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'});
   });
 }
 
@@ -1329,6 +1333,7 @@ function build3D(){
     if(d.moved && d.over){ it.x = d.ox; it.y = d.oy; trashItem(d.id); return; }
     if(d.moved) save();
     select(d.id);
+    if(!d.moved) openSheet('insp');
   };
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('wheel', e => { e.preventDefault(); v3.radius = clamp(v3.radius*(1 + Math.sign(e.deltaY)*0.08), 8, 16); placeCamera(); }, {passive:false});
@@ -1402,6 +1407,7 @@ function renderRoomStyle(){
 }
 const rsStatus = t => { $('#rs-status').textContent = t || ''; };
 $('#rs-open').addEventListener('click', () => {
+  if(openSheet('rs')) return;
   const panel = $('#room-style'), open = panel.hidden;
   panel.hidden = !open; $('#rs-open').setAttribute('aria-expanded', String(open));
   if(open) panel.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -1428,6 +1434,40 @@ $('#rs-remove').addEventListener('click', () => {
 });
 $('#rs-veil').addEventListener('input', e => { state.room = Object.assign(roomLook(), {veil:+e.target.value}); $('#room-veil').style.opacity = state.room.veil/100; });
 $('#rs-veil').addEventListener('change', save);
+
+/* ---------- phones: bottom sheets opened from the dock ---------- */
+const mqMobile = window.matchMedia('(max-width: 820px)');
+const isMobile = () => mqMobile.matches;
+const SHEET_TITLES = {alerts:'Sắp hết hạn', spend:'Chi tiêu', add:'Thêm vào phòng', history:'Lịch sử mua sắm', dormant:'Món nằm im', insp:'Chi tiết món', rs:'Đổi giao diện phòng'};
+function syncDock(){
+  document.querySelectorAll('.dock [data-sheet]').forEach(b => b.setAttribute('aria-expanded', String($('#sh-'+b.dataset.sheet).classList.contains('open'))));
+}
+let sheetOpenedAt = 0;
+function openSheet(key){
+  if(!isMobile()) return false;
+  sheetOpenedAt = Date.now();
+  document.querySelectorAll('.sheet.open').forEach(x => closeOne(x));
+  const sh = $('#sh-'+key); if(!sh) return false;
+  sh.classList.add('open'); sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true'); sh.setAttribute('aria-label', SHEET_TITLES[key] || '');
+  if(key === 'rs'){ $('#room-style').hidden = false; $('#rs-open').setAttribute('aria-expanded','true'); }
+  $('#scrim').hidden = false; document.body.classList.add('sheet-open'); sh.scrollTop = 0; syncDock();
+  return true;
+}
+function closeOne(sh){
+  sh.classList.remove('open'); sh.removeAttribute('role'); sh.removeAttribute('aria-modal'); sh.removeAttribute('aria-label');
+  if(sh.id === 'sh-rs' && isMobile()){ $('#room-style').hidden = true; $('#rs-open').setAttribute('aria-expanded','false'); }
+}
+function closeSheets(){
+  document.querySelectorAll('.sheet.open').forEach(closeOne);
+  $('#scrim').hidden = true; document.body.classList.remove('sheet-open'); syncDock();
+}
+document.querySelectorAll('.dock [data-sheet]').forEach(b => b.addEventListener('click', () => {
+  const key = b.dataset.sheet; if($('#sh-'+key).classList.contains('open')) closeSheets(); else openSheet(key);
+}));
+document.querySelectorAll('.sheet-x').forEach(b => b.addEventListener('click', closeSheets));
+$('#scrim').addEventListener('click', () => { if(Date.now() - sheetOpenedAt > 450) closeSheets(); });   // ignore the click that follows the tap which opened the sheet
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.querySelector('.sheet.open')) closeSheets(); });
+(mqMobile.addEventListener ? mqMobile.addEventListener.bind(mqMobile, 'change') : mqMobile.addListener.bind(mqMobile))(() => { closeSheets(); });
 
 /* ---------- boot ---------- */
 function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); }
