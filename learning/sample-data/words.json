@@ -1,0 +1,322 @@
+[
+  {
+    "id": "v:v-kitchen-0",
+    "topic": "v-kitchen",
+    "word": "fridge",
+    "pos": "n",
+    "meaning": "a cold appliance for keeping food fresh (refrigerator)",
+    "example": "The milk is in the fridge."
+  },
+  {
+    "id": "v:v-kitchen-1",
+    "topic": "v-kitchen",
+    "word": "freezer",
+    "pos": "n",
+    "meaning": "a very cold compartment for freezing food",
+    "example": "Put the ice cream in the freezer."
+  },
+  {
+    "id": "v:v-kitchen-2",
+    "topic": "v-kitchen",
+    "word": "stove",
+    "pos": "n",
+    "meaning": "a cooking surface with burners",
+    "example": "Don't leave the stove on."
+  },
+  {
+    "id": "v:v-kitchen-3",
+    "topic": "v-kitchen",
+    "word": "oven",
+    "pos": "n",
+    "meaning": "an enclosed space for baking",
+    "example": "Preheat the oven to 350."
+  },
+  {
+    "id": "v:v-kitchen-4",
+    "topic": "v-kitchen",
+    "word": "microwave",
+    "pos": "n/v",
+    "meaning": "an oven that heats food quickly",
+    "example": "Microwave it for two minutes."
+  },
+  {
+    "id": "v:v-kitchen-5",
+    "topic": "v-kitchen",
+    "word": "pan",
+    "pos": "n",
+    "meaning": "a flat cooking pot with a handle",
+    "example": "Heat some oil in the pan."
+  },
+  {
+    "id": "v:v-kitchen-6",
+    "topic": "v-kitchen",
+    "word": "pot",
+    "pos": "n",
+    "meaning": "a deep round cooking container",
+    "example": "Boil water in a large pot."
+  },
+  {
+    "id": "v:v-kitchen-7",
+    "topic": "v-kitchen",
+    "word": "knife",
+    "pos": "n",
+    "meaning": "a sharp tool for cutting",
+    "example": "Be careful with that knife."
+  },
+  {
+    "id": "v:v-kitchen-8",
+    "topic": "v-kitchen",
+    "word": "spoon",
+    "pos": "n",
+    "meaning": "a tool for eating soup or stirring",
+    "example": "Pass me a spoon."
+  },
+  {
+    "id": "v:v-kitchen-9",
+    "topic": "v-kitchen",
+    "word": "fork",
+    "pos": "n",
+    "meaning": "a tool with points for eating",
+    "example": "I need a clean fork."
+  },
+  {
+    "id": "v:v-kitchen-10",
+    "topic": "v-kitchen",
+    "word": "plate",
+    "pos": "n",
+    "meaning": "a flat dish for food",
+    "example": "Put the pasta on a plate."
+  },
+  {
+    "id": "v:v-kitchen-11",
+    "topic": "v-kitchen",
+    "word": "bowl",
+    "pos": "n",
+    "meaning": "a deep round dish",
+    "example": "A bowl of cereal, please."
+  },
+  {
+    "id": "v:v-kitchen-12",
+    "topic": "v-kitchen",
+    "word": "mug",
+    "pos": "n",
+    "meaning": "a large cup with a handle",
+    "example": "She poured coffee into a mug."
+  },
+  {
+    "id": "v:v-kitchen-13",
+    "topic": "v-kitchen",
+    "word": "recipe",
+    "pos": "n",
+    "meaning": "instructions for cooking a dish",
+    "example": "Do you have the recipe?"
+  },
+  {
+    "id": "v:v-kitchen-14",
+    "topic": "v-kitchen",
+    "word": "ingredient",
+    "pos": "n",
+    "meaning": "one of the foods used to make a dish",
+    "example": "We're missing one ingredient."
+  },
+  {
+    "id": "v:v-kitchen-15",
+    "topic": "v-kitchen",
+    "word": "chop",
+    "pos": "v",
+    "meaning": "to cut into small pieces",
+    "example": "Chop the onions finely."
+  },
+  {
+    "id": "v:v-kitchen-16",
+    "topic": "v-kitchen",
+    "word": "slice",
+    "pos": "v/n",
+    "meaning": "to cut into thin pieces; a thin piece",
+    "example": "Slice the bread."
+  },
+  {
+    "id": "v:v-kitchen-17",
+    "topic": "v-kitchen",
+    "word": "peel",
+    "pos": "v/n",
+    "meaning": "to remove the skin; the skin",
+    "example": "Peel the potatoes."
+  },
+  {
+    "id": "v:v-kitchen-18",
+    "topic": "v-kitchen",
+    "word": "stir",
+    "pos": "v",
+    "meaning": "to mix with a spoon",
+    "example": "Stir the soup slowly."
+  },
+  {
+    "id": "v:v-kitchen-19",
+    "topic": "v-kitchen",
+    "word": "boil",
+    "pos": "v",
+    "meaning": "to heat a liquid until it bubbles",
+    "example": "Boil the eggs for ten minutes."
+  },
+  {
+    "id": "v:v-food-0",
+    "topic": "v-food",
+    "word": "breakfast",
+    "pos": "n",
+    "meaning": "the first meal of the day",
+    "example": "I skipped breakfast today."
+  },
+  {
+    "id": "v:v-food-1",
+    "topic": "v-food",
+    "word": "snack",
+    "pos": "n",
+    "meaning": "a small amount of food between meals",
+    "example": "Do you want a snack?"
+  },
+  {
+    "id": "v:v-food-2",
+    "topic": "v-food",
+    "word": "dessert",
+    "pos": "n",
+    "meaning": "a sweet dish at the end of a meal",
+    "example": "We shared a dessert."
+  },
+  {
+    "id": "v:v-food-3",
+    "topic": "v-food",
+    "word": "appetizer",
+    "pos": "n",
+    "meaning": "a small dish before the main course (US)",
+    "example": "Let's order an appetizer."
+  },
+  {
+    "id": "v:v-food-4",
+    "topic": "v-food",
+    "word": "vegetable",
+    "pos": "n",
+    "meaning": "a plant eaten as food",
+    "example": "Eat your vegetables."
+  },
+  {
+    "id": "v:v-food-5",
+    "topic": "v-food",
+    "word": "fruit",
+    "pos": "n",
+    "meaning": "sweet food from plants, like apples",
+    "example": "I eat fruit every day."
+  },
+  {
+    "id": "v:v-food-6",
+    "topic": "v-food",
+    "word": "meat",
+    "pos": "n",
+    "meaning": "animal flesh eaten as food",
+    "example": "He doesn't eat meat."
+  },
+  {
+    "id": "v:v-food-7",
+    "topic": "v-food",
+    "word": "seafood",
+    "pos": "n",
+    "meaning": "fish and shellfish",
+    "example": "I'm allergic to seafood."
+  },
+  {
+    "id": "v:v-food-8",
+    "topic": "v-food",
+    "word": "poultry",
+    "pos": "n",
+    "meaning": "chicken, turkey and other birds",
+    "example": "The poultry section is over there."
+  },
+  {
+    "id": "v:v-food-9",
+    "topic": "v-food",
+    "word": "dairy",
+    "pos": "n",
+    "meaning": "milk, cheese and butter",
+    "example": "I avoid dairy."
+  },
+  {
+    "id": "v:v-food-10",
+    "topic": "v-food",
+    "word": "grain",
+    "pos": "n",
+    "meaning": "seeds like rice and wheat",
+    "example": "Whole grains are healthy."
+  },
+  {
+    "id": "v:v-food-11",
+    "topic": "v-food",
+    "word": "flour",
+    "pos": "n",
+    "meaning": "powder made from grain for baking",
+    "example": "We need more flour."
+  },
+  {
+    "id": "v:v-food-12",
+    "topic": "v-food",
+    "word": "sugar",
+    "pos": "n",
+    "meaning": "a sweet substance",
+    "example": "No sugar in my coffee, please."
+  },
+  {
+    "id": "v:v-food-13",
+    "topic": "v-food",
+    "word": "salt",
+    "pos": "n",
+    "meaning": "a white seasoning",
+    "example": "Pass the salt."
+  },
+  {
+    "id": "v:v-food-14",
+    "topic": "v-food",
+    "word": "pepper",
+    "pos": "n",
+    "meaning": "a spice; also a vegetable",
+    "example": "Add some black pepper."
+  },
+  {
+    "id": "v:v-food-15",
+    "topic": "v-food",
+    "word": "spicy",
+    "pos": "adj",
+    "meaning": "hot with strong flavor",
+    "example": "This salsa is too spicy."
+  },
+  {
+    "id": "v:v-food-16",
+    "topic": "v-food",
+    "word": "sweet",
+    "pos": "adj",
+    "meaning": "tasting like sugar",
+    "example": "The cake is very sweet."
+  },
+  {
+    "id": "v:v-food-17",
+    "topic": "v-food",
+    "word": "sour",
+    "pos": "adj",
+    "meaning": "having a sharp taste like lemon",
+    "example": "The milk smells sour."
+  },
+  {
+    "id": "v:v-food-18",
+    "topic": "v-food",
+    "word": "bitter",
+    "pos": "adj",
+    "meaning": "having a sharp, unpleasant taste",
+    "example": "Black coffee is bitter."
+  },
+  {
+    "id": "v:v-food-19",
+    "topic": "v-food",
+    "word": "salty",
+    "pos": "adj",
+    "meaning": "containing a lot of salt",
+    "example": "These fries are salty."
+  }
+]

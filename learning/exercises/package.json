@@ -1,0 +1,7 @@
+{
+  "name": "speak-natural-exercises",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "vitest run", "test:watch": "vitest" },
+  "devDependencies": { "typescript": "^5.6.0", "vitest": "^2.1.0" }
+}

@@ -1,0 +1,78 @@
+{
+  "id": "cafe",
+  "icon": "☕",
+  "title": "Ordering at a café",
+  "level": "Beginner",
+  "setting": "You walk up to the counter at a busy coffee shop in Seattle.",
+  "turns": [
+    {
+      "npc": "Hi there! What can I get started for you?",
+      "n": "Order a medium iced latte, politely.",
+      "a": "Can I get a medium iced latte, please?",
+      "alts": [
+        "Could I get a medium iced latte, please?",
+        "Can I have a medium iced latte, please?",
+        "I'll have a medium iced latte, please."
+      ],
+      "x": [
+        "want",
+        "would"
+      ],
+      "tip": "\"Can I get...?\" is the most natural way to order. \"I want...\" sounds too direct."
+    },
+    {
+      "npc": "Sure thing! Do you want any milk alternatives, like oat or almond?",
+      "n": "Say no, regular milk is fine.",
+      "a": "No, regular milk is fine, thanks.",
+      "alts": [
+        "Regular milk is fine, thanks.",
+        "No, I'm good, thanks."
+      ],
+      "x": [
+        "oat",
+        "the"
+      ],
+      "tip": "\"I'm good, thanks\" is a natural way to say no to an offer."
+    },
+    {
+      "npc": "Is that for here or to go?",
+      "n": "Say it's to go.",
+      "a": "To go, please.",
+      "alts": [
+        "It's to go, please."
+      ],
+      "x": [
+        "here",
+        "for"
+      ],
+      "tip": "Short answers sound natural. You don't need a full sentence."
+    },
+    {
+      "npc": "That'll be five fifty.",
+      "n": "Hand over cash and let them keep the change.",
+      "a": "Here you go. Keep the change.",
+      "alts": [
+        "Here you go, keep the change."
+      ],
+      "x": [
+        "take",
+        "money"
+      ],
+      "tip": "\"Here you go\" = you give something to someone."
+    },
+    {
+      "npc": "Thanks so much! Have a great day!",
+      "n": "Thank them and wish the same back.",
+      "a": "Thanks, you too!",
+      "alts": [
+        "Thank you, you too!",
+        "You too, thanks!"
+      ],
+      "x": [
+        "same",
+        "also"
+      ],
+      "tip": "\"You too!\" is the automatic response to \"Have a great day!\""
+    }
+  ]
+}
