@@ -1,0 +1,20 @@
+// Exercise 4.4: effects and timers. See curriculum/phase-4-state-and-hooks/4.4-use-countdown.md
+
+export interface Countdown {
+  remaining: number;       // seconds left
+  running: boolean;
+  start: () => void;
+  pause: () => void;
+  reset: () => void;
+}
+
+/**
+ * A focus timer. Counts down once per second while running.
+ * - At 0: stop, call onDone() exactly once, and go back to `seconds` (ready for the next session).
+ * - pause keeps the remaining time; reset stops and goes back to `seconds`.
+ * - Clean up the interval when paused or unmounted (no timers left behind).
+ */
+export function useCountdown(seconds: number, onDone: () => void): Countdown {
+  // TODO 4.4
+  return { remaining: seconds, running: false, start: () => {}, pause: () => {}, reset: () => {} };
+}

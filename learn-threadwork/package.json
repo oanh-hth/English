@@ -1,0 +1,46 @@
+{
+  "name": "learn-threadwork",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Learn TypeScript, React and Node.js by building Threadwork, exercise by exercise.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,blue \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch app/server/src/index.ts",
+    "test": "vitest",
+    "ex": "tsx scripts/ex.ts",
+    "progress": "tsx scripts/progress.ts",
+    "typecheck": "tsc --noEmit",
+    "verify": "tsx scripts/verify.ts",
+    "build": "vite build",
+    "start": "tsx app/server/src/index.ts"
+  },
+  "dependencies": {
+    "express": "4.21.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "10.4.0",
+    "@testing-library/jest-dom": "6.6.2",
+    "@testing-library/react": "16.0.1",
+    "@testing-library/user-event": "14.5.2",
+    "@types/express": "4.17.21",
+    "@types/node": "22.9.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@types/supertest": "6.0.2",
+    "@vitejs/plugin-react": "4.3.3",
+    "concurrently": "9.0.1",
+    "jsdom": "25.0.1",
+    "supertest": "7.0.0",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "vite": "5.4.10",
+    "vitest": "2.1.4"
+  }
+}

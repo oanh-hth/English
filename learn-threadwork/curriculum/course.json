@@ -1,0 +1,362 @@
+{
+  "phases": [
+    {
+      "id": "0",
+      "folder": "phase-0-setup",
+      "title": "Setup and your first test",
+      "goal": "Install the tools, run the app, and make your first test pass."
+    },
+    {
+      "id": "1",
+      "folder": "phase-1-typescript",
+      "title": "TypeScript through the task model",
+      "goal": "Types, unions, type guards, immutable updates, generics and validating unknown data."
+    },
+    {
+      "id": "2",
+      "folder": "phase-2-domain-logic",
+      "title": "Domain logic: dates, garden and rewards",
+      "goal": "Pure functions and reducers for streaks, plant growth, harvests, treats and badges."
+    },
+    {
+      "id": "3",
+      "folder": "phase-3-react-components",
+      "title": "React components",
+      "goal": "JSX, props, state, events, lists, forms and accessible markup, tested like a user would use them."
+    },
+    {
+      "id": "4",
+      "folder": "phase-4-state-and-hooks",
+      "title": "State management and hooks",
+      "goal": "Custom hooks, useReducer, Context, effects and timers."
+    },
+    {
+      "id": "5",
+      "folder": "phase-5-graphics-and-pencil",
+      "title": "Graphics and Apple Pencil",
+      "goal": "SVG from data, stroke geometry and pointer events with palm rejection."
+    },
+    {
+      "id": "6",
+      "folder": "phase-6-node-server",
+      "title": "Node.js server with Express",
+      "goal": "HTTP, routing, REST, validation, password hashing, tokens, files and calling other APIs."
+    },
+    {
+      "id": "7",
+      "folder": "phase-7-full-stack",
+      "title": "Full stack: connect the app to the server",
+      "goal": "A typed API client, sync decisions and an async login form."
+    }
+  ],
+  "exercises": [
+    {
+      "id": "0.1",
+      "phase": "0",
+      "slug": "hello",
+      "title": "Make your first test pass",
+      "files": [
+        "app/shared/hello.ts"
+      ],
+      "test": "tests/phase-0/0.1-hello.test.ts",
+      "lesson": "curriculum/phase-0-setup/0.1-hello.md"
+    },
+    {
+      "id": "1.1",
+      "phase": "1",
+      "slug": "task-model",
+      "title": "Create tasks and check importance",
+      "files": [
+        "app/shared/task-factory.ts"
+      ],
+      "test": "tests/phase-1/1.1-task-model.test.ts",
+      "lesson": "curriculum/phase-1-typescript/1.1-task-model.md"
+    },
+    {
+      "id": "1.2",
+      "phase": "1",
+      "slug": "growth",
+      "title": "Growth per importance and plant stages",
+      "files": [
+        "app/shared/growth.ts"
+      ],
+      "test": "tests/phase-1/1.2-growth.test.ts",
+      "lesson": "curriculum/phase-1-typescript/1.2-growth.md"
+    },
+    {
+      "id": "1.3",
+      "phase": "1",
+      "slug": "immutable-updates",
+      "title": "Link, move and delete tasks without mutation",
+      "files": [
+        "app/shared/task-ops.ts"
+      ],
+      "test": "tests/phase-1/1.3-immutable-updates.test.ts",
+      "lesson": "curriculum/phase-1-typescript/1.3-immutable-updates.md"
+    },
+    {
+      "id": "1.4",
+      "phase": "1",
+      "slug": "generics-and-validation",
+      "title": "groupBy, sorting and parsing unknown data",
+      "files": [
+        "app/shared/collections.ts"
+      ],
+      "test": "tests/phase-1/1.4-generics-and-validation.test.ts",
+      "lesson": "curriculum/phase-1-typescript/1.4-generics-and-validation.md"
+    },
+    {
+      "id": "2.1",
+      "phase": "2",
+      "slug": "dates-and-streaks",
+      "title": "Days, streaks and a thirsty plant",
+      "files": [
+        "app/shared/dates.ts"
+      ],
+      "test": "tests/phase-2/2.1-dates-and-streaks.test.ts",
+      "lesson": "curriculum/phase-2-domain-logic/2.1-dates-and-streaks.md"
+    },
+    {
+      "id": "2.2",
+      "phase": "2",
+      "slug": "garden-reducer",
+      "title": "The garden reducer: grow, harvest, unlock",
+      "files": [
+        "app/shared/garden.ts"
+      ],
+      "test": "tests/phase-2/2.2-garden-reducer.test.ts",
+      "lesson": "curriculum/phase-2-domain-logic/2.2-garden-reducer.md"
+    },
+    {
+      "id": "2.3",
+      "phase": "2",
+      "slug": "treats",
+      "title": "Trade fruit for treats",
+      "files": [
+        "app/shared/treats.ts"
+      ],
+      "test": "tests/phase-2/2.3-treats.test.ts",
+      "lesson": "curriculum/phase-2-domain-logic/2.3-treats.md"
+    },
+    {
+      "id": "2.4",
+      "phase": "2",
+      "slug": "badges",
+      "title": "Badges from your history",
+      "files": [
+        "app/shared/badges.ts"
+      ],
+      "test": "tests/phase-2/2.4-badges.test.ts",
+      "lesson": "curriculum/phase-2-domain-logic/2.4-badges.md"
+    },
+    {
+      "id": "3.1",
+      "phase": "3",
+      "slug": "task-card",
+      "title": "TaskCard component",
+      "files": [
+        "app/client/src/components/TaskCard.tsx"
+      ],
+      "test": "tests/phase-3/3.1-task-card.test.tsx",
+      "lesson": "curriculum/phase-3-react-components/3.1-task-card.md"
+    },
+    {
+      "id": "3.2",
+      "phase": "3",
+      "slug": "quick-capture",
+      "title": "QuickCapture form",
+      "files": [
+        "app/client/src/components/QuickCapture.tsx"
+      ],
+      "test": "tests/phase-3/3.2-quick-capture.test.tsx",
+      "lesson": "curriculum/phase-3-react-components/3.2-quick-capture.md"
+    },
+    {
+      "id": "3.3",
+      "phase": "3",
+      "slug": "board",
+      "title": "Board with columns and move buttons",
+      "files": [
+        "app/client/src/components/Board.tsx"
+      ],
+      "test": "tests/phase-3/3.3-board.test.tsx",
+      "lesson": "curriculum/phase-3-react-components/3.3-board.md"
+    },
+    {
+      "id": "3.4",
+      "phase": "3",
+      "slug": "task-drawer",
+      "title": "TaskDrawer: edit, link and complete",
+      "files": [
+        "app/client/src/components/TaskDrawer.tsx"
+      ],
+      "test": "tests/phase-3/3.4-task-drawer.test.tsx",
+      "lesson": "curriculum/phase-3-react-components/3.4-task-drawer.md"
+    },
+    {
+      "id": "4.1",
+      "phase": "4",
+      "slug": "use-local-storage",
+      "title": "useLocalStorage hook",
+      "files": [
+        "app/client/src/hooks/useLocalStorage.ts"
+      ],
+      "test": "tests/phase-4/4.1-use-local-storage.test.ts",
+      "lesson": "curriculum/phase-4-state-and-hooks/4.1-use-local-storage.md"
+    },
+    {
+      "id": "4.2",
+      "phase": "4",
+      "slug": "app-reducer",
+      "title": "The app reducer",
+      "files": [
+        "app/client/src/state/appReducer.ts"
+      ],
+      "test": "tests/phase-4/4.2-app-reducer.test.ts",
+      "lesson": "curriculum/phase-4-state-and-hooks/4.2-app-reducer.md"
+    },
+    {
+      "id": "4.3",
+      "phase": "4",
+      "slug": "app-context",
+      "title": "AppProvider and useApp with Context",
+      "files": [
+        "app/client/src/state/AppContext.tsx"
+      ],
+      "test": "tests/phase-4/4.3-app-context.test.tsx",
+      "lesson": "curriculum/phase-4-state-and-hooks/4.3-app-context.md"
+    },
+    {
+      "id": "4.4",
+      "phase": "4",
+      "slug": "use-countdown",
+      "title": "useCountdown focus timer",
+      "files": [
+        "app/client/src/hooks/useCountdown.ts"
+      ],
+      "test": "tests/phase-4/4.4-use-countdown.test.ts",
+      "lesson": "curriculum/phase-4-state-and-hooks/4.4-use-countdown.md"
+    },
+    {
+      "id": "5.1",
+      "phase": "5",
+      "slug": "plant",
+      "title": "Draw the plant with SVG",
+      "files": [
+        "app/client/src/components/Plant.tsx"
+      ],
+      "test": "tests/phase-5/5.1-plant.test.tsx",
+      "lesson": "curriculum/phase-5-graphics-and-pencil/5.1-plant.md"
+    },
+    {
+      "id": "5.2",
+      "phase": "5",
+      "slug": "stroke-geometry",
+      "title": "Stroke width, simplifying and smooth paths",
+      "files": [
+        "app/client/src/sketch/geometry.ts"
+      ],
+      "test": "tests/phase-5/5.2-stroke-geometry.test.ts",
+      "lesson": "curriculum/phase-5-graphics-and-pencil/5.2-stroke-geometry.md"
+    },
+    {
+      "id": "5.3",
+      "phase": "5",
+      "slug": "sketch-reducer",
+      "title": "Pencil input with palm rejection",
+      "files": [
+        "app/client/src/sketch/sketchReducer.ts"
+      ],
+      "test": "tests/phase-5/5.3-sketch-reducer.test.ts",
+      "lesson": "curriculum/phase-5-graphics-and-pencil/5.3-sketch-reducer.md"
+    },
+    {
+      "id": "6.1",
+      "phase": "6",
+      "slug": "express-app",
+      "title": "An Express app with health check and errors",
+      "files": [
+        "app/server/src/app.ts"
+      ],
+      "test": "tests/phase-6/6.1-express-app.test.ts",
+      "lesson": "curriculum/phase-6-node-server/6.1-express-app.md"
+    },
+    {
+      "id": "6.2",
+      "phase": "6",
+      "slug": "tasks-api",
+      "title": "A REST API for tasks",
+      "files": [
+        "app/server/src/routes/tasks.ts"
+      ],
+      "test": "tests/phase-6/6.2-tasks-api.test.ts",
+      "lesson": "curriculum/phase-6-node-server/6.2-tasks-api.md"
+    },
+    {
+      "id": "6.3",
+      "phase": "6",
+      "slug": "auth",
+      "title": "Password hashing, tokens and protected routes",
+      "files": [
+        "app/server/src/auth.ts"
+      ],
+      "test": "tests/phase-6/6.3-auth.test.ts",
+      "lesson": "curriculum/phase-6-node-server/6.3-auth.md"
+    },
+    {
+      "id": "6.4",
+      "phase": "6",
+      "slug": "file-store",
+      "title": "Atomic file storage and the state API",
+      "files": [
+        "app/server/src/storage/fileStore.ts"
+      ],
+      "test": "tests/phase-6/6.4-file-store.test.ts",
+      "lesson": "curriculum/phase-6-node-server/6.4-file-store.md"
+    },
+    {
+      "id": "6.5",
+      "phase": "6",
+      "slug": "weather",
+      "title": "Weather from Open-Meteo with a cache",
+      "files": [
+        "app/server/src/weather.ts"
+      ],
+      "test": "tests/phase-6/6.5-weather.test.ts",
+      "lesson": "curriculum/phase-6-node-server/6.5-weather.md"
+    },
+    {
+      "id": "7.1",
+      "phase": "7",
+      "slug": "api-client",
+      "title": "A typed API client",
+      "files": [
+        "app/client/src/api/client.ts"
+      ],
+      "test": "tests/phase-7/7.1-api-client.test.ts",
+      "lesson": "curriculum/phase-7-full-stack/7.1-api-client.md"
+    },
+    {
+      "id": "7.2",
+      "phase": "7",
+      "slug": "sync",
+      "title": "Sync decisions and debounce",
+      "files": [
+        "app/shared/sync.ts"
+      ],
+      "test": "tests/phase-7/7.2-sync.test.ts",
+      "lesson": "curriculum/phase-7-full-stack/7.2-sync.md"
+    },
+    {
+      "id": "7.3",
+      "phase": "7",
+      "slug": "login-form",
+      "title": "LoginForm with loading and errors",
+      "files": [
+        "app/client/src/components/LoginForm.tsx"
+      ],
+      "test": "tests/phase-7/7.3-login-form.test.tsx",
+      "lesson": "curriculum/phase-7-full-stack/7.3-login-form.md"
+    }
+  ]
+}

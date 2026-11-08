@@ -1,6 +1,8 @@
 # Speak Natural – American English
 
 > This repository also contains **Threadwork**, a separate personal workspace app with tasks, sketches and a garden. See [`threadwork/README.md`](threadwork/README.md).
+>
+> **Learn to build it yourself:** [`learn-threadwork/`](learn-threadwork/README.md) is a self-paced TypeScript, React and Node.js course that rebuilds Threadwork exercise by exercise, with tests and a progress checklist.
 
 A mobile-first web app (installable on iPhone as a PWA) for learning the phrases native American speakers really use.
 
