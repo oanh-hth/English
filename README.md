@@ -1,5 +1,7 @@
 # Speak Natural – American English
 
+> This repository also contains **Threadwork**, a separate personal workspace app with tasks, sketches and a garden. See [`threadwork/README.md`](threadwork/README.md).
+
 A mobile-first web app (installable on iPhone as a PWA) for learning the phrases native American speakers really use.
 
 - **Learn**: 1,024 phrases in 92 topics, plus 953 daily-life words in 30 topics (Learn → Words), each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
