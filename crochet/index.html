@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cozy Hook Nook · crochet charts</title>
+<meta name="theme-color" content="#f6e7d3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
+      <circle cx="20" cy="20" r="16" fill="#f2b8ad"/>
+      <g fill="none" stroke="#fffaf3" stroke-width="1.6" stroke-linecap="round" opacity=".9">
+        <path d="M7 17c8 3 18 3 26 0"/><path d="M5 24c9 4 21 4 30 0"/><path d="M11 9c5 8 13 8 18 0"/><path d="M12 32c5-7 12-7 17 0"/>
+      </g>
+      <path d="M31 31c6 3 7 6 3 7" fill="none" stroke="#f2b8ad" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <span>Cozy Hook Nook</span>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <button data-act="view" data-view="charts">My charts</button>
+    <button data-act="view" data-view="tips">Tips</button>
+    <button data-act="view" data-view="stitches">Stitches</button>
+  </nav>
+  <button class="terms" id="terms" data-act="terms" title="Switch between US and UK crochet terms"></button>
+</header>
+<main id="app"></main>
+<div id="modal" class="modal" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="tips.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

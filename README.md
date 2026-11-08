@@ -48,3 +48,10 @@ Open any phrase or word and tap **✏️ Edit** or **🗑 Delete** (also on the 
 
 ## Adding your own items
 Open a topic and tap **Add a word or phrase** to add your own word or phrase to that topic (or to My words). It joins that topic's lists, exercises and your review deck. You can edit it later, including moving it to a different topic. Your additions are stored on your device only.
+
+## Cozy Hook Nook (crochet chart maker)
+
+A separate, dependency-free app in [`crochet/`](crochet/index.html): build crochet charts row by row
+(pick a stitch, enter how many, group repeats like `(sc, inc) × 6`), preview them as a symbol chart
+(flat rows or in the round, with a "watch it grow" scrubber), and browse a library of crochet tips and stitches.
+Charts are saved in your browser and can be exported as JSON, PNG or printed.
