@@ -1073,7 +1073,6 @@ $('#auto-rebuy').addEventListener('change', e => { state.autoRebuy = e.target.ch
 const THREE_URL = 'vendor/three.min.js';
 const RW = 10, RD = 7, RH = 4.2, FW = RW*0.96;
 let T = null, v3 = null;
-const iconCache = {};
 function loadThree(){
   if(window.THREE) return Promise.resolve(window.THREE);
   return new Promise((res, rej) => {
@@ -1090,12 +1089,6 @@ function toWorld(it){
   return [x, clamp(2.4 + (16-it.y)*0.06, 0.3, 3.4), -RD/2 + 0.35];
 }
 const floorToItem = (x, z) => ({x:+clamp((x/FW + 0.5)*100, 4, 96).toFixed(2), y:+clamp(44 + (z - (-RD/2 + 0.5))/(RD-0.9)*52, 44, 96).toFixed(2)});
-const iconImg = cat => iconCache[cat] || (iconCache[cat] = new Promise(res => {
-  const sym = document.getElementById('s-'+cat);
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="256" height="256">'+(sym ? sym.innerHTML : '').replace(/currentColor/g, CAT[cat].color)+'</svg>';
-  const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null);
-  im.src = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-}));
 function pill(x, c, text, fill, cx, cy){
   c.font = '700 24px "DM Sans", system-ui, sans-serif';
   const w = Math.max(40, c.measureText(text).width + 22), h = 38, l = cx - w/2, t = cy - h/2;
@@ -1106,12 +1099,74 @@ function badgeOf(it){
   const st = status(it), d = daysLeft(it);
   return st === 'expired' ? {t:'!', c:'#c42b36'} : st === 'soon' ? {t:d === 0 ? 'Hôm nay' : d+'d', c:'#b26a00'} : null;
 }
-const itemSig = it => it.cat+'|'+(badgeOf(it) ? badgeOf(it).t : '')+'|'+(isDormant(it) ? 'z' : '');
-async function itemCanvas(it){
-  const im = await iconImg(it.cat), c = document.createElement('canvas'); c.width = 256; c.height = 320;
-  const x = c.getContext('2d'); if(im) x.drawImage(im, 28, 96, 200, 200);
-  const b = badgeOf(it); if(b) pill(x, x, b.t, b.c, 176, 84);
-  if(isDormant(it)) pill(x, x, 'zZ', '#6c86ad', 58, 292);
+const badgeSig = it => (badgeOf(it) ? badgeOf(it).t : '')+'|'+(isDormant(it) ? 'z' : '');
+/* Every category is a small 3D object built from simple shapes */
+const hashId = id => { let h = 0; for(let i = 0; i < id.length; i++) h = (h*31 + id.charCodeAt(i)) | 0; return Math.abs(h); };
+function disposeObj(o){ o.traverse(c => { if(c.geometry) c.geometry.dispose(); if(c.material){ if(c.material.map) c.material.map.dispose(); c.material.dispose(); } }); }
+function buildModel(cat){
+  const col = CAT[cat].color, g = new T.Group(), WHITE = 0xffffff, DARK = 0x3d4452;
+  const light = (c, k) => new T.Color(c).lerp(new T.Color(0xffffff), k).getHex();
+  const add = (geo, c, x, y, z, o) => { const m = new T.Mesh(geo, new T.MeshLambertMaterial(Object.assign({color:c}, o || {}))); m.position.set(x || 0, y || 0, z || 0); g.add(m); return m; };
+  const cyl = (rt, rb, h, c, y, x, z) => add(new T.CylinderGeometry(rt, rb, h, 28), c, x, y, z);
+  const box = (w, h, d, c, x, y, z) => add(new T.BoxGeometry(w, h, d), c, x, y, z);
+  const plane = (w, h, c, x, y, z) => add(new T.PlaneGeometry(w, h), c, x, y, z);
+  const disc = (r, c, x, y, z) => add(new T.CircleGeometry(r, 20), c, x, y, z);
+  if(cat === 'produce'){                       // apple
+    add(new T.SphereGeometry(0.5, 28, 20), col, 0, 0.5, 0).scale.set(1, 0.92, 1);
+    cyl(0.04, 0.05, 0.22, 0x6b4a2b, 1.02);
+    const leaf = add(new T.SphereGeometry(0.16, 12, 8), 0x4c9a3f, 0.15, 1.08, 0); leaf.scale.set(1.6, 0.35, 0.8); leaf.rotation.z = 0.4;
+  }else if(cat === 'dairy'){                   // milk carton
+    box(0.72, 0.9, 0.72, col, 0, 0.45, 0);
+    plane(0.46, 0.4, WHITE, 0, 0.45, 0.365); disc(0.09, col, 0, 0.45, 0.367);
+    const geo = new T.CylinderGeometry(0.4, 0.4, 0.72, 3); geo.rotateZ(Math.PI/2); geo.rotateX(-Math.PI/2);
+    const roof = add(geo, light(col, 0.12), 0, 1.01, 0); roof.scale.y = 0.55;
+    box(0.26, 0.1, 0.14, WHITE, 0, 1.27, 0);
+  }else if(cat === 'drinks'){                  // bottle
+    cyl(0.3, 0.3, 0.7, col, 0.35); cyl(0.13, 0.3, 0.22, col, 0.81); cyl(0.13, 0.13, 0.25, col, 1.04); cyl(0.15, 0.15, 0.12, 0x3b3b3b, 1.22);
+    cyl(0.305, 0.305, 0.3, WHITE, 0.4);
+  }else if(cat === 'pantry'){                  // can
+    cyl(0.4, 0.4, 0.9, col, 0.45); cyl(0.42, 0.42, 0.07, new T.Color(col).multiplyScalar(0.7).getHex(), 0.9); cyl(0.42, 0.42, 0.07, new T.Color(col).multiplyScalar(0.7).getHex(), 0.035);
+    cyl(0.405, 0.405, 0.45, WHITE, 0.45);
+  }else if(cat === 'meds'){                    // pill bottle
+    cyl(0.32, 0.32, 0.8, col, 0.4); cyl(0.36, 0.36, 0.25, 0xf1f3f5, 0.93); cyl(0.325, 0.325, 0.42, WHITE, 0.4);
+    box(0.28, 0.07, 0.02, col, 0, 0.4, 0.335); box(0.07, 0.28, 0.02, col, 0, 0.4, 0.335);
+  }else if(cat === 'care'){                    // pump bottle
+    cyl(0.32, 0.32, 0.78, col, 0.39); cyl(0.16, 0.32, 0.15, col, 0.855); cyl(0.07, 0.07, 0.18, DARK, 1.0);
+    box(0.3, 0.1, 0.14, DARK, 0.05, 1.12, 0); box(0.16, 0.05, 0.05, DARK, 0.22, 1.14, 0);
+    plane(0.4, 0.32, WHITE, 0, 0.4, 0.325);
+  }else if(cat === 'cleaning'){                // spray bottle
+    box(0.6, 0.75, 0.42, col, 0, 0.375, 0); cyl(0.1, 0.12, 0.18, DARK, 0.84, 0.05, 0);
+    box(0.55, 0.28, 0.3, DARK, 0.05, 1.07, 0); const tr = box(0.07, 0.3, 0.07, DARK, 0.32, 0.92, 0); tr.rotation.z = 0.4;
+    plane(0.4, 0.3, WHITE, 0, 0.38, 0.215);
+  }else if(cat === 'electronics'){             // laptop
+    box(1.0, 0.07, 0.72, 0xa6b0be, 0, 0.035, 0.05); box(0.84, 0.012, 0.4, 0x6a7585, 0, 0.075, 0.08);
+    const lid = new T.Group(); lid.position.set(0, 0.07, -0.3); lid.rotation.x = -0.32; g.add(lid);
+    const back = new T.Mesh(new T.BoxGeometry(1.0, 0.68, 0.06), new T.MeshLambertMaterial({color:DARK})); back.position.y = 0.34; lid.add(back);
+    const scr = new T.Mesh(new T.PlaneGeometry(0.88, 0.56), new T.MeshLambertMaterial({color:col, emissive:col, emissiveIntensity:0.45})); scr.position.set(0, 0.34, 0.032); lid.add(scr);
+  }else if(cat === 'baby'){                    // diaper pack
+    box(0.9, 1.0, 0.5, col, 0, 0.5, 0); add(new T.TorusGeometry(0.22, 0.045, 8, 18, Math.PI), 0x4a4a4a, 0, 1.0, 0);
+    plane(0.62, 0.46, WHITE, 0, 0.55, 0.255); disc(0.14, col, 0, 0.55, 0.257); box(0.9, 0.14, 0.51, light(col, 0.55), 0, 0.12, 0);
+  }else if(cat === 'clothes'){                 // t-shirt
+    const sh = new T.Shape(); [[-0.38,0],[0.38,0],[0.38,0.62],[0.75,0.52],[0.62,0.84],[0.28,0.96],[0.14,0.98],[0,0.86],[-0.14,0.98],[-0.28,0.96],[-0.62,0.84],[-0.75,0.52],[-0.38,0.62]].forEach((p, i) => i ? sh.lineTo(p[0], p[1]) : sh.moveTo(p[0], p[1]));
+    const geo = new T.ExtrudeGeometry(sh, {depth:0.16, bevelEnabled:false}); geo.translate(0, 0, -0.08);
+    const tee = add(geo, col, 0, 0.02, 0); tee.scale.set(0.95, 0.95, 1);
+    box(0.2, 0.2, 0.02, light(col, 0.4), 0.2, 0.52, 0.085);
+  }else if(cat === 'gift'){                    // gift box with a bow
+    box(0.9, 0.7, 0.9, col, 0, 0.35, 0); box(1.0, 0.2, 1.0, light(col, 0.15), 0, 0.8, 0);
+    box(0.16, 0.72, 0.92, WHITE, 0, 0.36, 0); box(0.92, 0.72, 0.16, WHITE, 0, 0.36, 0);
+    box(0.16, 0.22, 1.02, WHITE, 0, 0.8, 0); box(1.02, 0.22, 0.16, WHITE, 0, 0.8, 0);
+    const b1 = add(new T.SphereGeometry(0.16, 14, 10), WHITE, -0.14, 1.0, 0); b1.scale.set(1.3, 0.75, 0.7); b1.rotation.z = 0.5;
+    const b2 = add(new T.SphereGeometry(0.16, 14, 10), WHITE, 0.14, 1.0, 0); b2.scale.set(1.3, 0.75, 0.7); b2.rotation.z = -0.5;
+    add(new T.SphereGeometry(0.07, 10, 8), WHITE, 0, 0.98, 0);
+  }else{                                       // other: a parcel
+    box(0.9, 0.9, 0.9, col, 0, 0.45, 0); box(0.22, 0.02, 0.92, light(col, 0.55), 0, 0.905, 0); box(0.22, 0.9, 0.02, light(col, 0.55), 0, 0.45, 0.451);
+  }
+  return g;
+}
+function badgeCanvas(it){
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'), b = badgeOf(it);
+  if(b) pill(x, x, b.t, b.c, isDormant(it) ? 170 : 128, 64);
+  if(isDormant(it)) pill(x, x, 'zZ', '#6c86ad', b ? 66 : 128, 64);
   return c;
 }
 function canvasTex(w, h, draw){
@@ -1176,10 +1231,10 @@ function resize3D(){
 }
 function makeItemGroup(it){
   const grp = new T.Group();
-  const shadow = new T.Mesh(new T.CircleGeometry(0.5, 20), new T.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.22, depthWrite:false}));
-  shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; shadow.scale.set(1, 0.6, 1); grp.add(shadow);
-  const sp = new T.Sprite(new T.SpriteMaterial({transparent:true})); sp.center.set(0.5, 0.1); sp.scale.set(1.4, 1.75, 1); sp.userData.id = it.id; grp.add(sp);
-  grp.userData = {id:it.id, sp, shadow, sig:''};
+  const shadow = new T.Mesh(new T.CircleGeometry(0.55, 24), new T.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.2, depthWrite:false}));
+  shadow.rotation.x = -Math.PI/2; shadow.position.y = 0.02; shadow.scale.set(1, 0.65, 1); shadow.raycast = () => {}; grp.add(shadow);
+  const sp = new T.Sprite(new T.SpriteMaterial({transparent:true, depthTest:false})); sp.scale.set(1.5, 0.75, 1); sp.position.y = 1.75; sp.renderOrder = 4; sp.raycast = () => {}; sp.visible = false; grp.add(sp);
+  grp.userData = {id:it.id, sp, shadow, model:null, cat:'', sig:null, dim:false};
   v3.items.add(grp); v3.map.set(it.id, grp); return grp;
 }
 function sync3D(){
@@ -1188,12 +1243,21 @@ function sync3D(){
   live.forEach(it => {
     keep.add(it.id);
     const grp = v3.map.get(it.id) || makeItemGroup(it), u = grp.userData;
+    if(u.cat !== it.cat){
+      if(u.model){ grp.remove(u.model); disposeObj(u.model); }
+      u.model = buildModel(it.cat); u.model.rotation.y = ((hashId(it.id) % 100)/100 - 0.5)*0.8; u.cat = it.cat; u.dim = false; grp.add(u.model);
+    }
     if(!(v3.drag && v3.drag.moved && v3.drag.id === it.id)){ const w = toWorld(it); grp.position.set(w[0], w[1], w[2]); u.shadow.position.y = 0.02 - w[1]; }
-    u.sp.material.opacity = ((filter && filter !== it.cat) || !inPeriod(it)) ? 0.25 : 1;
-    const sig = itemSig(it);
-    if(sig !== u.sig){ u.sig = sig; itemCanvas(it).then(c => { if(u.sig !== sig) return; const tex = new T.CanvasTexture(c); if(u.sp.material.map) u.sp.material.map.dispose(); u.sp.material.map = tex; u.sp.material.needsUpdate = true; v3.needs = true; }); }
+    const dim = (filter && filter !== it.cat) || !inPeriod(it);
+    if(dim !== u.dim){ u.dim = dim; u.model.traverse(o => { if(o.material){ o.material.transparent = dim; o.material.opacity = dim ? 0.25 : 1; o.material.needsUpdate = true; } }); u.sp.material.opacity = dim ? 0.25 : 1; }
+    u.model.scale.setScalar(sel === it.id ? 1.12 : 1);
+    const sig = badgeSig(it);
+    if(sig !== u.sig){
+      u.sig = sig; const has = !!badgeOf(it) || isDormant(it); u.sp.visible = has;
+      if(has){ const tex = new T.CanvasTexture(badgeCanvas(it)); if(u.sp.material.map) u.sp.material.map.dispose(); u.sp.material.map = tex; u.sp.material.needsUpdate = true; }
+    }
   });
-  v3.map.forEach((grp, id) => { if(!keep.has(id)){ v3.items.remove(grp); grp.userData.sp.material.dispose(); v3.map.delete(id); } });
+  v3.map.forEach((grp, id) => { if(!keep.has(id)){ v3.items.remove(grp); disposeObj(grp); v3.map.delete(id); } });
   const s = sel && byId(sel);
   if(s && !s.used){ const w = toWorld(s); v3.ring.position.set(w[0], w[1]+0.03, w[2]); v3.ring.visible = true; } else v3.ring.visible = false;
   v3.needs = true;
@@ -1204,8 +1268,9 @@ function ndc(e){
 }
 function pick3D(e){
   v3.ray.setFromCamera(ndc(e), v3.camera);
-  const hits = v3.ray.intersectObjects(Array.from(v3.map.values()).map(g => g.userData.sp), false);
-  return hits.length ? hits[0].object.userData.id : null;
+  const hits = v3.ray.intersectObjects(Array.from(v3.map.values()), true);
+  for(const h of hits){ let o = h.object; while(o && !(o.userData && o.userData.id)) o = o.parent; if(o) return o.userData.id; }
+  return null;
 }
 function floorPoint(e){
   v3.ray.setFromCamera(ndc(e), v3.camera);
@@ -1214,7 +1279,7 @@ function floorPoint(e){
 function updateTag3D(){
   const tag = $('#tag3d'), id = v3 && (v3.hover || sel), it = id && byId(id);
   if(!it || it.used || !v3 || state.view !== '3d'){ tag.hidden = true; return; }
-  const w = toWorld(it), v = new T.Vector3(w[0], w[1] + 1.5, w[2]).project(v3.camera);
+  const w = toWorld(it), v = new T.Vector3(w[0], w[1] + 2.2, w[2]).project(v3.camera);
   tag.hidden = false; tag.textContent = it.name; tag.style.left = ((v.x*0.5 + 0.5)*room.clientWidth)+'px'; tag.style.top = ((-v.y*0.5 + 0.5)*room.clientHeight)+'px';
 }
 function build3D(){
