@@ -29,7 +29,7 @@ export function SeriesReader({ series, photos, startIndex = 0, onMove, onSetCove
 
   if (!photo) {
     return (
-      <div className="reader">
+      <div className="left">
         <h2>{series.title}</h2>
         <p>No photos in this series.</p>
         <button className="btn" type="button" onClick={onClose}>
@@ -43,7 +43,7 @@ export function SeriesReader({ series, photos, startIndex = 0, onMove, onSetCove
   const isCover = photo.id === series.coverId;
 
   return (
-    <div className="reader">
+    <div className="left">
       <h2>{series.title}</h2>
       {series.note && <p>{series.note}</p>}
 

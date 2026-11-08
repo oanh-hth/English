@@ -36,6 +36,8 @@ export interface SeriesReaderProps {
  *    the button is disabled and says "Is the cover".
  *  - "Remove from series": calls onRemove(photo.id).
  *  - "Close": calls onClose.
+ * Put everything inside ONE outer <div className="left">: the dialog is a two-column card and `left` is its left column
+ * (the note editor sits in the right column). Wrap the photo in <div className="stage"> for the framed look.
  * The parent may send a shorter `photos` list after a removal, so never read photos[index] without clamping the index.
  * With no photos at all, render <p>No photos in this series.</p> and just the Close button.
  */

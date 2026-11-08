@@ -170,16 +170,18 @@ function Home({ client, username, onSignOut }: { client: ApiClient; username: st
 
       {series && (
         <div className="veil">
-          <SeriesReader
-            key={series.id}
-            series={series}
-            photos={photos}
-            onMove={moveInSeries}
-            onSetCover={(id) => patch(`/api/series/${series.id}`, { coverId: id })}
-            onRemove={removeFromSeries}
-            onClose={() => setSeriesId(null)}
-          />
-          <NoteEditor key={`${series.id}-notes`} initial={{ title: series.title, takenOn: series.takenOn, tags: series.tags, note: series.note }} onSave={saveSeries} />
+          <div className="reader">
+            <SeriesReader
+              key={series.id}
+              series={series}
+              photos={photos}
+              onMove={moveInSeries}
+              onSetCover={(id) => patch(`/api/series/${series.id}`, { coverId: id })}
+              onRemove={removeFromSeries}
+              onClose={() => setSeriesId(null)}
+            />
+            <NoteEditor key={`${series.id}-notes`} initial={{ title: series.title, takenOn: series.takenOn, tags: series.tags, note: series.note }} onSave={saveSeries} />
+          </div>
         </div>
       )}
     </main>

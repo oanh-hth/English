@@ -175,3 +175,7 @@ h1 .logo{margin-right:8px;vertical-align:-8px;animation:bob 3.2s ease-in-out inf
 .side label.btn{display:inline-flex;font-size:1rem;color:var(--ink);margin-bottom:0}
 .login .status{min-height:1.4em;color:var(--danger)}
 a.btn{color:var(--ink)}
+.left h2{font:600 1.6rem/1.2 var(--head);margin:0 0 4px}
+.left h3{font:600 .9rem var(--head);color:var(--muted);margin:12px 0 0}
+.left .row{margin-top:10px}
+.left p{margin:4px 0}

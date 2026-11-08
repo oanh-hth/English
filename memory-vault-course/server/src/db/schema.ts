@@ -2,9 +2,12 @@
 //
 // SQLite is a database in a single file, and Node has it built in (node:sqlite), so there is nothing to install.
 // Use ':memory:' for a throw-away database that lives only in RAM (perfect for tests).
+import fs from 'node:fs';
+import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 export function openDb(file = ':memory:'): DatabaseSync {
+  if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
   db.exec(`
     PRAGMA foreign_keys = ON;
