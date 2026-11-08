@@ -19,6 +19,7 @@ Lấy từ lịch sử git của thư mục `room/` (nhánh `claude/room-invento
 | 2026-11-08 | `a225dcc` | Phones: long cards become bottom sheets opened from a dock |
 | 2026-11-08 | `790dd8b` | Add Mỹ phẩm, Dụng cụ, Văn phòng phẩm and Len categories |
 | 2026-11-08 | `f968f78` | Merge care and cosmetics, add Đồ ăn vặt, 90-day Misu for yarn, tools, stationery |
+| 2026-11-08 | `c54aeac` | Add documentation: user guide, rules, bills, technical, changelog |
 
 ## Tóm tắt theo chủ đề
 
@@ -27,3 +28,4 @@ Lấy từ lịch sử git của thư mục `room/` (nhánh `claude/room-invento
 - **Nhập liệu:** nhập tay, đọc hoá đơn từ chữ hoặc ảnh (Shopee, bill quán, siêu thị), 15 món có sẵn khi mở lần đầu.
 - **Nhắc nhở:** hạn dùng, món nằm im (Misu, 30 ngày và 90 ngày), mua theo ngày và theo tuần (Miso), quy tắc mua lại.
 - **Nhóm đồ:** 16 nhóm; gộp Chăm sóc và Mỹ phẩm; thêm Mua tặng, Quần áo, Dụng cụ, Văn phòng phẩm, Len, Đồ ăn vặt.
+- **Giao diện kawaii:** phông Baloo 2 và Nunito, khung kiểu nhãn dán, đồ vật có mặt, nhân vật chớp mắt và vẫy đuôi, thú cưng trong phòng 2D và 3D, cửa sổ theo giờ, cây phản ánh đồ hết hạn, heo đất, điểm gọn gàng và huy hiệu, pháo giấy, âm thanh tuỳ chọn.

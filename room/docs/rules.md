@@ -104,3 +104,28 @@ Thứ tự này quyết định các trường hợp nhập nhằng:
 - "Bánh quy", "kẹo", "socola" ra Đồ ăn vặt; "bánh mì" ra Đồ khô.
 
 Từ khoá nằm ở thuộc tính `kw` của từng nhóm trong `CATS` và ở bảng `VN` trong `app.js`. Đoán sai thì sửa ở bước xem lại hoá đơn.
+
+## 8. Điểm gọn gàng và huy hiệu
+
+**Điểm gọn gàng** (hàm `tidyScore`) = 100, trừ 10 điểm mỗi món còn trong phòng đã hết hạn, trừ 3 điểm mỗi món nằm im (theo mục 3), trừ 10 điểm nếu phòng có từ 24 món; giới hạn từ 0 đến 100. Nhãn: từ 85 *Phòng gọn như mơ*, từ 65 *Cũng ổn áp*, từ 40 *Hơi bừa rồi nha*, dưới 40 *Cần dọn gấp*.
+
+| Huy hiệu | Điều kiện nhận |
+| --- | --- |
+| Heo đất khoẻ | Có chi tiêu cùng kỳ tháng trước và tháng này chi không hơn |
+| Dùng kịp hạn | Ít nhất 3 món có hạn được bấm *Dùng hết rồi* **trước hoặc đúng ngày hết hạn** trong 30 ngày gần nhất (dùng trường `usedAt`) |
+| Phòng gọn gàng | Điểm gọn gàng từ 85 trở lên và có ít nhất 5 món trong phòng |
+| Nhịn được đồ uống, Nhịn được đồ ăn vặt | Đã mua nhóm đó ít nhất 2 lần trong 60 ngày gần nhất, và lần mua cuối cách đây từ 7 ngày |
+
+Huy hiệu được tính lại mỗi lần vẽ, không lưu từng huy hiệu mà chỉ nhớ danh sách đã nhận (`state.badges`) để biết khi nào có huy hiệu **mới** (lúc đó có pháo giấy và thông báo). Lần mở đầu tiên chỉ ghi lại danh sách, không ăn mừng.
+
+## 9. Căn phòng sống
+
+- **Cửa sổ** theo giờ trên máy: từ 19 giờ đến 5 giờ là đêm (nền xanh đậm, trăng sao, cả phòng tối nhẹ, hết vệt nắng trên sàn); từ 17 giờ 30 là hoàng hôn (nền cam); từ 5 giờ đến 7 giờ là bình minh; còn lại là ban ngày. Cập nhật mỗi phút.
+- **Cái cây** theo số món hết hạn còn trong phòng: 0 món là khoẻ và có hoa; 1 đến 2 món là rũ xuống; từ 3 món là héo úa.
+- **Mặt của món** (`faceMood`): lo lắng nếu đã hết hạn hoặc sắp hết hạn trong 1 ngày; buồn ngủ nếu đang nằm im; còn lại vui. Món nằm im còn bám bụi trong 2D.
+- **Misu trong phòng** ngủ khi có ít nhất một món nằm im.
+- Phòng 3D áp dụng cùng quy tắc: màu cửa sổ theo giờ, màu và độ rũ của lá cây, mặt của món, Misu ngủ.
+
+## 10. Heo đất
+
+Độ đầy của bụng heo = chi tiêu tháng này chia cho số lớn hơn giữa cả tháng trước và tháng này (tối thiểu hiển thị 5%). Heo toát mồ hôi nếu tháng này chi hơn cùng kỳ tháng trước trên 10%, cười nếu không hơn, bình thường nếu chưa có số liệu tháng trước.

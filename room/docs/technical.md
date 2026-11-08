@@ -14,6 +14,8 @@ Phòng Trữ Đồ là một web app **tĩnh**: HTML, CSS và JavaScript thuần
 | `vendor/three.min.js` | three.js r128 (MIT, `three.LICENSE`) cho phòng 3D |
 | `docs/` | Tài liệu này |
 
+Phông chữ lấy từ Google Fonts (Baloo 2 cho tiêu đề, Nunito cho chữ thường, cả hai hỗ trợ tiếng Việt); mất mạng thì dùng phông hệ thống.
+
 ## 2. Chạy và đưa lên host
 
 Chạy cục bộ, từ **thư mục gốc của repo** (vì `room/` dùng `../vendor/`):
@@ -47,6 +49,8 @@ Không đưa khoá API hay tệp `.env` vào repo (đã có trong `.gitignore`).
 | 3D view | three.js: `buildModel`, `buildRoomMeshes`, `sync3D`, tương tác |
 | room look | `ROOMS` (kiểu làm sẵn), ảnh nền, thanh Làm dịu ảnh |
 | phones | Bảng trượt và thanh lối tắt |
+| living room, piggy, achievements | `updateLiving` (giờ trong ngày, trạng thái cây), `piggySvg`, `tidyScore`, `computeBadges`, `renderRewards` |
+| mascots, effects, sound | `catHead`, `misuHead`, `petSvg` (thú cưng trong phòng 2D), `burst` (đốm sáng, bụi, pháo giấy), `SFX` (âm thanh tổng hợp bằng Web Audio) |
 | boot | Khởi động |
 
 **Mô hình hiển thị:** không có framework. Mỗi khu vực có một hàm `renderX()` ghi lại `innerHTML` của khu đó và gắn lại sự kiện. `renderAll()` gọi tất cả (`renderRoom`, `renderLegend`, `renderInspector`, `renderAlerts`, `renderSpend`, `renderHistory`, `renderCritic`, `renderDormant`). Mọi thay đổi dữ liệu theo trình tự: sửa `state` → `save()` → `renderAll()`.
@@ -63,6 +67,8 @@ Một khoá `localStorage` `phongtrudo.v1` chứa:
   "win": 3,
   "view": "2d",
   "autoRebuy": true,
+  "sound": false,
+  "badges": ["tidy"],
   "room": {"mode": "preset", "preset": "sang", "veil": 25}
 }
 ```
@@ -83,6 +89,7 @@ Một món (`item`):
 | `snoozed` | Ngày bấm Chưa dùng (ẩn câu hỏi của Misu 30 ngày) |
 | `replacedBy` | Mã món mới đã thay món này (quy tắc mua lại) |
 | `batch` | Mã chung của mọi món cùng một hoá đơn |
+| `usedAt` | Ngày bấm Dùng hết rồi (dùng cho huy hiệu Dùng kịp hạn) |
 
 Các khoá `localStorage` khác:
 
@@ -102,7 +109,8 @@ Toạ độ `x`, `y` là toạ độ phòng 2D. Phòng 3D ánh xạ: `y` từ 44
 - Phòng dựng từ khối đơn giản: sàn có ván, tường sau và hai tường bên (chỉ một mặt, nên khi xoay ra sau tường thì tường biến mất), chân tường, cửa sổ, tranh, kệ, thảm, cây. Màu lấy từ kiểu phòng đang chọn (`ROOMS`); ảnh của bạn thành tường sau.
 - Mỗi nhóm có một mô hình trong `buildModel(cat)`, dựng từ khối hộp, trụ, cầu... Huy hiệu hết hạn và zZ là sprite phía trên. Món có bóng đơn giản dưới chân.
 - Camera là hàm của `yaw`, `pitch`, `radius` quanh một điểm; kéo vào chỗ trống để xoay, cuộn để zoom. Chọn món bằng raycast, kéo món bằng giao điểm tia với mặt sàn, thả vào thùng rác bằng cách so toạ độ con trỏ với nút thùng rác (DOM).
-- Vẽ chỉ khi có thay đổi (cờ `needs`), không vẽ liên tục.
+- Mỗi món có một khuôn mặt (`addFace3D`: mắt, miệng cười, mắt nhắm, miệng méo và giọt mồ hôi, bật tắt theo `faceMood`). Miso và Misu là hai mô hình `buildPet` đặt trên sàn góc phải phía trước, không chọn được.
+- Vòng vẽ chạy khoảng 30 khung hình mỗi giây khi đang ở chế độ 3D (cho đuôi vẫy, chớp mắt, thở) và tự dừng khi chuyển về 2D hoặc khi tab bị ẩn; tương tác kéo thả vẫn dùng cờ `needs`.
 
 ## 6. Giao diện điện thoại
 
@@ -165,6 +173,7 @@ Cùng mã nguồn có thể đóng gói thành **một trang đơn** để chạ
 - Thông báo chỉ hiện khi app đang mở, tối đa một lần mỗi ngày (cần máy chủ Web Push để nhắc khi đã đóng app).
 - Đọc ảnh cần khoá API cá nhân khi chạy ngoài Claude.
 - Phòng 3D chưa có phím nhích món; phím tắt chỉ ở chế độ 2D. Trên điện thoại, chạm vào phòng 3D không cuộn trang.
+- Vòng vẽ 3D chạy liên tục nên tốn pin hơn 2D; bật giảm chuyển động của hệ điều hành chưa làm 3D dừng hẳn (2D thì có).
 - Mô hình 3D là khối hình học đơn giản (kiểu hoạt hình), chưa có mô hình chi tiết.
 - Bố cục 3D mới (nội thất theo nhóm, xếp ô tự động) mới ở mức bản phác thảo.
 - Chỉ tiếng Việt và VND.

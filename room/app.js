@@ -58,21 +58,21 @@ const icon = (cat, cls='') => '<svg class="'+cls+'" viewBox="0 0 48 48" aria-hid
 function starter(){
   const t = today();
   const S = [
-    ['Sữa tươi 1L','dairy',-2,5,36000,1,25,62],
-    ['Trứng gà (10 quả)','dairy',-3,12,38000,1,38,80],
-    ['Rau cải xanh','produce',-1,2,15000,1,52,66],
-    ['Nước cam ép','drinks',-5,6,28000,1,74,62],
+    ['Sữa tươi 1L','dairy',-2,5,36000,1,26,60],
+    ['Trứng gà (10 quả)','dairy',-3,12,38000,1,36,74],
+    ['Rau cải xanh','produce',-1,2,15000,1,50,62],
+    ['Nước cam ép','drinks',-5,6,28000,1,72,60],
     ['Gạo ST25 5kg','pantry',-12,null,145000,1,72,16],
     ['Vitamin C','meds',-9,180,120000,1,82,16],
     ['Dầu gội','care',-20,300,95000,1,12,56],
-    ['Nước rửa chén','cleaning',-15,null,42000,1,88,60],
-    ['Áo thun trắng','clothes',-30,null,189000,1,22,86],
-    ['Quà sinh nhật cho bạn','gift',-3,null,250000,1,52,90],
-    ['Son dưỡng môi','care',-8,365,89000,1,16,70],
-    ['Bánh quy bơ','snack',-5,70,52000,1,60,90],
-    ['Bộ tua vít','tools',-10,null,135000,1,64,88],
-    ['Bút gel (hộp 10 cây)','stationery',-6,null,45000,1,44,88],
-    ['Len cotton 200g','yarn',-14,null,60000,2,34,92]
+    ['Nước rửa chén','cleaning',-15,null,42000,1,88,58],
+    ['Áo thun trắng','clothes',-30,null,189000,1,22,88],
+    ['Quà sinh nhật cho bạn','gift',-3,null,250000,1,66,88],
+    ['Son dưỡng môi','care',-8,365,89000,1,16,72],
+    ['Bánh quy bơ','snack',-5,70,52000,1,62,74],
+    ['Bộ tua vít','tools',-10,null,135000,1,82,76],
+    ['Bút gel (hộp 10 cây)','stationery',-6,null,45000,1,52,90],
+    ['Len cotton 200g','yarn',-14,null,60000,2,38,88]
   ];
   return S.map(r => ({id:uid(), name:r[0], cat:r[1], bought:iso(addDays(t,r[2])), exp:r[3]===null?'':iso(addDays(t,r[3])), price:r[4], qty:r[5], x:r[6], y:r[7], used:false}));
 }
@@ -188,6 +188,25 @@ function attention(){
     .sort((a,b) => daysLeft(a)-daysLeft(b));
 }
 
+/* ---------- sound: tiny synthesised meows and woofs, off until you switch it on ---------- */
+let AC = null;
+function tone(f0, f1, dur, type, vol){
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime;
+    o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.03);
+  }catch(e){}
+}
+const SFX = {
+  meow:() => { tone(620, 900, 0.17, 'triangle', 0.07); setTimeout(() => tone(900, 520, 0.28, 'triangle', 0.07), 170); },
+  woof:() => { tone(270, 170, 0.13, 'square', 0.045); setTimeout(() => tone(250, 150, 0.15, 'square', 0.045), 170); },
+  coin:() => { tone(880, 1320, 0.08, 'square', 0.035); setTimeout(() => tone(1320, 1760, 0.12, 'square', 0.035), 80); },
+  pop:() => tone(500, 900, 0.09, 'sine', 0.06)
+};
+const sfxPlay = name => { if(state.sound) SFX[name](); };
+
 /* ---------- toast ---------- */
 let toastT;
 function toast(msg, act){
@@ -212,6 +231,7 @@ function duplicateItem(id, refocus){
   save(); react('add', it.name, undefined, it.cat);
   sel = it.id; justAdded = it.id; filter = null;
   renderAll();
+  burst('spark', it.x, it.y); sfxPlay('pop');
   try{ if(navigator.vibrate) navigator.vibrate(25); }catch(e){}
   if(refocus){ const n = room.querySelector('[data-id="'+it.id+'"]'); if(n) n.focus({preventScroll:true}); }
   toast('Đã nhân đôi '+it.name+' (+'+money(it.price)+', ngày mua là hôm nay'+(exp ? ', hạn tính từ hôm nay' : '')+').', {label:'Hoàn tác', fn:() => { state.items = state.items.filter(x => x.id !== it.id); if(sel === it.id) sel = null; save(); renderAll(); }});
@@ -223,6 +243,7 @@ function trashItem(id){
   state.items.splice(idx,1);
   if(sel === id) sel = null;
   save(); react('trash', it.name); renderAll();
+  sfxPlay('pop'); burst('poof', 6, 88); binEl.classList.add('munch'); setTimeout(() => binEl.classList.remove('munch'), 500);
   toast('Đã xoá '+it.name+', '+money(it.price)+' cũng biến khỏi phần chi tiêu.', {label:'Hoàn tác', fn:() => {
     state.items.splice(Math.min(idx, state.items.length), 0, it); sel = it.id; save(); react('undo', it.name); renderAll();
   }});
@@ -235,17 +256,31 @@ function itemLabel(it){
   return it.name+', '+CAT[it.cat].name+(d===null?'':', '+whenText(d).toLowerCase());
 }
 /* ---------- the critic: Miso the cat ---------- */
-let tick = 0, reaction = null, lastCounts = null;
+let tick = 0, reaction = null, lastCounts = null, lastMisoLine = null, lastMisuLine = null;
+const cycleMiso = () => { tick++; reaction = null; renderCritic(); const b = $('#cat-more'); if(b) b.focus(); };
+const cycleMisu = () => { misuTick++; misuReaction = null; renderDormant(); const b = $('#misu-more'); if(b) b.focus(); };
 const react = (kind, name, n, cat) => { reaction = {kind, name, n, cat}; };
-function catSvg(mood){
-  const fur='#f4a259', dark='#3b2a1a';
-  let face='';
-  if(mood==='happy') face='<path d="M24 43q5-6 10 0M46 43q5-6 10 0" stroke="'+dark+'" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M34 57q6 6 12 0" stroke="'+dark+'" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-  else if(mood==='neutral') face='<circle cx="29" cy="43" r="3.2" fill="'+dark+'"/><circle cx="51" cy="43" r="3.2" fill="'+dark+'"/><path d="M36 58q4 3 8 0" stroke="'+dark+'" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
-  else if(mood==='judging') face='<ellipse cx="29" cy="43" rx="6" ry="5" fill="#fff"/><ellipse cx="51" cy="43" rx="6" ry="5" fill="#fff"/><circle cx="31" cy="44" r="2.6" fill="'+dark+'"/><circle cx="53" cy="44" r="2.6" fill="'+dark+'"/><rect x="22" y="37" width="14" height="6.5" fill="'+fur+'"/><rect x="44" y="37" width="14" height="6.5" fill="'+fur+'"/><path d="M22 43.500h14M44 43.500h14" stroke="'+dark+'" stroke-width="2.5" stroke-linecap="round"/><path d="M45 33l12-4" stroke="'+dark+'" stroke-width="2.5" stroke-linecap="round"/><path d="M35 58h10" stroke="'+dark+'" stroke-width="2.5" stroke-linecap="round"/>';
-  else face='<circle cx="29" cy="42" r="7" fill="#fff"/><circle cx="51" cy="42" r="7" fill="#fff"/><circle cx="29" cy="43" r="2" fill="'+dark+'"/><circle cx="51" cy="43" r="2" fill="'+dark+'"/><ellipse cx="40" cy="60" rx="4" ry="5" fill="#7a2e3a"/><path d="M69 22q5 8 0 12q-5-4 0-12z" fill="#7ec8ff"/>';
-  return '<svg viewBox="0 0 80 80" aria-hidden="true"><path d="M13 36L15 9l18 13z" fill="'+fur+'"/><path d="M67 36L65 9 47 22z" fill="'+fur+'"/><path d="M18 28l1-10 8 6z" fill="#f3a3b6"/><path d="M62 28l-1-10-8 6z" fill="#f3a3b6"/><ellipse cx="40" cy="45" rx="29" ry="26" fill="'+fur+'"/><path d="M40 20v8M32 21l2 7M48 21l-2 7" stroke="#d9822b" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="55" rx="12" ry="9" fill="#fff3e0"/>'+face+'<path d="M37 50h6l-3 4z" fill="#e0607e"/><path d="M12 50l12 2M12 57l12-2M68 50l-12 2M68 57l-12-2" stroke="#8a5a2b" stroke-width="1.4" stroke-linecap="round"/></svg>';
+function catHead(mood){
+  const fur = '#f4a259', dark = '#3b2a1a';
+  let eyes, mouth = '';
+  if(mood === 'happy'){
+    eyes = '<path d="M24 43q5-6 10 0M46 43q5-6 10 0" stroke="'+dark+'" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    mouth = '<path d="M34 57q6 6 12 0" stroke="'+dark+'" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+  }else if(mood === 'neutral'){
+    eyes = '<g class="eyes"><circle cx="29" cy="43" r="3.2" fill="'+dark+'"/><circle cx="51" cy="43" r="3.2" fill="'+dark+'"/></g>';
+    mouth = '<path d="M36 58q4 3 8 0" stroke="'+dark+'" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+  }else if(mood === 'judging'){
+    eyes = '<ellipse cx="29" cy="43" rx="6" ry="5" fill="#fff"/><ellipse cx="51" cy="43" rx="6" ry="5" fill="#fff"/><circle cx="31" cy="44" r="2.6" fill="'+dark+'"/><circle cx="53" cy="44" r="2.6" fill="'+dark+'"/><rect x="22" y="37" width="14" height="6.5" fill="'+fur+'"/><rect x="44" y="37" width="14" height="6.5" fill="'+fur+'"/><path d="M22 43.500h14M44 43.500h14" stroke="'+dark+'" stroke-width="2.500" stroke-linecap="round"/><path d="M45 33l12-4" stroke="'+dark+'" stroke-width="2.500" stroke-linecap="round"/>';
+    mouth = '<path d="M35 58h10" stroke="'+dark+'" stroke-width="2.500" stroke-linecap="round"/>';
+  }else{
+    eyes = '<g class="eyes"><circle cx="29" cy="42" r="7" fill="#fff"/><circle cx="51" cy="42" r="7" fill="#fff"/><circle cx="29" cy="43" r="2" fill="'+dark+'"/><circle cx="51" cy="43" r="2" fill="'+dark+'"/></g><path d="M69 22q5 8 0 12q-5-4 0-12z" fill="#7ec8ff"/>';
+    mouth = '<ellipse cx="40" cy="60" rx="4" ry="5" fill="#7a2e3a"/>';
+  }
+  return '<g class="ear l"><path d="M13 36L15 9l18 13z" fill="'+fur+'"/><path d="M18 28l1-10 8 6z" fill="#f3a3b6"/></g><g class="ear r"><path d="M67 36L65 9 47 22z" fill="'+fur+'"/><path d="M62 28l-1-10-8 6z" fill="#f3a3b6"/></g>'+
+    '<ellipse cx="40" cy="45" rx="29" ry="26" fill="'+fur+'"/><path d="M40 20v8M32 21l2 7M48 21l-2 7" stroke="#d9822b" stroke-width="3" stroke-linecap="round"/><ellipse cx="40" cy="55" rx="12" ry="9" fill="#fff3e0"/>'+eyes+
+    '<path d="M37 50h6l-3 4z" fill="#e0607e"/>'+mouth+'<path d="M12 50l12 2M12 57l12-2M68 50l-12 2M68 57l-12-2" stroke="#8a5a2b" stroke-width="1.4" stroke-linecap="round"/>';
 }
+const catSvg = mood => '<svg viewBox="0 0 80 80" aria-hidden="true">'+catHead(mood)+'</svg>';
 /* Miso on weekly habits: how many of the last 7 days did you buy something from the same category? 5-6 days is a nudge, 7 of 7 is a scolding */
 const HABIT_MIN_DAYS = 5;
 const HABIT = {
@@ -369,32 +404,44 @@ function renderCritic(){
   const c = critique();
   $('#critic').innerHTML = '<button class="av" type="button" id="cat-av" aria-label="Nhờ Miso chê tiếp">'+catSvg(c.mood)+'</button>'+
     '<div class="bubble" lang="vi"><div class="eyebrow">Miso, bé mèo khó tính</div><p>'+esc(c.line)+'</p><div class="meta"><span>Tháng này: <b id="m-now">'+c.now+'</b> món đã mua · <b id="m-room">'+c.inRoom+'</b> món trong phòng · cùng kỳ tháng trước '+c.prev+' món'+(c.daily ? ' · Hôm nay mua <b>'+esc(c.daily.name)+'</b> '+c.daily.count+' lần' : '')+(c.habit ? ' · 7 ngày qua mua <b>'+esc(c.habit.name)+'</b> '+c.habit.days+'/7 ngày' : '')+'</span><button class="btn ghost sm" id="cat-more" type="button">Chê tiếp đi</button></div></div>';
+  const changed = lastMisoLine !== null && lastMisoLine !== c.line; lastMisoLine = c.line;
+  if(changed){ $('#critic .bubble').classList.add('pop'); $('#cat-av').classList.add('hop'); sfxPlay('meow'); }
+  const pet = $('#pet-cat'); if(pet) pet.innerHTML = petSvg('cat', c.mood);
   if(lastCounts){
     if(lastCounts.now !== c.now) $('#m-now').classList.add('bump');
     if(lastCounts.inRoom !== c.inRoom) $('#m-room').classList.add('bump');
   }
   lastCounts = {now:c.now, inRoom:c.inRoom};
-  const again = () => { tick++; reaction = null; renderCritic(); const b = $('#cat-more'); if(b) b.focus(); };
-  $('#cat-more').addEventListener('click', again); $('#cat-av').addEventListener('click', again);
+  $('#cat-more').addEventListener('click', cycleMiso); $('#cat-av').addEventListener('click', cycleMiso);
 }
 
 /* ---------- Misu the puppy: reminds you about things nobody has touched for over a month ---------- */
 let misuTick = 0, misuReaction = null, showAllDormant = false;
-function misuSvg(mood){
+function misuHead(mood){
   const dark = '#3b2a1a';
-  let eyes, extra = '';
+  let eyes, mouth, extra = '';
   if(mood === 'sleepy'){
     eyes = '<path d="M23 43q5 5 10 0M47 43q5 5 10 0" stroke="'+dark+'" stroke-width="3" fill="none" stroke-linecap="round"/>';
-    extra = '<text x="60" y="20" font-size="11" font-weight="700" font-family="sans-serif" fill="#6c86ad">z</text><text x="67" y="12" font-size="8" font-weight="700" font-family="sans-serif" fill="#6c86ad">z</text>';
+    extra = '<text class="zzt" x="60" y="20" font-size="11" font-weight="700" font-family="sans-serif" fill="#6c86ad">z</text><text class="zzt" style="animation-delay:-1.2s" x="67" y="12" font-size="8" font-weight="700" font-family="sans-serif" fill="#6c86ad">z</text>';
+    mouth = '<path d="M40 54v4q-4 4-8 1M40 58q4 4 8 1" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/>';
   }else if(mood === 'worried'){
-    eyes = '<circle cx="29" cy="43" r="3.6" fill="'+dark+'"/><circle cx="51" cy="43" r="3.6" fill="'+dark+'"/><circle cx="30.200" cy="41.800" r="1.200" fill="#fff"/><circle cx="52.200" cy="41.800" r="1.200" fill="#fff"/><path d="M22 35l10 4M58 35l-10 4" stroke="'+dark+'" stroke-width="2.500" stroke-linecap="round"/>';
+    eyes = '<g class="eyes"><circle cx="29" cy="43" r="3.6" fill="'+dark+'"/><circle cx="51" cy="43" r="3.6" fill="'+dark+'"/><circle cx="30.200" cy="41.800" r="1.200" fill="#fff"/><circle cx="52.200" cy="41.800" r="1.200" fill="#fff"/></g><path d="M22 35l10 4M58 35l-10 4" stroke="'+dark+'" stroke-width="2.500" stroke-linecap="round"/>';
     extra = '<path d="M70 28q4 6 0 9q-4-3 0-9z" fill="#7ec8ff"/>';
+    mouth = '<path d="M34 61q6-4 12 0" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/>';
   }else{
-    eyes = '<circle cx="29" cy="43" r="3.6" fill="'+dark+'"/><circle cx="51" cy="43" r="3.6" fill="'+dark+'"/><circle cx="30.200" cy="41.800" r="1.200" fill="#fff"/><circle cx="52.200" cy="41.800" r="1.200" fill="#fff"/>';
+    eyes = '<g class="eyes"><circle cx="29" cy="43" r="3.6" fill="'+dark+'"/><circle cx="51" cy="43" r="3.6" fill="'+dark+'"/><circle cx="30.200" cy="41.800" r="1.200" fill="#fff"/><circle cx="52.200" cy="41.800" r="1.200" fill="#fff"/></g>';
+    mouth = '<path d="M40 54v4q-4 4-8 1M40 58q4 4 8 1" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/><path class="tongue" d="M36 61q4 9 8 0z" fill="#f08aa1"/>';
   }
-  const mouth = mood === 'worried' ? '<path d="M34 61q6-4 12 0" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/>'
-    : '<path d="M40 54v4q-4 4-8 1M40 58q4 4 8 1" stroke="'+dark+'" stroke-width="2.500" fill="none" stroke-linecap="round"/>'+(mood==='happy' ? '<path d="M36 61q4 9 8 0z" fill="#f08aa1"/>' : '');
-  return '<svg viewBox="0 0 80 80" aria-hidden="true"><ellipse cx="13" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(14 13 40)"/><ellipse cx="67" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(-14 67 40)"/><ellipse cx="40" cy="45" rx="27" ry="25" fill="#fbf1e4"/><ellipse cx="55" cy="39" rx="9" ry="10" fill="#d9b99b"/><ellipse cx="40" cy="56" rx="11" ry="8" fill="#fff"/>'+eyes+'<ellipse cx="40" cy="51" rx="4.500" ry="3.200" fill="'+dark+'"/>'+mouth+extra+'</svg>';
+  return '<g class="dear l"><ellipse cx="13" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(14 13 40)"/></g><g class="dear r"><ellipse cx="67" cy="40" rx="9" ry="19" fill="#b08968" transform="rotate(-14 67 40)"/></g>'+
+    '<ellipse cx="40" cy="45" rx="27" ry="25" fill="#fbf1e4"/><ellipse cx="55" cy="39" rx="9" ry="10" fill="#d9b99b"/><ellipse cx="40" cy="56" rx="11" ry="8" fill="#fff"/>'+eyes+'<ellipse cx="40" cy="51" rx="4.500" ry="3.200" fill="'+dark+'"/>'+mouth+extra;
+}
+const misuSvg = mood => '<svg viewBox="0 0 80 80" aria-hidden="true">'+misuHead(mood)+'</svg>';
+/* the two pets sitting in the room: a head on a little body with a wagging tail */
+function petSvg(kind, mood){
+  const cat = kind === 'cat', fur = cat ? '#f4a259' : '#e9d3b4', belly = cat ? '#fff3e0' : '#fff';
+  return '<svg viewBox="0 0 100 112" aria-hidden="true"><path class="tail" d="M74 96c20-2 26-22 14-36" stroke="'+(cat ? fur : '#b08968')+'" stroke-width="9" fill="none" stroke-linecap="round"/>'+
+    '<ellipse cx="50" cy="92" rx="27" ry="19" fill="'+fur+'"/><ellipse cx="50" cy="98" rx="15" ry="11" fill="'+belly+'"/><ellipse cx="36" cy="108" rx="9" ry="5" fill="'+fur+'"/><ellipse cx="64" cy="108" rx="9" ry="5" fill="'+fur+'"/>'+
+    '<g transform="translate(10 4)">'+(cat ? catHead(mood) : misuHead(mood))+'</g></svg>';
 }
 function renderDormant(){
   const list = dormantList(), el = $('#dormant'), asks = list.filter(needsAsk), std = list.filter(i => !needsAsk(i)), top = std[0] || asks[0];
@@ -431,12 +478,14 @@ function renderDormant(){
     }).join('')+'</ul>'+
       (list.length>5 ? '<button type="button" class="btn ghost sm more" id="d-more">'+(showAllDormant?'Thu gọn':'Xem hết '+list.length+' món')+'</button>' : '') : '');
   { const dn = $('#dock-n-dormant'); dn.textContent = list.length; dn.hidden = !list.length; }
-  const again = () => { misuTick++; misuReaction = null; renderDormant(); const b = $('#misu-more'); if(b) b.focus(); };
-  $('#misu-more').addEventListener('click', again); $('#misu-av').addEventListener('click', again);
+  const chg = lastMisuLine !== null && lastMisuLine !== line; lastMisuLine = line;
+  if(chg){ $('#dormant .bubble').classList.add('pop'); $('#misu-av').classList.add('hop'); sfxPlay('woof'); }
+  const dog = $('#pet-dog'); if(dog){ dog.innerHTML = petSvg('dog', mood); dog.classList.toggle('asleep', mood === 'sleepy'); }
+  $('#misu-more').addEventListener('click', cycleMisu); $('#misu-av').addEventListener('click', cycleMisu);
   const more = $('#d-more'); if(more) more.addEventListener('click', () => { showAllDormant = !showAllDormant; renderDormant(); });
-  el.querySelectorAll('[data-touch]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.touch); it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); }));
+  el.querySelectorAll('[data-touch]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.touch); it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); burst('spark', it.x, it.y); }));
   el.querySelectorAll('[data-snooze]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.snooze); it.snoozed = iso(today()); misuReaction = {kind:'snooze', name:it.name}; save(); renderAll(); toast('Ok, Misu sẽ hỏi lại về '+it.name+' sau 30 ngày nha.'); }));
-  el.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.done); it.used = true; if(sel===it.id) sel = null; misuReaction = {kind:'done', name:it.name}; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); }));
+  el.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { const it = byId(b.dataset.done); it.used = true; it.usedAt = iso(today()); if(sel===it.id) sel = null; misuReaction = {kind:'done', name:it.name}; save(); react('used', it.name); renderAll(); burst('confetti', it.x, it.y); sfxPlay('coin'); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); }));
   el.querySelectorAll('[data-dfind]').forEach(b => b.addEventListener('click', () => { sel = b.dataset.dfind; found = sel; renderRoom(); renderInspector(); closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'}); }));
 }
 
@@ -497,6 +546,25 @@ function renderHistory(){
   if(refocus){ const f = document.getElementById(refocus); refocus = null; if(f) f.focus(); }
 }
 
+/* where each object's face sits (percent of the icon box) */
+const FACE_POS = {produce:[50,57,1], dairy:[50,57,1], drinks:[50,66,1], pantry:[50,56,1], meds:[50,66,1], care:[62,60,.8], cleaning:[47,62,1], electronics:[50,38,.9], baby:[50,54,1], clothes:[50,54,.9], gift:[50,66,1], tools:[50,60,1], stationery:[50,68,.9], yarn:[50,60,1], snack:[50,48,.9], other:[50,58,1]};
+const faceMood = it => { const st = status(it), d = daysLeft(it); if(st === 'expired' || (st === 'soon' && d <= 1)) return 'worried'; return isDormant(it) ? 'sleepy' : 'happy'; };
+let landed = null;
+/* a puff of sparkles, dust or confetti over the room */
+function burst(kind, xPct, yPct){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(state.view === '3d' && v3){ xPct = 50; yPct = 50; }
+  const c = document.createElement('span'); c.className = 'fx fx-'+kind; c.style.left = xPct+'%'; c.style.top = yPct+'%';
+  const n = kind === 'confetti' ? 24 : kind === 'poof' ? 7 : 9, cols = ['#ff6f9f','#ffd43b','#3d9bff','#1fbf8a','#c76bf0','#ff9a1f'];
+  for(let i = 0; i < n; i++){
+    const p = document.createElement('i'), a = (i/n)*Math.PI*2 + Math.random()*0.5;
+    const d = (kind === 'poof' ? 24 : kind === 'confetti' ? 55 + Math.random()*45 : 34) + Math.random()*14;
+    p.style.setProperty('--dx', Math.cos(a)*d+'px'); p.style.setProperty('--dy', (Math.sin(a)*d - (kind === 'confetti' ? 34 : 0))+'px');
+    if(kind === 'confetti'){ p.style.background = cols[i % cols.length]; p.style.setProperty('--r', (Math.random()*600 - 300)+'deg'); }
+    c.appendChild(p);
+  }
+  room.appendChild(c); setTimeout(() => c.remove(), 1000);
+}
 function renderRoom(){
   room.querySelectorAll('.item').forEach(n => n.remove());
   $('#empty-room').hidden = state.items.some(i => !i.used);
@@ -509,9 +577,14 @@ function renderRoom(){
     b.dataset.id = it.id;
     b.style.cssText = 'left:'+it.x+'%;top:'+it.y+'%;--c:'+CAT[it.cat].color+';z-index:'+Math.round(it.y*10);
     b.setAttribute('aria-label', itemLabel(it)+'. Kéo để di chuyển, nhấn giữ hoặc bấm phím D để nhân đôi, phím mũi tên để nhích.');
-    const badge = st==='expired' ? '<span class="badge">!</span>' : st==='soon' ? '<span class="badge">'+(d===0?'Today':d+'d')+'</span>' : '';
+    const badge = st==='expired' ? '<span class="badge">!</span>' : st==='soon' ? '<span class="badge">'+(d===0?'Hôm nay':d+'d')+'</span>' : '';
     const zz = isDormant(it) ? '<span class="zz" title="Nằm im lâu rồi">zZ</span>' : '';
-    b.innerHTML = icon(it.cat,'ico')+badge+zz+'<span class="tag">'+esc(it.name)+'</span>';
+    const fp = FACE_POS[it.cat] || [50,58,1], mood = faceMood(it);
+    b.style.cssText += ';--fx:'+fp[0]+';--fy:'+fp[1]+';--fs:'+fp[2]+';--bd:-'+((hashId(it.id) % 54)/10)+'s';
+    if(isDormant(it)) b.classList.add('dusty');
+    if(it.id === landed) b.classList.add('land');
+    const face = '<span class="face f-'+mood+'"><i></i><i></i><b></b></span>';
+    b.innerHTML = '<span class="bod">'+icon(it.cat,'ico')+face+'</span>'+badge+zz+(isDormant(it) ? '<span class="dust"></span>' : '')+'<span class="tag">'+esc(it.name)+'</span>';
     room.appendChild(b);
   });
 }
@@ -539,6 +612,7 @@ room.addEventListener('pointermove', e => {
   if(!drag.moved && Math.hypot(dx,dy) < 5) return;
   if(!drag.moved){ binEl.classList.add('armed'); clearTimeout(drag.timer); drag.el.classList.remove('holding'); }
   drag.moved = true; drag.el.classList.add('drag');
+  { const vx = e.clientX - (drag.px === undefined ? e.clientX : drag.px); drag.px = e.clientX; drag.el.style.setProperty('--lean', clamp(vx*1.5, -14, 14)+'deg'); }
   drag.it.x = +clamp(drag.ox + dx/drag.r.width*100, 4, 96).toFixed(2);
   drag.it.y = +clamp(drag.oy + dy/drag.r.height*100, 8, 95).toFixed(2);
   drag.el.style.left = drag.it.x+'%'; drag.el.style.top = drag.it.y+'%';
@@ -552,7 +626,7 @@ function endDrag(e){
   clearTimeout(d.timer); d.el.classList.remove('holding');
   binEl.classList.remove('armed','over');
   if(d.moved && d.over){ d.it.x = d.ox; d.it.y = d.oy; trashItem(d.it.id); return; }
-  if(d.moved) save();
+  if(d.moved){ save(); landed = d.it.id; setTimeout(() => { landed = null; }, 700); }
   select(d.it.id);
   if(!d.moved) openSheet('insp');
 }
@@ -632,7 +706,7 @@ function renderInspector(){
   $('#i-exp').addEventListener('change', e => { it.exp = e.target.value; save(); renderAll(); });
   $('#i-dup').addEventListener('click', () => duplicateItem(it.id));
   $('#i-touch').addEventListener('click', () => { it.touched = iso(today()); misuReaction = {kind:'touch', name:it.name}; save(); renderAll(); toast('Đã ghi nhận bạn vừa dùng '+it.name+'.'); });
-  $('#i-used').addEventListener('click', () => { it.used = true; sel = null; save(); react('used', it.name); renderAll(); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); });
+  $('#i-used').addEventListener('click', () => { it.used = true; it.usedAt = iso(today()); sel = null; save(); react('used', it.name); renderAll(); burst('confetti', it.x, it.y); toast(it.name+' đã dùng hết. Tiền mua vẫn được tính trong chi tiêu nha.'); });
   $('#i-del').addEventListener('click', () => trashItem(it.id));
 }
 
@@ -719,6 +793,20 @@ function monthDaily(y, m){
   return a;
 }
 function cumulative(a, upTo){ const out = []; let s = 0; for(let d=1; d<=upTo; d++){ s += a[d]||0; out.push(s); } return out; }
+/* a piggy bank whose belly fills with this month's spending (compared with all of last month) */
+function piggySvg(fill, mood){
+  const f = clamp(fill, 0.05, 1), y0 = Math.round(78 - f*50);
+  return '<svg class="pig" viewBox="0 0 122 92" role="img" aria-label="Heo đất: tiền chi tháng này so với cả tháng trước"><defs><clipPath id="pigbelly"><ellipse cx="58" cy="52" rx="38" ry="28"/></clipPath></defs>'+
+    '<path class="pigtail" d="M18 50q-12-3-9-14q4 6 10 4" fill="none" stroke="#ff9fbd" stroke-width="4" stroke-linecap="round"/>'+
+    '<rect x="30" y="70" width="13" height="18" rx="5" fill="#ff9fbd"/><rect x="70" y="70" width="13" height="18" rx="5" fill="#ff9fbd"/>'+
+    '<path d="M80 26l9-13 4 18z" fill="#ff9fbd"/><ellipse cx="58" cy="52" rx="42" ry="32" fill="#ffb8cf"/>'+
+    '<g clip-path="url(#pigbelly)"><rect x="18" y="'+y0+'" width="82" height="60" fill="#ffd96b"/><path d="M18 '+y0+'q10-7 20 0t20 0t20 0t22 0v6H18z" fill="#ffd96b"/><path d="M24 '+(y0+14)+'h56M30 '+(y0+26)+'h46" stroke="#f2b705" stroke-width="2" stroke-linecap="round" opacity=".55"/></g>'+
+    '<ellipse cx="58" cy="52" rx="42" ry="32" fill="none" stroke="#ff8fb1" stroke-width="3"/><rect x="45" y="20" width="26" height="5.500" rx="2.700" fill="#c2547a"/>'+
+    '<ellipse cx="102" cy="54" rx="13" ry="11" fill="#ff9fbd"/><circle cx="98" cy="54" r="2" fill="#a23c5f"/><circle cx="106" cy="54" r="2" fill="#a23c5f"/>'+
+    (mood === 'happy' ? '<path d="M80 41q4-5 8 0" stroke="#3b2a1a" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="78" cy="49" rx="4" ry="2.800" fill="#ff7aa5" opacity=".6"/>' : '<circle cx="84" cy="41" r="3.600" fill="#3b2a1a"/><circle cx="85.200" cy="39.800" r="1.200" fill="#fff"/>')+
+    (mood === 'sweat' ? '<path class="pigsweat" d="M94 27q4 6 0 9q-4-3 0-9z" fill="#7ec8ff"/>' : '')+
+    '<circle class="pigcoin" cx="58" cy="4" r="6" fill="#ffd43b" stroke="#e0a800" stroke-width="2"/></svg>';
+}
 function renderSpend(){
   const t = today(), y = t.getFullYear(), m = t.getMonth(), day = t.getDate();
   const ly = m===0 ? y-1 : y, lm = m===0 ? 11 : m-1;
@@ -744,15 +832,15 @@ function renderSpend(){
   let g = '';
   [0, .5, 1].forEach(f => { const v = mx*f; g += '<line class="grid-l" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'"/><text x="'+(L-6)+'" y="'+(Y(v)+3.5).toFixed(1)+'" text-anchor="end">'+money0(v)+'</text>'; });
   [1,8,15,22,29].forEach(d => { g += '<text x="'+X(d).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+d+'</text>'; });
-  const svg = '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chi tiêu cộng dồn theo ngày, tháng này so với tháng trước">'+g+
+  const svg = '<svg class="chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chi tiêu cộng dồn theo ngày, tháng này so với tháng trước"><defs><filter id="wob" x="-5%" y="-8%" width="110%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.6"/></filter></defs>'+g+
     '<line class="today-l" x1="'+X(day).toFixed(1)+'" x2="'+X(day).toFixed(1)+'" y1="'+T+'" y2="'+(H-B)+'"/>'+
-    '<polyline class="l-last" points="'+pts(prevC)+'"/>'+
-    '<polyline class="l-now" points="'+pts(curC)+'"/>'+
+    '<g filter="url(#wob)"><polyline class="l-last" points="'+pts(prevC)+'"/>'+
+    '<polyline class="l-now" points="'+pts(curC)+'"/></g>'+
     '<circle class="dot" cx="'+X(day).toFixed(1)+'" cy="'+Y(curTotal).toFixed(1)+'" r="4.5"/></svg>';
 
   $('#spend').innerHTML =
     '<div class="card-head"><h2 id="h-spend">Chi tiêu</h2><span class="small muted">Cộng dồn theo ngày</span></div>'+
-    '<div class="spend-top"><div><div class="eyebrow">Tháng này tính đến hôm nay</div><div class="amt num">'+money(curTotal)+'</div></div>'+
+    '<div class="spend-top"><div class="spend-main"><div><div class="eyebrow">Tháng này tính đến hôm nay</div><div class="amt num">'+money(curTotal)+'</div></div>'+piggySvg(curTotal/Math.max(prevTotal, curTotal, 1), prevSame > 0 && curTotal > prevSame*1.1 ? 'sweat' : prevSame > 0 && curTotal <= prevSame ? 'happy' : 'ok')+'</div>'+
       '<span class="delta '+cls+'" title="So với cùng kỳ tháng trước">'+arrow+' '+(pct===null ? (diff>0?'Mới chi':'Không đổi') : (diff>=0?'+':'−')+Math.abs(pct).toFixed(0)+'%')+' <span style="font-weight:500">so với '+rangePrev+'</span></span></div>'+
     '<div class="cmp">'+
       '<div><div class="eyebrow">'+rangePrev+'</div><div class="v num">'+money(prevSame)+'</div></div>'+
@@ -904,6 +992,7 @@ $('#api-save').addEventListener('click', () => {
 });
 $('#api-clear').addEventListener('click', () => { lsSet(KEY_API,''); $('#api-key').value = ''; pStatus('Đã xoá khoá.'); });
 const pStatus = t => { $('#photo-status').textContent = t || ''; };
+const pReading = () => { $('#photo-status').innerHTML = '<span class="reading">'+catSvg('neutral')+'<span class="lens"></span><span>Miso đang đọc hoá đơn, đợi xíu nha…</span></span>'; };
 function renderThumbs(){
   const box = $('#thumbs'); box.innerHTML = '';
   files.forEach((f,i) => {
@@ -988,7 +1077,7 @@ $('#photo-read').addEventListener('click', async () => {
   if(!key && !sampleFn){ $('#key-details').open = true; pStatus('Bạn thêm khoá API Claude ở dưới trước nha. Hoặc dán chữ của hoá đơn vào thay cho ảnh.'); return; }
   ctl = new AbortController();
   $('#photo-read').disabled = true; $('#photo-stop').hidden = false; $('#bill-preview').innerHTML = '';
-  pStatus('Miso đang đọc hoá đơn, đợi xíu nha…');
+  pReading();
   try{
     let out;
     if(sampleFn){
@@ -1068,6 +1157,57 @@ function renderBill(){
     closeSheets(); room.scrollIntoView({behavior:'smooth', block:'center'});
   });
 }
+
+/* ---------- achievements: a tidiness score and a few badges ---------- */
+function tidyScore(){
+  const live = state.items.filter(i => !i.used), expired = live.filter(i => status(i) === 'expired').length, dormant = live.filter(isDormant).length, crowd = live.length >= 24;
+  const score = clamp(100 - expired*10 - dormant*3 - (crowd ? 10 : 0), 0, 100), why = [];
+  if(expired) why.push('−'+(expired*10)+' vì '+expired+' món đã hết hạn');
+  if(dormant) why.push('−'+(dormant*3)+' vì '+dormant+' món nằm im lâu');
+  if(crowd) why.push('−10 vì phòng đã có '+live.length+' món');
+  if(!why.length) why.push('Không bị trừ điểm nào, giỏi quá!');
+  return {score, why, live:live.length, label: score >= 85 ? 'Phòng gọn như mơ' : score >= 65 ? 'Cũng ổn áp' : score >= 40 ? 'Hơi bừa rồi nha' : 'Cần dọn gấp'};
+}
+function spendNumbers(){
+  const t = today(), y = t.getFullYear(), m = t.getMonth(), day = t.getDate(), ly = m === 0 ? y-1 : y, lm = m === 0 ? 11 : m-1;
+  const cur = monthDaily(y, m), prev = monthDaily(ly, lm), curC = cumulative(cur, day), prevC = cumulative(prev, prev.length-1), sameN = Math.min(day, prev.length-1);
+  return {cur:curC[curC.length-1] || 0, prevSame:prevC[sameN-1] || 0};
+}
+const BADGE_ICON = {
+  piggy:'<circle cx="12" cy="13" r="7" fill="currentColor"/><path d="M8 7l1-3 3 2M16 8l2-3 1 4" fill="currentColor"/><circle cx="15" cy="12" r="1.200" fill="#fff"/>',
+  ontime:'<circle cx="12" cy="12" r="8.500" fill="none" stroke="currentColor" stroke-width="2.400"/><path d="M8 12.500l3 3 5-6" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/>',
+  tidy:'<path d="M12 3l1.800 5.200L19 10l-5.200 1.800L12 17l-1.800-5.200L5 10l5.200-1.800z" fill="currentColor"/><path d="M18 15l.8 2.200L21 18l-2.200.8L18 21l-.8-2.200L15 18l2.200-.8z" fill="currentColor"/>',
+  abstain:'<path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z" fill="currentColor"/><path d="M8.500 12l2.500 2.500 4.500-5" fill="none" stroke="#fff" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+function computeBadges(){
+  const t = today(), td = iso(t), tidy = tidyScore(), sp = spendNumbers(), out = [];
+  out.push({id:'piggy', name:'Heo đất khoẻ', desc:'Tháng này chi ít hơn hoặc bằng cùng kỳ tháng trước', earned:sp.prevSame > 0 && sp.cur <= sp.prevSame, hint:sp.prevSame > 0 ? 'Đang chi '+money(sp.cur)+' so với '+money(sp.prevSame) : 'Cần có chi tiêu tháng trước để so sánh', color:'#ff8fb1'});
+  const recent = iso(addDays(t, -30)), onTime = state.items.filter(i => i.used && i.usedAt && i.usedAt >= recent && i.exp && i.usedAt <= i.exp).length;
+  out.push({id:'ontime', name:'Dùng kịp hạn', desc:'Dùng hết 3 món trước khi hết hạn trong 30 ngày', earned:onTime >= 3, hint:onTime+'/3 món', color:'#1fbf8a'});
+  out.push({id:'tidy', name:'Phòng gọn gàng', desc:'Điểm gọn gàng từ 85 trở lên với ít nhất 5 món', earned:tidy.score >= 85 && tidy.live >= 5, hint:'Điểm hiện tại '+tidy.score, color:'#ffb347'});
+  [['drinks','đồ uống'],['snack','đồ ăn vặt']].forEach(([cat, nm]) => {
+    const bought = state.items.filter(i => i.cat === cat).map(i => i.bought).sort(), last = bought[bought.length-1];
+    const since = last ? Math.round((today() - parseISO(last))/864e5) : null, before = state.items.filter(i => i.cat === cat && i.bought >= iso(addDays(t, -60))).length;
+    out.push({id:'abstain-'+cat, name:'Nhịn được '+nm, desc:'7 ngày không mua '+nm+' (sau khi đã mua đều)', earned:since !== null && since >= 7 && before >= 2, hint: since === null ? 'Chưa mua lần nào' : 'Đã '+since+' ngày không mua', color:CAT[cat].color});
+  });
+  return out;
+}
+function renderRewards(){
+  const el = $('#rewards'), ti = tidyScore(), badges = computeBadges(), earned = badges.filter(b => b.earned).map(b => b.id);
+  const col = ti.score >= 65 ? '#1fbf8a' : ti.score >= 40 ? '#f59f00' : '#e03131', circ = 2*Math.PI*34;
+  $('#tidy-n').textContent = ti.score;
+  el.innerHTML = '<div class="card-head"><h2 id="h-rewards">Thành tích</h2><span class="small muted">Điểm gọn gàng và huy hiệu</span></div>'+
+    '<div class="tidy"><svg class="ring" viewBox="0 0 84 84" role="img" aria-label="Điểm gọn gàng '+ti.score+' trên 100"><circle cx="42" cy="42" r="34" fill="none" stroke="#e8eef8" stroke-width="9"/><circle cx="42" cy="42" r="34" fill="none" stroke="'+col+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+(circ*ti.score/100).toFixed(1)+' '+circ.toFixed(1)+'" transform="rotate(-90 42 42)"/><text x="42" y="49" text-anchor="middle" class="rn">'+ti.score+'</text></svg>'+
+      '<div><div class="tidy-l">'+ti.label+'</div><ul class="why">'+ti.why.map(w => '<li>'+esc(w)+'</li>').join('')+'</ul></div></div>'+
+    '<div class="badges">'+badges.map(b => '<div class="bdg'+(b.earned ? ' on' : '')+'" style="--bc:'+b.color+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+(BADGE_ICON[b.id] || BADGE_ICON.abstain)+'</svg><div><b>'+esc(b.name)+'</b><span>'+(b.earned ? esc(b.desc) : esc(b.hint))+'</span></div></div>').join('')+'</div>';
+  const fresh = state.badges ? earned.filter(id => state.badges.indexOf(id) < 0) : [];
+  if(!state.badges || fresh.length || state.badges.length !== earned.length){ state.badges = earned; save(); }
+  if(fresh.length){
+    const b = badges.find(x => x.id === fresh[0]);
+    burst('confetti', 50, 40); sfxPlay('coin'); toast('Huy hiệu mới: '+b.name+'!');
+  }
+}
+$('#tidy-pill').addEventListener('click', () => { if(!openSheet('rewards')) $('#rewards').scrollIntoView({behavior:'smooth', block:'start'}); });
 
 /* ---------- tabs ---------- */
 function showTab(which){
@@ -1216,7 +1356,65 @@ function buildModel(cat){
   }else{                                       // other: a parcel
     box(0.9, 0.9, 0.9, col, 0, 0.45, 0); box(0.22, 0.02, 0.92, light(col, 0.55), 0, 0.905, 0); box(0.22, 0.9, 0.02, light(col, 0.55), 0, 0.45, 0.451);
   }
+  addFace3D(g, cat);
   return g;
+}
+/* a face on the front of each object: [height in the model, sideways offset] */
+const FACE3D = {produce:[0.5,0], dairy:[0.5,0], drinks:[0.34,0], pantry:[0.45,0], meds:[0.4,0], care:[0.42,0.27], cleaning:[0.4,0], baby:[0.52,0], clothes:[0.46,0], gift:[0.34,0], tools:[0.24,0], stationery:[0.26,0], yarn:[0.45,0], snack:[0.5,0], other:[0.45,0]};
+function addFace3D(g, cat){
+  const spec = FACE3D[cat]; if(!spec) return;
+  const bb = new T.Box3().setFromObject(g), sz = bb.getSize(new T.Vector3()), z = bb.max.z + 0.006;
+  const er = clamp(sz.x*0.06, 0.035, 0.075), gap = clamp(sz.x*0.17, 0.09, 0.2), cx = spec[1]*sz.x*0.5, cy = spec[0];
+  const f = new T.Group(); f.position.set(cx, cy, z); g.add(f);
+  const basic = c => new T.MeshBasicMaterial({color:c, side:T.DoubleSide});
+  const eyes = new T.Group(); f.add(eyes);
+  [-gap, gap].forEach(x => {
+    const e = new T.Mesh(new T.CircleGeometry(er, 16), basic(0x2a1d14)); e.position.set(x, 0, 0); eyes.add(e);
+    const h = new T.Mesh(new T.CircleGeometry(er*0.36, 10), basic(0xffffff)); h.position.set(x + er*0.25, er*0.3, 0.002); eyes.add(h);
+  });
+  const arc = (r0, r1, start, len, y) => { const m = new T.Mesh(new T.RingGeometry(r0, r1, 14, 1, start, len), basic(0x2a1d14)); m.position.y = y; return m; };
+  const smile = arc(er*0.9, er*1.35, Math.PI, Math.PI, -gap*0.75); f.add(smile);
+  const frown = arc(er*0.9, er*1.35, 0, Math.PI, -gap*1.05); frown.visible = false; f.add(frown);
+  const closed = new T.Group(); closed.visible = false; [-gap, gap].forEach(x => { const a = arc(er*0.8, er*1.3, Math.PI, Math.PI, 0); a.position.x = x; closed.add(a); }); f.add(closed);
+  const sweat = new T.Mesh(new T.SphereGeometry(er*0.75, 10, 8), basic(0x7ec8ff)); sweat.scale.set(0.8, 1.2, 0.2); sweat.position.set(gap*1.9, er*1.8, 0); sweat.visible = false; f.add(sweat);
+  g.userData.face = {eyes, smile, frown, closed, sweat};
+}
+function setFace3D(model, mood){
+  const f = model && model.userData.face; if(!f || f.mood === mood) return; f.mood = mood;
+  f.eyes.visible = mood !== 'sleepy'; f.closed.visible = mood === 'sleepy';
+  f.smile.visible = mood !== 'worried'; f.frown.visible = mood === 'worried'; f.sweat.visible = mood === 'worried';
+}
+function buildPet(kind){
+  const cat = kind === 'cat', fur = cat ? 0xf4a259 : 0xe9d3b4, dark = 0x3b2a1a, g = new T.Group();
+  const mk = (geo, c, x, y, z, par) => { const m = new T.Mesh(geo, new T.MeshLambertMaterial({color:c})); m.position.set(x, y, z); (par || g).add(m); m.castShadow = false; return m; };
+  const body = mk(new T.SphereGeometry(0.42, 22, 16), fur, 0, 0.4, 0); body.scale.set(1, 0.92, 1.05);
+  mk(new T.SphereGeometry(0.3, 18, 12), cat ? 0xfff3e0 : 0xffffff, 0, 0.3, 0.22).scale.set(1, 1, 0.55);
+  mk(new T.SphereGeometry(0.11, 12, 8), fur, -0.18, 0.08, 0.33).scale.set(1, 0.7, 1.2); mk(new T.SphereGeometry(0.11, 12, 8), fur, 0.18, 0.08, 0.33).scale.set(1, 0.7, 1.2);
+  const head = new T.Group(); head.position.set(0, 0.98, 0.1); g.add(head);
+  mk(new T.SphereGeometry(0.37, 22, 16), fur, 0, 0, 0, head).scale.set(1.1, 1, 1);
+  if(cat){ [-1, 1].forEach(sx => { const e = mk(new T.ConeGeometry(0.13, 0.28, 4), fur, sx*0.25, 0.34, 0, head); e.rotation.z = -sx*0.22; mk(new T.ConeGeometry(0.07, 0.17, 4), 0xf3a3b6, sx*0.25, 0.32, 0.05, head).rotation.z = -sx*0.22; }); }
+  else { [-1, 1].forEach(sx => { const e = mk(new T.SphereGeometry(0.16, 12, 10), 0xb08968, sx*0.4, 0.04, 0, head); e.scale.set(0.5, 1.5, 0.8); e.rotation.z = sx*0.25; e.userData.flop = sx; }); }
+  mk(new T.SphereGeometry(0.16, 14, 10), cat ? 0xfff3e0 : 0xffffff, 0, -0.1, 0.27, head).scale.set(1.15, 0.85, 0.8);
+  mk(new T.SphereGeometry(0.05, 10, 8), cat ? 0xe0607e : dark, 0, -0.04, 0.4, head);
+  const eyes = new T.Group(); head.add(eyes);
+  [-1, 1].forEach(sx => { mk(new T.SphereGeometry(0.05, 10, 8), dark, sx*0.15, 0.08, 0.34, eyes); });
+  const tail = new T.Group(); tail.position.set(0, 0.32, -0.38); g.add(tail);
+  const tl = mk(new T.CylinderGeometry(0.055, 0.055, 0.55, 10), cat ? fur : 0xb08968, 0, 0.26, -0.04, tail); tl.rotation.x = -0.35;
+  const zz = new T.Sprite(new T.SpriteMaterial({map:(() => { const c = document.createElement('canvas'); c.width = 128; c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#6c86ad'; x.font = '700 40px "Nunito", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('z Z', 64, 34); return new T.CanvasTexture(c); })(), transparent:true, depthTest:false}));
+  zz.scale.set(0.6, 0.3, 1); zz.position.set(0.3, 1.55, 0); zz.visible = false; g.add(zz);
+  g.userData = {kind, head, eyes, tail, zz, asleep:false};
+  return g;
+}
+function animate3D(t){
+  if(!v3) return;
+  [v3.cat, v3.dog].forEach(p => {
+    if(!p) return; const u = p.userData, dog = u.kind === 'dog', blink = (t + (dog ? 1.7 : 0)) % 5.2 > 5.05;
+    u.tail.rotation.z = u.asleep ? 0 : Math.sin(t*(dog ? 7 : 2.4))*(dog ? 0.5 : 0.3);
+    u.head.rotation.z = Math.sin(t*0.9 + (dog ? 1 : 0))*0.04 + (u.asleep ? 0.18 : 0); u.head.position.y = u.asleep ? 0.9 : 0.98;
+    u.eyes.scale.y = u.asleep || blink ? 0.1 : 1; u.zz.visible = u.asleep; if(u.asleep) u.zz.position.y = 1.55 + Math.sin(t*1.6)*0.06;
+    u.head.children.forEach(ch => { if(ch.userData.flop) ch.rotation.z = ch.userData.flop*(0.25 + Math.sin(t*3)*0.06); });
+  });
+  v3.map.forEach((grp, id) => { const m = grp.userData.model, f = m && m.userData.face; if(f && f.eyes.visible) f.eyes.scale.y = ((t + (hashId(id) % 50)/10) % 5.4) > 5.25 ? 0.1 : 1; });
 }
 function badgeCanvas(it){
   const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'), b = badgeOf(it);
@@ -1260,18 +1458,27 @@ function buildRoomMeshes(){
   }
   // window, picture, shelf
   box(2.3, 1.8, 0.08, V['--frame'], -3.1, 2.55, -RD/2+0.05);
-  const glass = new T.Mesh(new T.PlaneGeometry(2.0, 1.5), new T.MeshBasicMaterial({color:V['--glass']})); glass.position.set(-3.1, 2.55, -RD/2+0.1); g.add(glass);
+  v3.leaves = [];
+  const glass = v3.glass = new T.Mesh(new T.PlaneGeometry(2.0, 1.5), new T.MeshBasicMaterial({color:V['--glass']})); glass.position.set(-3.1, 2.55, -RD/2+0.1); g.add(glass);
   box(0.07, 1.5, 0.05, V['--frame'], -3.1, 2.55, -RD/2+0.12); box(2.0, 0.07, 0.05, V['--frame'], -3.1, 2.55, -RD/2+0.12);
-  const beam = new T.Mesh(new T.PlaneGeometry(1.9, 3.2), new T.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.16})); beam.rotation.x = -Math.PI/2; beam.position.set(-3.0, 0.02, -1.3); g.add(beam);
+  const beam = v3.beam = new T.Mesh(new T.PlaneGeometry(1.9, 3.2), new T.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.16})); beam.rotation.x = -Math.PI/2; beam.position.set(-3.0, 0.02, -1.3); g.add(beam);
   box(1.3, 1.0, 0.06, V['--frame'], 0.5, 3.0, -RD/2+0.04);
   const pic = new T.Mesh(new T.PlaneGeometry(1.1, 0.8), new T.MeshBasicMaterial({map:canvasTex(220,160,(x,w,h) => { x.fillStyle = V['--wall-2']; x.fillRect(0,0,w,h); x.fillStyle = V['--rug']; x.beginPath(); x.moveTo(0,h); x.lineTo(60,60); x.lineTo(105,105); x.lineTo(150,50); x.lineTo(w,h); x.fill(); })})); pic.position.set(0.5, 3.0, -RD/2+0.08); g.add(pic);
   const shelfX = (0.795-0.5)*FW; box(2.5, 0.12, 0.55, V['--floor-line'], shelfX, 2.34, -RD/2+0.3); box(0.1, 0.5, 0.35, V['--floor-line'], shelfX-1.0, 2.05, -RD/2+0.2); box(0.1, 0.5, 0.35, V['--floor-line'], shelfX+1.0, 2.05, -RD/2+0.2);
   // rug and plant
   const rug = new T.Mesh(new T.CircleGeometry(1, 48), L(V['--rug'])); rug.rotation.x = -Math.PI/2; rug.scale.set(2.5, 1.5, 1); rug.position.set(0.2, 0.012, 0.9); g.add(rug);
   const pot = new T.Mesh(new T.CylinderGeometry(0.35, 0.28, 0.6, 20), L(0xb96a4a)); pot.position.set(4.2, 0.3, -2.6); g.add(pot);
-  [[0,0.55,0,0.45],[0.2,0.9,0.1,0.38],[-0.2,0.85,-0.1,0.36],[0,1.2,0,0.3]].forEach(a => { const l = new T.Mesh(new T.SphereGeometry(a[3], 14, 10), L(0x4c9a3f)); l.position.set(4.2+a[0], 0.3+a[1], -2.6+a[2]); l.scale.y = 1.35; g.add(l); });
-  v3.group = g; v3.scene.add(g);
+  [[0,0.55,0,0.45],[0.2,0.9,0.1,0.38],[-0.2,0.85,-0.1,0.36],[0,1.2,0,0.3]].forEach(a => { const l = new T.Mesh(new T.SphereGeometry(a[3], 14, 10), L(0x4c9a3f)); l.position.set(4.2+a[0], 0.3+a[1], -2.6+a[2]); l.scale.y = 1.35; l.userData.y0 = 0.3+a[1]; v3.leaves.push(l); g.add(l); });
+  v3.group = g; v3.scene.add(g); applyLiving3D();
   room.style.background = 'linear-gradient(180deg,'+V['--wall-2']+','+V['--base']+')';
+  v3.needs = true;
+}
+function applyLiving3D(){
+  if(!v3 || !v3.glass) return;
+  const t = timeOfDay(), p = plantState();
+  v3.glass.material.color.setHex({day:0xcfeaff, dawn:0xffd9c2, dusk:0xffb98a, night:0x1d2a55}[t]);
+  v3.beam.material.opacity = t === 'night' ? 0 : t === 'day' ? 0.16 : 0.22; v3.beam.material.color.setHex(t === 'dusk' || t === 'dawn' ? 0xffd2a1 : 0xffffff);
+  v3.leaves.forEach(l => { l.material.color.setHex(p === 'wilt' ? 0x9a8a3a : p === 'droop' ? 0x7fae3f : 0x4c9a3f); l.position.y = l.userData.y0 - (p === 'wilt' ? 0.3 : p === 'droop' ? 0.12 : 0); l.rotation.z = p === 'wilt' ? 0.5 : p === 'droop' ? 0.2 : 0; });
   v3.needs = true;
 }
 function placeCamera(){
@@ -1306,6 +1513,7 @@ function sync3D(){
     const dim = (filter && filter !== it.cat) || !inPeriod(it);
     if(dim !== u.dim){ u.dim = dim; u.model.traverse(o => { if(o.material){ o.material.transparent = dim; o.material.opacity = dim ? 0.25 : 1; o.material.needsUpdate = true; } }); u.sp.material.opacity = dim ? 0.25 : 1; }
     u.model.scale.setScalar(sel === it.id ? 1.12 : 1);
+    setFace3D(u.model, faceMood(it));
     const sig = badgeSig(it);
     if(sig !== u.sig){
       u.sig = sig; const has = !!badgeOf(it) || isDormant(it); u.sp.visible = has;
@@ -1346,6 +1554,8 @@ function build3D(){
   v3 = {renderer, scene, camera, yaw:0, pitch:0.5, radius:12.5, target:new T.Vector3(0, 1.0, 0.3), ray:new T.Raycaster(), plane:new T.Plane(new T.Vector3(0,1,0), 0),
         items:new T.Group(), map:new Map(), needs:true, drag:null, orbit:null, hover:null, raf:0, timer:0};
   scene.add(v3.items);
+  v3.cat = buildPet('cat'); v3.cat.position.set(2.7, 0, 2.4); v3.cat.rotation.y = -0.35; scene.add(v3.cat);
+  v3.dog = buildPet('dog'); v3.dog.position.set(3.75, 0, 2.45); v3.dog.rotation.y = -0.25; scene.add(v3.dog);
   v3.ring = new T.Mesh(new T.RingGeometry(0.5, 0.62, 40), new T.MeshBasicMaterial({color:0x07877d, side:T.DoubleSide, transparent:true, opacity:0.95, depthTest:false}));
   v3.ring.rotation.x = -Math.PI/2; v3.ring.visible = false; v3.ring.renderOrder = 5; scene.add(v3.ring);
   buildRoomMeshes(); placeCamera(); resize3D(); new ResizeObserver(resize3D).observe(room);
@@ -1389,7 +1599,7 @@ function build3D(){
   canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('wheel', e => { e.preventDefault(); v3.radius = clamp(v3.radius*(1 + Math.sign(e.deltaY)*0.08), 8, 16); placeCamera(); }, {passive:false});
   canvas.addEventListener('contextmenu', e => e.preventDefault());
-  const loop = () => { if(state.view !== '3d'){ v3.raf = 0; return; } v3.raf = requestAnimationFrame(loop); if(v3.needs){ v3.needs = false; v3.renderer.render(v3.scene, v3.camera); } updateTag3D(); };
+  const loop = () => { if(state.view !== '3d'){ v3.raf = 0; return; } v3.raf = requestAnimationFrame(loop); { const now = performance.now(); if(now - (v3.last || 0) >= 33){ v3.last = now; v3.dog.userData.asleep = dormantList().length > 0; animate3D(now/1000); v3.needs = true; } } if(v3.needs){ v3.needs = false; v3.renderer.render(v3.scene, v3.camera); } updateTag3D(); };
   v3.loop = loop;
   return v3;
 }
@@ -1401,15 +1611,15 @@ function show3D(on){
   if(!on) room.style.background = '';
 }
 async function enter3D(){
-  const btn = $('#v3d-btn'); btn.disabled = true; btn.textContent = 'Đang tải 3D…';
+  const btn = $('#v3d-btn'); btn.disabled = true; btn.textContent = 'Đang tải 3D…'; $('#room-loading').hidden = false;
   try{
     T = await loadThree();
     if(!v3) build3D();
   }catch(e){
-    v3 = null; state.view = '2d'; btn.disabled = false; btn.textContent = 'Xem 3D';
+    v3 = null; state.view = '2d'; btn.disabled = false; btn.textContent = 'Xem 3D'; $('#room-loading').hidden = true;
     toast('Chưa mở được phòng 3D. Lần đầu bạn cần có mạng, và trình duyệt cần hỗ trợ WebGL nha.'); return;
   }
-  btn.disabled = false; state.view = '3d'; save(); show3D(true); applyRoom(); resize3D(); renderRoom();
+  btn.disabled = false; $('#room-loading').hidden = true; state.view = '3d'; save(); show3D(true); applyRoom(); resize3D(); renderRoom();
   if(!v3.raf) v3.loop();
 }
 function leave3D(){ state.view = '2d'; save(); show3D(false); applyRoom(); renderRoom(); }
@@ -1489,7 +1699,7 @@ $('#rs-veil').addEventListener('change', save);
 /* ---------- phones: bottom sheets opened from the dock ---------- */
 const mqMobile = window.matchMedia('(max-width: 820px)');
 const isMobile = () => mqMobile.matches;
-const SHEET_TITLES = {alerts:'Sắp hết hạn', spend:'Chi tiêu', add:'Thêm vào phòng', history:'Lịch sử mua sắm', dormant:'Món nằm im', insp:'Chi tiết món', rs:'Đổi giao diện phòng'};
+const SHEET_TITLES = {rewards:'Thành tích', alerts:'Sắp hết hạn', spend:'Chi tiêu', add:'Thêm vào phòng', history:'Lịch sử mua sắm', dormant:'Món nằm im', insp:'Chi tiết món', rs:'Đổi giao diện phòng'};
 function syncDock(){
   document.querySelectorAll('.dock [data-sheet]').forEach(b => b.setAttribute('aria-expanded', String($('#sh-'+b.dataset.sheet).classList.contains('open'))));
 }
@@ -1520,8 +1730,29 @@ $('#scrim').addEventListener('click', () => { if(Date.now() - sheetOpenedAt > 45
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.querySelector('.sheet.open')) closeSheets(); });
 (mqMobile.addEventListener ? mqMobile.addEventListener.bind(mqMobile, 'change') : mqMobile.addListener.bind(mqMobile))(() => { closeSheets(); });
 
+$('#snd').setAttribute('aria-pressed', String(!!state.sound));
+$('#snd').addEventListener('click', () => {
+  state.sound = !state.sound; save(); $('#snd').setAttribute('aria-pressed', String(state.sound));
+  toast(state.sound ? 'Đã bật âm thanh. Miso meo, Misu gâu nha.' : 'Đã tắt âm thanh.');
+  if(state.sound) SFX.meow();
+});
+$('#pet-cat').addEventListener('click', cycleMiso);
+$('#pet-dog').addEventListener('click', cycleMisu);
+$('#empty-cat').innerHTML = catSvg('neutral'); $('#load-dog').innerHTML = misuSvg('happy');
+
 /* ---------- boot ---------- */
-function renderAll(){ renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); }
+/* ---------- a room that lives: time of day at the window, a plant that mirrors your waste ---------- */
+function timeOfDay(){ const d = new Date(), h = d.getHours() + d.getMinutes()/60; return (h >= 19 || h < 5) ? 'night' : h >= 17.5 ? 'dusk' : h < 7 ? 'dawn' : 'day'; }
+function plantState(){ const e = state.items.filter(i => !i.used && status(i) === 'expired').length; return e >= 3 ? 'wilt' : e >= 1 ? 'droop' : 'happy'; }
+function updateLiving(){
+  const t = timeOfDay();
+  room.dataset.time = t; room.dataset.plant = plantState();
+  room.style.setProperty('--sky-c', {dawn:'#ffd9c2', dusk:'#ffb98a', night:'#1d2a55', day:'transparent'}[t]);
+  applyLiving3D();
+}
+setInterval(updateLiving, 60000);
+
+function renderAll(){ updateLiving(); renderRoom(); renderLegend(); renderInspector(); renderAlerts(); renderSpend(); renderHistory(); renderCritic(); renderDormant(); renderRewards(); }
 applyRoom();
 renderAll();
 if(state.view === '3d') enter3D();

@@ -21,6 +21,7 @@ python3 -m http.server 8000
 - Thêm món bằng tay hoặc từ hoá đơn (đơn Shopee, bill quán cà phê, hoá đơn siêu thị), luôn có bước xem lại.
 - Nhắc hạn dùng, chi tiêu so sánh theo tháng, lịch sử theo khoảng thời gian.
 - Miso và Misu với các quy tắc nhắc nhở; quy tắc mua lại món giống.
+- Giao diện kawaii: đồ vật có mặt biết chớp mắt và đổi biểu cảm, hai bạn thú cưng ngồi trong phòng (2D và 3D), cửa sổ đổi theo giờ, cái cây héo khi bạn để đồ hết hạn, heo đất cho chi tiêu, điểm gọn gàng và huy hiệu, pháo giấy, âm thanh tuỳ chọn.
 - Trên điện thoại: bảng trượt và thanh lối tắt thay cho trang dài.
 
 ## Tài liệu

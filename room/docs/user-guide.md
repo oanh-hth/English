@@ -116,12 +116,30 @@ Từ chiều rộng 820 px trở xuống, trang chỉ giữ căn phòng, Miso v�
 
 Bảng nằm phía trên thanh lối tắt nên bấm sang nút khác là chuyển bảng ngay. Đóng bằng nút **Xong**, chạm vào vùng mờ hoặc phím Esc. Chạm một món trong phòng thì bảng chi tiết món tự mở. Thêm món xong hoặc bấm **Tìm** thì bảng tự đóng. Có thể thêm app vào màn hình chính (trên iPhone: Safari, Chia sẻ, Thêm vào Màn hình chính) khi app được host qua HTTPS.
 
-## 11. Dữ liệu của bạn
+## 11. Thành tích
+
+Nút **Gọn gàng** ở đầu trang (số điểm bên cạnh) mở khung **Thành tích**:
+
+- **Điểm gọn gàng** từ 0 đến 100: bắt đầu 100, trừ 10 điểm cho mỗi món đã hết hạn còn trong phòng, trừ 3 điểm cho mỗi món nằm im lâu, trừ 10 điểm nếu phòng có từ 24 món. Khung ghi rõ bị trừ vì đâu.
+- **Huy hiệu**: *Heo đất khoẻ* (tháng này chi không hơn cùng kỳ tháng trước), *Dùng kịp hạn* (dùng hết 3 món trước hạn trong 30 ngày), *Phòng gọn gàng* (điểm từ 85 trở lên với ít nhất 5 món), *Nhịn được đồ uống* và *Nhịn được đồ ăn vặt* (7 ngày không mua sau khi đã mua đều). Huy hiệu chưa đạt hiện màu xám kèm tiến độ.
+- Khi nhận huy hiệu mới, app bắn pháo giấy và báo bằng thông báo nhỏ.
+
+## 12. Những điều dễ thương
+
+- **Món có mặt.** Mỗi đồ vật có đôi mắt biết chớp. Món đã hết hạn hoặc chỉ còn một ngày thì lo lắng, toát mồ hôi và lắc nhẹ. Món nằm im lâu thì nhắm mắt ngủ và bám bụi.
+- **Chuyển động.** Kéo món thì nó nghiêng theo tay, thả xuống thì nảy lên. Nhân đôi bắn các đốm sáng, **Dùng hết rồi** bắn pháo giấy, thùng rác nhai và bay ra đám bụi nhỏ. Tất cả tắt khi máy bật chế độ giảm chuyển động.
+- **Miso và Misu ngồi trong phòng** ở góc dưới bên phải (cả 2D lẫn 3D). Chạm vào bé nào thì bé đó nói câu khác. Mèo chớp mắt, giật tai và vẫy đuôi, cún vẫy đuôi nhanh, và khi có món nằm im thì Misu ngủ gục với zZ. Bong bóng lời thoại nảy lên mỗi khi đổi câu.
+- **Căn phòng sống.** Cửa sổ đổi theo giờ trên máy (sáng, bình minh, hoàng hôn, đêm có trăng sao và cả phòng ngả tối nhẹ). Cái cây trong phòng phản ánh chuyện lãng phí: có hoa khi không có món nào hết hạn, rũ xuống khi có 1 đến 2 món, héo úa khi có từ 3 món.
+- **Heo đất** trong khung Chi tiêu: bụng heo đầy dần theo chi tiêu tháng này so với cả tháng trước, heo cười khi bạn chi không hơn cùng kỳ tháng trước và toát mồ hôi khi chi nhiều hơn khoảng 10%. Biểu đồ vẽ nét tay.
+- **Âm thanh** (tắt sẵn): nút **Âm thanh** ở đầu trang. Khi bật, Miso meo khi nói câu mới, Misu gâu, có tiếng xu khi Dùng hết rồi hoặc nhận huy hiệu, tiếng bụp khi nhân đôi hoặc xoá. Âm thanh là tiếng tổng hợp ngay trên máy, không tải tệp nào.
+- **Màn trống và màn chờ có nhân vật:** phòng trống có Miso chào, đọc hoá đơn có Miso và kính lúp, dựng phòng 3D có Misu.
+
+## 13. Dữ liệu của bạn
 
 - Mọi dữ liệu nằm trong trình duyệt của máy đang dùng. Xoá dữ liệu trình duyệt hoặc đổi sang máy khác thì không còn. App chưa có sao lưu, xuất hay đồng bộ.
 - Ảnh hoá đơn được gửi để đọc: trong app độc lập thì gửi tới Anthropic bằng khoá API của chính bạn (khoá chỉ lưu trên máy); trong bản chạy bên trong Claude thì đọc bằng Claude, không cần khoá. Ảnh được thu nhỏ còn tối đa 1600 px trước khi gửi.
 
-## 12. Hỏi nhanh
+## 14. Hỏi nhanh
 
 **Sao món biến khỏi phòng?** Bạn bấm Dùng hết rồi, hoặc quy tắc mua lại đã coi nó là hết (xem Lịch sử, dòng đó ghi *Đã dùng hết* hoặc *Đã thay bằng món mới*), hoặc bạn đã xoá.
 

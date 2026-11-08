@@ -13,7 +13,7 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="styles.css">
   <title>Phòng Trữ Đồ</title>
 </head>
@@ -57,6 +57,8 @@
           <option value="14">trước 14 ngày</option>
         </select>
       </label>
+      <button class="bell tidy-pill" id="tidy-pill" type="button" title="Điểm gọn gàng của căn phòng"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.800 5.200L19 10l-5.200 1.800L12 17l-1.800-5.200L5 10l5.200-1.800z" fill="currentColor"/></svg><span>Gọn gàng</span><b class="num" id="tidy-n">0</b></button>
+      <button class="bell" id="snd" type="button" aria-pressed="false" title="Bật hoặc tắt âm thanh (tắt sẵn)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.500v5h3.500L12 18.500v-13L7.500 9.500z" fill="currentColor"/><path class="wave" d="M15.500 9a4 4 0 0 1 0 6M18 6.500a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.900" stroke-linecap="round"/></svg><span>Âm thanh</span></button>
       <button class="bell" id="bell" type="button" aria-label="Món sắp hết hạn">
         <svg aria-hidden="true"><use href="#s-bell"/></svg><span>Nhắc nhở</span><span class="count num" id="bell-count">0</span>
       </button>
@@ -74,6 +76,7 @@
           <!-- window -->
           <rect x="78" y="38" width="160" height="118" rx="4" fill="var(--frame)"/>
           <rect x="88" y="48" width="140" height="98" fill="var(--glass)"/>
+          <g id="sky"><rect class="skyrect" x="88" y="48" width="140" height="98"/><g class="stars" fill="#fff8d6"><circle cx="106" cy="66" r="1.600"/><circle cx="130" cy="58" r="1.200"/><circle cx="150" cy="82" r="1.600"/><circle cx="176" cy="62" r="1.200"/><circle cx="118" cy="112" r="1.200"/><circle cx="206" cy="108" r="1.600"/><circle cx="190" cy="128" r="1.200"/></g><path class="moon" d="M200 62a14 14 0 1 0 12 22a11 11 0 1 1-12-22z" fill="#fff4c2"/></g>
           <path d="M158 48v98M88 97h140" stroke="var(--frame)" stroke-width="5"/>
           <!-- picture -->
           <rect x="330" y="52" width="86" height="64" rx="3" fill="var(--frame)"/>
@@ -90,13 +93,13 @@
             <path d="M0 500L300 216M100 500L340 216M200 500L380 216M300 500L420 216M400 500V216M500 500L380 216M600 500L420 216M700 500L460 216M800 500L500 216"/>
           </g>
           <!-- light from the window -->
-          <path d="M96 216h140l-60 150h-160z" fill="#fff" opacity=".28"/>
+          <path id="beam" d="M96 216h140l-60 150h-160z" fill="#fff" opacity=".28"/>
           <!-- rug -->
           <ellipse cx="410" cy="388" rx="210" ry="62" fill="var(--rug)" opacity=".85"/>
           <ellipse cx="410" cy="388" rx="176" ry="48" fill="none" stroke="var(--frame)" stroke-width="2" opacity=".6"/>
           <!-- plant -->
-          <path d="M752 236l6 38h26l6-38z" fill="#b96a4a"/>
-          <path d="M771 238c-22-10-26-34-14-52 12 14 18 32 14 52zM771 238c-2-30 8-46 26-56 4 22-6 42-26 56zM771 238c12-16 30-22 40-18-6 14-22 22-40 18z" fill="#4c9a3f"/>
+          <g id="plant"><path d="M752 236l6 38h26l6-38z" fill="#b96a4a"/>
+          <g class="leaves"><path d="M771 238c-22-10-26-34-14-52 12 14 18 32 14 52zM771 238c-2-30 8-46 26-56 4 22-6 42-26 56zM771 238c12-16 30-22 40-18-6 14-22 22-40 18z" fill="#4c9a3f"/><g id="flower"><circle cx="771" cy="178" r="8" fill="#ff8fb1"/><circle cx="771" cy="178" r="3.400" fill="#ffd166"/></g></g></g>
         </svg>
         <div class="room3d" id="room3d" hidden><canvas aria-label="Căn phòng 3D"></canvas></div>
         <div class="room-img" id="room-img" hidden></div>
@@ -111,7 +114,10 @@
         </div>
         <span class="tag3d" id="tag3d" hidden></span>
         <span class="hint">Kéo món đi đâu cũng được. Nhấn giữ để nhân đôi. Thả vào thùng rác để xoá.</span>
+        <div class="pets" id="pets"><button class="pet cat" id="pet-cat" type="button" aria-label="Miso, bấm để nghe chê tiếp"></button><button class="pet dog" id="pet-dog" type="button" aria-label="Misu, bấm để nghe nhắc tiếp"></button></div>
+        <div class="room-loading" id="room-loading" hidden><span class="mascot" id="load-dog"></span><p>Misu đang dựng phòng 3D…</p></div>
         <div class="empty-room" id="empty-room" hidden>
+          <span class="mascot" id="empty-cat"></span>
           <p><strong>Phòng còn trống trơn nè!</strong></p>
           <p class="small">Thêm món đầu tiên ở khung bên phải, hoặc nạp vài món có sẵn nhé.</p>
           <button class="btn sm" id="load-sample" type="button">Thêm vài món có sẵn</button>
@@ -159,6 +165,10 @@
         <section class="card" id="spend" aria-labelledby="h-spend"></section>
       </div>
 
+      <div class="sheet" id="sh-rewards">
+        <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
+        <section class="card" id="rewards" aria-labelledby="h-rewards"></section>
+      </div>
       <div class="sheet" id="sh-alerts">
         <div class="sheet-bar"><span class="grab" aria-hidden="true"></span><button class="sheet-x" type="button">Xong</button></div>
         <section class="card" id="alerts" aria-labelledby="h-alerts"></section>
