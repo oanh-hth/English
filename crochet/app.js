@@ -323,6 +323,7 @@ function renderList() {
     <div class="page-head">
       <div><h1>My charts</h1><p class="muted">Pick a pattern to keep working, or start a new one.</p></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" data-act="photo">From photo</button>
         <button class="btn" data-act="paste">Paste pattern</button>
         <button class="btn" data-act="import">Import file</button>
         <button class="btn primary" data-act="new">+ New chart</button>
@@ -425,7 +426,7 @@ function renderRows() {
         <button class="icon" data-act="duprow" data-r="${r.id}" aria-label="Duplicate">⧉</button>
         <button class="icon" data-act="delrow" data-r="${r.id}" aria-label="Delete row">✕</button></div>
       <div class="chips">${chips}</div>
-      <div class="dots" role="group" aria-label="Yarn color">${PAL.map(p => `<button class="dot" data-act="color" data-r="${r.id}" data-c="${p[1]}" style="background:${p[1]}" aria-pressed="${p[1] === r.color}" aria-label="${p[0]}" title="${p[0]}"></button>`).join('')}</div>
+      <div class="dots" role="group" aria-label="Yarn color">${PAL.concat(PAL.some(p => p[1] === r.color) ? [] : [['Custom', r.color]]).map(p => `<button class="dot" data-act="color" data-r="${r.id}" data-c="${p[1]}" style="background:${p[1]}" aria-pressed="${p[1] === r.color}" aria-label="${p[0]}" title="${p[0]}"></button>`).join('')}</div>
       <textarea class="note-in" rows="2" data-act="note" data-r="${r.id}" placeholder="Note for this row (optional)" maxlength="200">${esc(r.note)}</textarea>
       ${showHint ? `<div class="hint">This ${c.mode === 'round' ? 'round' : 'row'} works into ${st.used} stitches, but the one before has ${prev}. <button data-act="okhint" data-r="${r.id}">That's fine</button></div>` : ''}
     </div>`;
@@ -754,6 +755,234 @@ function importCreate() {
   save(); render(); window.scrollTo(0, 0); toast('Pattern imported. Check the rows against your source.');
 }
 
+/* ---------------------------------------------------------- chart from a photo */
+/* Finds a round piece in a photo, reads its color, and estimates the number of rounds from how
+   brightness repeats from the centre outwards. It cannot see single stitches: the result is a starting chart. */
+const PHOTO_MAX = 560;
+function loadPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, PHOTO_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.max(1, Math.round(img.naturalWidth * k)), h = Math.max(1, Math.round(img.naturalHeight * k));
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve({ w, h, canvas: cv, data: g.getImageData(0, 0, w, h) });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+    img.src = url;
+  });
+}
+/* the piece is whatever differs from the colours around the picture's border */
+function detectPiece(photo) {
+  const { w, h, data } = photo, d = data.data;
+  const px = (x, y) => { const i = (y * w + x) * 4; return [d[i], d[i + 1], d[i + 2]]; };
+  const band = Math.max(3, Math.round(Math.min(w, h) * .04)), samples = [];
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (x < band || y < band || x >= w - band || y >= h - band) samples.push(px(x, y));
+  const lum = c => c[0] * .299 + c[1] * .587 + c[2] * .114;
+  const sorted = samples.slice().sort((a, b) => lum(a) - lum(b));
+  let cent = [0, .33, .66, 1].map(q => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))].slice());
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+  
+  for (let it = 0; it < 6; it++) {
+    const sum = cent.map(() => [0, 0, 0, 0]);
+    for (const c of samples) {
+      let b = 0; for (let k = 1; k < cent.length; k++) if (dist(c, cent[k]) < dist(c, cent[b])) b = k;
+      sum[b][0] += c[0]; sum[b][1] += c[1]; sum[b][2] += c[2]; sum[b][3]++;
+    }
+    cent = cent.map((c, k) => sum[k][3] ? [sum[k][0] / sum[k][3], sum[k][1] / sum[k][3], sum[k][2] / sum[k][3]] : c);
+  }
+  const far = c => Math.min(...cent.map(k => dist(c, k)));
+  /* split "like the background" from "unlike it" with Otsu's threshold on the distance */
+  const hist = new Array(64).fill(0);
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) hist[Math.min(63, Math.floor(far(px(x, y)) / 7))]++;
+  const total = hist.reduce((a, b) => a + b, 0), sumAll = hist.reduce((a, v, i) => a + v * i, 0);
+  let wB = 0, sB = 0, bestVar = -1, bestBin = 8;
+  for (let i = 0; i < 64; i++) {
+    wB += hist[i]; if (!wB) continue; const wF = total - wB; if (!wF) break;
+    sB += hist[i] * i; const mB = sB / wB, mF = (sumAll - sB) / wF, v = wB * wF * (mB - mF) ** 2;
+    if (v > bestVar) { bestVar = v; bestBin = i; }
+  }
+  const thr = Math.max(40, (bestBin + 1) * 7);
+  const cell = 6, gw = Math.ceil(w / cell), gh = Math.ceil(h / cell), fg = new Uint8Array(gw * gh);
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    let on = 0, tot = 0;
+    for (let y = gy * cell; y < Math.min(h, gy * cell + cell); y += 2) for (let x = gx * cell; x < Math.min(w, gx * cell + cell); x += 2) {
+      tot++; if (far(px(x, y)) > thr) on++;
+    }
+    fg[gy * gw + gx] = tot && on / tot >= .5 ? 1 : 0;
+  }
+  const seen = new Uint8Array(gw * gh); let best = null;
+  for (let i = 0; i < fg.length; i++) {
+    if (!fg[i] || seen[i]) continue;
+    const stack = [i], comp = []; seen[i] = 1;
+    while (stack.length) {
+      const j = stack.pop(); comp.push(j); const x = j % gw, y = (j / gw) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy, n = ny * gw + nx;
+        if (nx >= 0 && ny >= 0 && nx < gw && ny < gh && fg[n] && !seen[n]) { seen[n] = 1; stack.push(n); }
+      }
+    }
+    if (!best || comp.length > best.length) best = comp;
+  }
+  const fallback = { cx: w / 2, cy: h / 2, rx: Math.min(w, h) * .3, ry: Math.min(w, h) * .3, found: false };
+  if (!best || best.length < gw * gh * .02 || best.length > gw * gh * .8) return fallback;
+  let x0 = 1e9, x1 = -1, y0 = 1e9, y1 = -1;
+  for (const j of best) { const x = j % gw, y = (j / gw) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const L = x0 * cell, R = Math.min(w, (x1 + 1) * cell), T = y0 * cell, B = Math.min(h, (y1 + 1) * cell);
+  return { cx: (L + R) / 2, cy: (T + B) / 2, rx: (R - L) / 2, ry: (B - T) / 2, found: true };
+}
+function samplePhoto(photo, e, t, a) {
+  const x = Math.round(e.cx + t * e.rx * Math.cos(a)), y = Math.round(e.cy + t * e.ry * Math.sin(a));
+  if (x < 0 || y < 0 || x >= photo.w || y >= photo.h) return null;
+  const i = (y * photo.w + x) * 4, d = photo.data.data;
+  return [d[i], d[i + 1], d[i + 2]];
+}
+function radialProfile(photo, e, steps = 120, angles = 90, a0 = 0, span = Math.PI * 2) {
+  const out = [];
+  for (let i = 0; i < steps; i++) {
+    let sum = 0, n = 0;
+    for (let k = 0; k < angles; k++) {
+      const c = samplePhoto(photo, e, (i + .5) / steps, a0 + k / angles * span);
+      if (c) { sum += c[0] * .299 + c[1] * .587 + c[2] * .114; n++; }
+    }
+    out.push(n ? sum / n : 0);
+  }
+  return out;
+}
+/* rounds show up as a ring pattern of light and dark: find how many cycles fit between centre and edge.
+   Each sector of the piece is measured on its own, then the results are added, so lighting and perspective cancel less. */
+function spectrum(prof, nMin, nMax) {
+  const n = prof.length, lo = Math.floor(n * .1), hi = Math.floor(n * .94);
+  const seg = prof.slice(lo, hi), m = seg.length, win = Math.max(3, Math.round(m * .075));
+  const hp = seg.map((v, i) => { let s = 0, c = 0; for (let j = Math.max(0, i - win); j <= Math.min(m - 1, i + win); j++) { s += seg[j]; c++; } return v - s / c; });
+  const pw = [];
+  for (let N = nMin; N <= nMax; N += .25) {
+    let re = 0, im = 0;
+    for (let k = 0; k < m; k++) {
+      const t = (lo + k + .5) / n, wnd = .5 - .5 * Math.cos(2 * Math.PI * (k + .5) / m);
+      re += hp[k] * wnd * Math.cos(2 * Math.PI * N * t); im += hp[k] * wnd * Math.sin(2 * Math.PI * N * t);
+    }
+    pw.push([N, re * re + im * im]);
+  }
+  return pw;
+}
+function estimateRounds(photo, e) {
+  const total = new Map(), SECT = 12;
+  for (let k = 0; k < SECT; k++) {
+    const prof = radialProfile(photo, e, 120, 12, k / SECT * Math.PI * 2, Math.PI * 2 / SECT);
+    for (const [N, p] of spectrum(prof, 5, 18)) total.set(N, (total.get(N) || 0) + p);
+  }
+  let best = 6, bp = -1;
+  for (const [N, p] of total) if (p > bp) { bp = p; best = N; }
+  return clamp(Math.round(best), 2, 30);
+}
+function pieceColor(photo, e) {
+  const px = [];
+  for (let i = 0; i < 24; i++) for (let k = 0; k < 40; k++) {
+    const c = samplePhoto(photo, e, .12 + .78 * i / 24, k / 40 * Math.PI * 2); if (c) px.push(c);
+  }
+  if (!px.length) return PAL[5][1];
+  px.sort((a, b) => (a[0] * .299 + a[1] * .587 + a[2] * .114) - (b[0] * .299 + b[1] * .587 + b[2] * .114));
+  const mid = px.slice(Math.floor(px.length * .25), Math.ceil(px.length * .75));
+  const avg = [0, 1, 2].map(k => Math.round(mid.reduce((a, c) => a + c[k], 0) / mid.length));
+  return '#' + avg.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+/* a flat circle: sc adds 6 stitches a round, hdc 8, dc 12 */
+function circleRows(st, N, color) {
+  const n0 = { sc: 6, hdc: 8, dc: 12 }[st] || 6;
+  const rows = [R(color, 'Start with a magic ring. Built from a photo: check the stitch count against your piece.', S('mr'), S(st, n0))];
+  for (let k = 2; k <= N; k++) {
+    if (st === 'sc') rows.push(R(color, '', k === 2 ? S('inc', n0) : G(n0, S('sc', k - 2), S('inc'))));
+    else rows.push(NC(R(color, k === 2 ? `2 ${st} in every stitch.` : `${k - 2} ${st}, then 2 ${st} in the next stitch, ${n0} times.`,
+      k === 2 ? G(n0, S(st, 2)) : G(n0, S(st, k - 2), S(st, 2)))));
+  }
+  return rows;
+}
+function photoModal() {
+  ui.ph = null;
+  openModal(`
+    <h2>Chart from a photo</h2>
+    <p class="muted small">Upload a photo of a flat, round piece (a coaster, a circle, a doily) taken from above. I find its edge and color and estimate the number of rounds, then build a starting chart. A photo can't show every stitch, so check the result against your piece.</p>
+    <input type="file" id="phFile" accept="image/*">
+    <div id="phStage" hidden>
+      <canvas id="phCanvas" aria-label="Photo with the detected outline"></canvas>
+      <p class="muted small">Drag the dots so the outline hugs the piece. The thin rings show the rounds counted; slide them with Rounds until they match what you see.</p>
+      <div class="imp-opts">
+        <label for="phN">Rounds <span class="stepper"><button type="button" id="phMinus" aria-label="Fewer rounds">−</button><input id="phN" type="number" min="2" max="30" value="6"><button type="button" id="phPlus" aria-label="More rounds">+</button></span></label>
+        <label for="phSt">Stitch <select id="phSt"><option value="sc">Single crochet</option><option value="hdc">Half double</option><option value="dc">Double crochet</option></select></label>
+        <label for="phColor">Yarn <input type="color" id="phColor" value="#b7a6e0"></label>
+        <label for="phName">Name <input type="text" id="phName" maxlength="60" placeholder="Chart from photo"></label>
+      </div>
+      <div class="ph-prev"><div><div class="small muted">Brightness from the center outward</div><canvas id="phProf" width="320" height="60"></canvas></div><div id="phChart"></div></div>
+      <p class="muted small" id="phNote"></p>
+    </div>
+    <div class="actions"><button class="btn" data-act="closemodal">Cancel</button><button class="btn primary" id="phCreate" data-act="phcreate" disabled>Create chart</button></div>`);
+  $('#phFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try { await startPhoto(f); } catch (err) { toast('Could not open that image'); }
+  });
+}
+async function startPhoto(file) {
+  const photo = await loadPhoto(file), e = detectPiece(photo);
+  ui.ph = { photo, e, manual: false, rounds: 6, st: 'sc', color: pieceColor(photo, e), prof: [] };
+  const cv = $('#phCanvas'); cv.width = photo.w; cv.height = photo.h;
+  $('#phStage').hidden = false; $('#phColor').value = ui.ph.color; $('#phCreate').disabled = false;
+  $('#phNote').textContent = e.found ? '' : "I couldn't find the piece on its own, so drag the dots to outline it.";
+  wirePhoto(cv); photoUpdate(true);
+}
+function wirePhoto(cv) {
+  let drag = null;
+  const pos = ev => { const r = cv.getBoundingClientRect(), k = cv.width / r.width; return { x: (ev.clientX - r.left) * k, y: (ev.clientY - r.top) * k, k }; };
+  cv.addEventListener('pointerdown', ev => {
+    const { x, y, k } = pos(ev), e = ui.ph.e, hs = [['c', e.cx, e.cy], ['x', e.cx + e.rx, e.cy], ['y', e.cx, e.cy + e.ry]];
+    let best = null;
+    for (const h of hs) { const d = Math.hypot(h[1] - x, h[2] - y); if (d < 26 * k && (!best || d < best.d)) best = { id: h[0], d }; }
+    if (best) { drag = best.id; cv.setPointerCapture(ev.pointerId); ev.preventDefault(); }
+  });
+  cv.addEventListener('pointermove', ev => {
+    if (!drag) return;
+    const { x, y } = pos(ev), e = ui.ph.e, ph = ui.ph.photo;
+    if (drag === 'c') { e.cx = clamp(x, 0, ph.w); e.cy = clamp(y, 0, ph.h); }
+    else if (drag === 'x') e.rx = Math.max(14, x - e.cx);
+    else e.ry = Math.max(14, y - e.cy);
+    photoUpdate(false);
+  });
+  const end = () => { if (drag) { drag = null; ui.ph.color = pieceColor(ui.ph.photo, ui.ph.e); $('#phColor').value = ui.ph.color; photoUpdate(false); } };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  $('#phN').addEventListener('input', ev => { ui.ph.manual = true; ui.ph.rounds = toInt(ev.target.value, 2, 30); photoUpdate(false, true); });
+  $('#phMinus').addEventListener('click', () => { ui.ph.manual = true; ui.ph.rounds = clamp(ui.ph.rounds - 1, 2, 30); photoUpdate(false); });
+  $('#phPlus').addEventListener('click', () => { ui.ph.manual = true; ui.ph.rounds = clamp(ui.ph.rounds + 1, 2, 30); photoUpdate(false); });
+  $('#phSt').addEventListener('change', ev => { ui.ph.st = ev.target.value; photoUpdate(false); });
+  $('#phColor').addEventListener('input', ev => { ui.ph.color = ev.target.value; photoUpdate(false); });
+}
+function photoUpdate(first, keepN) {
+  const ph = ui.ph; if (!ph) return;
+  ph.prof = radialProfile(ph.photo, ph.e);
+  if (!ph.manual) ph.rounds = estimateRounds(ph.photo, ph.e);
+  if (!keepN) $('#phN').value = ph.rounds;
+  const cv = $('#phCanvas'), g = cv.getContext('2d'), e = ph.e;
+  g.drawImage(ph.photo.canvas, 0, 0);
+  g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,.55)'; g.setLineDash([]);
+  for (let k = 1; k < ph.rounds; k++) { g.beginPath(); g.ellipse(e.cx, e.cy, e.rx * k / ph.rounds, e.ry * k / ph.rounds, 0, 0, Math.PI * 2); g.stroke(); }
+  g.lineWidth = 3; g.strokeStyle = '#f2a3b8'; g.setLineDash([8, 5]); g.beginPath(); g.ellipse(e.cx, e.cy, e.rx, e.ry, 0, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+  for (const [x, y] of [[e.cx, e.cy], [e.cx + e.rx, e.cy], [e.cx, e.cy + e.ry]]) { g.beginPath(); g.arc(x, y, 9, 0, Math.PI * 2); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#c9746a'; g.stroke(); }
+  const pc = $('#phProf'), pg = pc.getContext('2d'), p = ph.prof, lo = Math.min(...p), hi = Math.max(...p);
+  pg.clearRect(0, 0, pc.width, pc.height); pg.strokeStyle = 'rgba(150,120,100,.35)'; pg.lineWidth = 1;
+  for (let k = 0; k <= ph.rounds; k++) { const x = k / ph.rounds * pc.width; pg.beginPath(); pg.moveTo(x, 0); pg.lineTo(x, pc.height); pg.stroke(); }
+  pg.strokeStyle = '#c9746a'; pg.lineWidth = 2; pg.beginPath();
+  p.forEach((v, i) => { const x = i / (p.length - 1) * pc.width, y = pc.height - 4 - (v - lo) / Math.max(1, hi - lo) * (pc.height - 8); i ? pg.lineTo(x, y) : pg.moveTo(x, y); }); pg.stroke();
+  ph.chart = { mode: 'round', rows: circleRows(ph.st, ph.rounds, ph.color) };
+  $('#phChart').innerHTML = chartSVG(ph.chart, { mini: true });
+}
+function photoCreate() {
+  const ph = ui.ph; if (!ph) return;
+  const c = { id: uid(), name: ($('#phName').value.trim() || 'Chart from photo').slice(0, 60), mode: 'round', updated: Date.now(), rows: ph.chart.rows };
+  closeModal(); DB.charts.push(c); ui.chartId = c.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null;
+  save(); render(); window.scrollTo(0, 0); toast('Chart built from your photo. Compare it with your piece and adjust.');
+}
+
 /* ------------------------------------------------------------------- events */
 function pngExport() {
   const c = chart();
@@ -789,6 +1018,8 @@ document.addEventListener('click', e => {
     case 'create': { const n = $('#newName').value.trim(); closeModal(); createChart(ui.tpl, n || TEMPLATES[ui.tpl].label); break; }
     case 'closemodal': closeModal(); break;
     case 'paste': pasteModal(); break;
+    case 'photo': photoModal(); break;
+    case 'phcreate': photoCreate(); break;
     case 'impexample': $('#impText').value = IMP_EXAMPLE; importPreview(); break;
     case 'impcreate': importCreate(); break;
     case 'open': ui.chartId = d.id; ui.view = 'chart'; ui.activeRow = null; ui.target = null; render(); window.scrollTo(0, 0); break;

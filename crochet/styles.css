@@ -205,7 +205,7 @@ select {
 /* modal + toast */
 .modal { position: fixed; inset: 0; z-index: 50; background: rgba(60, 40, 30, .45); display: grid; place-items: center; padding: 16px; }
 .modal[hidden] { display: none; }
-.sheet { width: min(560px, 100%); max-height: 92vh; overflow: auto; padding: 22px; }
+.sheet { max-height: 92vh; overflow: auto; padding: 22px; }
 .sheet label.f { display: block; font-weight: 700; margin: 14px 0 6px; }
 .sheet input[type=text] { width: 100%; border: 2px solid var(--line); background: var(--bg); border-radius: 14px; padding: 8px 14px; }
 .tpl-grid { display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); }
@@ -220,6 +220,14 @@ select {
 .imp-list li { padding: 3px 0; border-bottom: 1px dotted var(--line); }
 .imp-list li b { color: var(--rose-d); }
 .warn { color: var(--rose-d); background: color-mix(in srgb, var(--butter) 60%, transparent); border-radius: 8px; padding: 0 6px; font-size: .82rem; }
+.sheet { width: min(640px, 100%); }
+#phCanvas { width: 100%; height: auto; border-radius: 14px; touch-action: none; display: block; margin: 10px 0 6px; cursor: crosshair; }
+.sheet input[type=file] { width: 100%; padding: 8px; border: 2px dashed var(--line); border-radius: 14px; background: var(--bg); }
+.sheet input[type=color] { width: 44px; height: 30px; border: 2px solid var(--line); border-radius: 10px; padding: 0; background: none; vertical-align: middle; }
+.ph-prev { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+.ph-prev > div { min-width: 0; }
+#phProf { width: 100%; max-width: 320px; background: #fffaf3; border-radius: 10px; display: block; }
+#phChart svg { width: 100%; max-width: 200px; max-height: 200px; height: auto; display: block; }
 .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
 .toast {
   position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 30px); opacity: 0; pointer-events: none; z-index: 60;
