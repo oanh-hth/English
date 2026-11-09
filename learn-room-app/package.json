@@ -17,7 +17,9 @@
     "dev": "vite",
     "server": "tsx watch src/server/main.ts",
     "verify": "tsx tools/learn.ts verify",
-    "stubs": "tsx tools/make-stubs.ts"
+    "stubs": "tsx tools/make-stubs.ts",
+    "room": "tsx src/cli/room.ts",
+    "docs": "tsx tools/build-docs.ts"
   },
   "dependencies": {
     "express": "^5.3.0",

@@ -1,8 +1,6 @@
-# Phase 1: TypeScript and pure functions
+In this part we write the heart of the app with no screen at all: what an item is, how to handle dates, which items are about to expire and how much you spent compared with last month. Everything is a small, pure, tested function.
 
-**You will build:** the heart of the app, with no UI yet: item types, dates, expiry rules and the "this month vs last month" spending comparison.
-
-## 1. Types are a vocabulary
+## a) Types are a vocabulary
 
 ```ts
 const CATEGORY_IDS = ['produce', 'dairy', 'drinks'] as const;      // a readonly tuple of literals
@@ -20,7 +18,7 @@ if (isCategoryId(raw)) { raw /* here it is a CategoryId */ }
 
 Prefer a guard to a cast (`raw as CategoryId`): a cast is you promising, a guard is you proving.
 
-## 2. Pure functions
+## b) Pure functions
 
 A function is **pure** when its result depends only on its arguments, and it changes nothing outside itself. Pure functions are easy to test (no setup), easy to reuse and impossible to break from afar.
 
@@ -28,7 +26,7 @@ That is why `daysLeft(item, today)` takes `today` as a parameter instead of call
 
 Also pure means **no mutation**: `array.sort()` changes the array it is called on. Use `[...array].sort()` or `array.filter(...).sort()` (filter already made a new array).
 
-## 3. Dates are the classic trap
+## c) Dates are the classic trap
 
 - `new Date('2026-11-08')` is midnight **UTC**. `new Date(2026, 10, 8)` is midnight **local** time. In Vietnam (UTC+7) the first one is 07:00 local, and in the Americas it is *the day before*.
 - Months in `new Date(y, m, d)` start at 0.
@@ -38,22 +36,6 @@ Also pure means **no mutation**: `array.sort()` changes the array it is called o
 
 The app stores dates as `'YYYY-MM-DD'` strings. Strings compare correctly with `<` and are easy to save as JSON.
 
-## 4. Money and `Intl`
+## d) Money and `Intl`
 
 `new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(517600)` gives `517.600 ₫`. Do not format money by hand.
-
-## Exercises
-
-| | |
-|---|---|
-| 1.1 | `isCategoryId`, `categoryInfo`, `makeItem` in `src/domain/types.ts` |
-| 1.2 | `parseISO`, `toISO`, `startOfDay`, `addDays`, `daysBetween`, `daysLeft` in `src/domain/dates.ts` |
-| 1.3 | `expiryStatus`, `whenText`, `needsAttention` in `src/domain/expiry.ts` |
-| 1.4 | `monthKey`, `formatVND`, `totalForMonth`, `compareSpending` in `src/domain/spending.ts` |
-
-## Check yourself (tick them with `npm run learn -- tick 1.m1`)
-
-1. What is the difference between `string`, `'dairy' | 'drinks'` and `unknown`?
-2. Why does `daysLeft` receive `today`?
-3. Why is `items.sort(...)` on a parameter a bug?
-4. Give one case where UTC and local date differ.

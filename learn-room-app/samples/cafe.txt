@@ -1,0 +1,10 @@
+Giờ vào: 09:12     Giờ ra: 09:12
+STT  Tên món  SL  Đơn giá  Thành tiền
+1  Phê Hạnh Nhân  1  35,000  35,000
+2  Mộc  1  37,000  37,000
+   - Thạch Giòn  1  0  0
+3  Thạch Giòn  1  5,000  5,000
+Thành tiền:  77,000 đ
+Tổng tiền:  77,000 đ
++Thanh toán tiền mặt  77,000 đ
+Wifi: Thức
