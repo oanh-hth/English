@@ -44,7 +44,7 @@ Material: [course/part-3-writing-notes.md](course/part-3-writing-notes.md)
 **Manual**
 - [ ] Read the material of this part <!-- m:3.read -->
 - [ ] Answer the self-check questions in your own words (write them in a notes file) <!-- m:3.quiz -->
-- [ ] Run the app: open a photo, write a note, save, reload the page (it is still there); try a wrong date and read the error <!-- m:3.run -->
+- [ ] Run the app: open a photo, write a note, save, reload the page (it is still there); send a wrong date with curl and read the error <!-- m:3.run -->
 
 **Exercises** (automatic)
 - [ ] **3.1 Validate requests**: Reject bad input before it touches the database <!-- e:3.1 -->

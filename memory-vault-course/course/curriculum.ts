@@ -72,7 +72,7 @@ export const phases: Part[] = [
     title: 'Writing notes',
     goal: 'Open a memory, write its title, date, tags and note, save it, or delete it. Bad input is refused with a clear message.',
     lesson: 'course/part-3-writing-notes.md',
-    manual: [...readLesson(3), { id: '3.run', text: 'Run the app: open a photo, write a note, save, reload the page (it is still there); try a wrong date and read the error' }],
+    manual: [...readLesson(3), { id: '3.run', text: 'Run the app: open a photo, write a note, save, reload the page (it is still there); send a wrong date with curl and read the error' }],
     exercises: [
       { id: '3.1', title: 'Validate requests', feature: 'Reject bad input before it touches the database',
         tests: ['server/tests/3.1-validation.test.ts'], files: ['server/src/http/validation.ts'] },
