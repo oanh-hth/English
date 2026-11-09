@@ -1,11 +1,11 @@
-// EXERCISE 4.3: the upload workflow. Make `npm run ex -- 4.3` pass.
+// EXERCISE 4.2: the upload workflow. Make `npm run ex -- 4.2` pass.
 //
 // Uploading a big video is not one step, and the browser cannot be trusted, so the server does it in three:
 //   init      "I want to upload beach.jpg, 4 MB."   -> record a PENDING item, say where to send the bytes
 //   (the browser sends the bytes straight to that place)
 //   complete  "I finished."                         -> check the file really arrived and really is an image or video,
 //                                                      and only then make the item visible (READY)
-// This service uses the pieces you built before: cleanFileName / isIsoDate (1.1), sniffFileType (1.2) and MediaRepo (3.1).
+// This service uses the pieces you built before: cleanFileName / isIsoDate (1.1), sniffFileType (4.1) and MediaRepo (2.1).
 import { randomBytes } from 'node:crypto';
 import type { MediaKind } from '@memory-vault/shared';
 import { cleanFileName, isIsoDate, sniffFileType } from '@memory-vault/shared';

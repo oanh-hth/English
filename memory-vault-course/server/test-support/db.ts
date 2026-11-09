@@ -46,3 +46,12 @@ export function placement(db: DatabaseSync, ids: string[]): { id: string; series
     return { id, seriesId: r ? r.series_id : null, position: r ? r.position : -1 };
   });
 }
+
+/** Insert a series row directly and put these media ids in it, in order. The first one becomes the cover. */
+export function seedSeries(db: DatabaseSync, userId: number, ids: string[], o: { id?: string; title?: string } = {}): string {
+  counter += 1;
+  const id = o.id ?? `s${counter}`;
+  db.prepare('INSERT INTO series (id, user_id, title, cover_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run(id, userId, o.title ?? 'Series', ids[0] ?? null, counter, counter);
+  ids.forEach((mid, i) => db.prepare('UPDATE media SET series_id = ?, position = ? WHERE id = ?').run(id, i, mid));
+  return id;
+}

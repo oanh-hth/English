@@ -29,8 +29,8 @@ for (const phase of phases) {
   const exDone = phase.exercises.filter((e) => passed.has(e.id)).length;
   const maDone = phase.manual.filter((m) => manualDone.has(m.id)).length;
   const complete = exDone === phase.exercises.length && maDone === phase.manual.length;
-  md += `\n## ${complete ? '✅ ' : ''}Phase ${phase.id}: ${phase.title}  (${exDone}/${phase.exercises.length} exercises)\n`;
-  md += `${phase.goal}\n\nLesson: [${phase.lesson}](${phase.lesson})\n\n`;
+  md += `\n## ${complete ? '✅ ' : ''}Part ${phase.id}: ${phase.title}  (${exDone}/${phase.exercises.length} exercises)\n`;
+  md += `${phase.goal}\n\nMaterial: [${phase.lesson}](${phase.lesson})\n\n`;
   md += '**Manual**\n';
   for (const m of phase.manual) md += `- ${box(manualDone.has(m.id))} ${m.text} <!-- m:${m.id} -->\n`;
   md += '\n**Exercises** (automatic)\n';
@@ -42,7 +42,7 @@ const next = allExercises.find((e) => !passed.has(e.id));
 console.log(`\nExercises passed: ${passed.size} / ${total}`);
 for (const phase of phases) {
   const n = phase.exercises.filter((e) => passed.has(e.id)).length;
-  console.log(`  Phase ${phase.id} ${phase.title.padEnd(34)} ${'#'.repeat(n)}${'.'.repeat(phase.exercises.length - n)} ${n}/${phase.exercises.length}`);
+  console.log(`  Part ${phase.id} ${phase.title.padEnd(34)} ${'#'.repeat(n)}${'.'.repeat(phase.exercises.length - n)} ${n}/${phase.exercises.length}`);
 }
 console.log(next ? `\nNext up: ${next.id} ${next.title}   ->   npm run ex -- ${next.id}` : '\nAll exercises pass. Finish the manual steps in CHECKLIST.md!');
 console.log('Checklist written to CHECKLIST.md');

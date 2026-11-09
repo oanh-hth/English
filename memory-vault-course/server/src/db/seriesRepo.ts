@@ -1,4 +1,5 @@
-// EXERCISE 3.2: the series repository. Make `npm run ex -- 3.2` pass.
+// EXERCISE 5.1: the series repository. Make `npm run ex -- 5.1` pass.
+// (`list` and `get` are GIVEN, because the library page already needs them in part 2. Read them, then build the rest.)
 //
 // A series is a row in `series` plus the photos that point to it with media.series_id and media.position.
 // This repository keeps the RULES, so no route can break them:
@@ -28,6 +29,11 @@ export type SeriesPatch = Partial<SeriesFields> & {
   ids?: string[];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toSeries = (r: Record<string, any>): Series => ({
+  id: r.id, title: r.title, note: r.note, tags: r.tags, takenOn: r.taken_on, coverId: r.cover_id ?? null, createdAt: r.created_at,
+});
+
 export class SeriesRepo {
   constructor(private db: DatabaseSync) {}
 
@@ -43,14 +49,15 @@ export class SeriesRepo {
     throw new Error('Not implemented: SeriesRepo.create');
   }
 
-  /** All series of this user as Series objects (camelCase). */
+  /** GIVEN. All series of this user as Series objects (camelCase). */
   list(userId: number): Series[] {
-    throw new Error('Not implemented: SeriesRepo.list');
+    return this.db.prepare('SELECT * FROM series WHERE user_id = ? ORDER BY created_at').all(userId).map(toSeries);
   }
 
-  /** One series of this user, or null. */
+  /** GIVEN. One series of this user, or null. */
   get(id: string, userId: number): Series | null {
-    throw new Error('Not implemented: SeriesRepo.get');
+    const row = this.db.prepare('SELECT * FROM series WHERE id = ? AND user_id = ?').get(id, userId);
+    return row ? toSeries(row) : null;
   }
 
   /**

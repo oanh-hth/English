@@ -1,6 +1,6 @@
-// EXERCISE 6.4: the library view. Make `npm run ex -- 6.4` pass.
+// EXERCISE 2.6: the library view. Make `npm run ex -- 2.6` pass.
 //
-// The scrapbook page: search box, filter, then tiles grouped by year. The hard thinking is already done in 1.3
+// The scrapbook page: search box, filter, then tiles grouped by year. The hard thinking is already done in 1.2
 // (buildEntries, groupByYear): this component only turns that data into HTML. New ideas:
 //  - rendering a list:  {items.map((item) => <li key={item.id}>...</li>)}   (every item needs a stable `key`)
 //  - useMemo to avoid recomputing when nothing changed: const entries = useMemo(() => ..., [library, query, kind])

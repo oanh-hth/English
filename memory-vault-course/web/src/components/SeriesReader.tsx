@@ -1,4 +1,4 @@
-// EXERCISE 6.6: the series reader. Make `npm run ex -- 6.6` pass.
+// EXERCISE 5.4: the series reader. Make `npm run ex -- 5.4` pass.
 //
 // Flip through the photos of a series like a little album, and reorder them. New ideas:
 //  - useEffect to react to the outside world, here the keyboard. Always clean up what you start:

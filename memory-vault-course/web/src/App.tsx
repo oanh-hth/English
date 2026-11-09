@@ -1,4 +1,4 @@
-// Given: the application shell. Read it from top to bottom: it is every exercise of phase 6 wired together.
+// Given: the application shell. Read it from top to bottom: it is every component exercise of the course wired together.
 //
 //   <App>          decides between the login screen and the signed-in screen
 //   <Home>         loads the library, shows it, and opens the item / series dialogs and the upload panel

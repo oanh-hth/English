@@ -1,4 +1,4 @@
-// EXERCISE 6.3: the note editor. Make `npm run ex -- 6.3` pass.
+// EXERCISE 3.3: the note editor. Make `npm run ex -- 3.3` pass.
 //
 // This is where you write down a memory: title, date, tags and a note. New ideas:
 //  - several pieces of state in one object:  const [values, setValues] = useState(initial);

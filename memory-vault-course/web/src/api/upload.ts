@@ -1,4 +1,4 @@
-// Given: upload one file with the three steps from phase 4 (announce, send the bytes, finish).
+// Given: upload one file with the three steps from part 4 (announce, send the bytes, finish).
 // The browser sends the file itself, untouched, so the quality is never changed.
 import type { ApiClient } from './client';
 

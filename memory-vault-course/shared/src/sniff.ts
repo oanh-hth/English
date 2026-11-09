@@ -1,4 +1,4 @@
-// EXERCISE 1.2: recognise a file by its first bytes. Make `npm run ex -- 1.2` pass.
+// EXERCISE 4.1: recognise a file by its first bytes. Make `npm run ex -- 4.1` pass.
 //
 // Never trust a file's name or the Content-Type the browser sends: "virus.html" can be renamed "photo.png".
 // Real image and video formats start with a fixed "magic" signature, so we look at the bytes instead.

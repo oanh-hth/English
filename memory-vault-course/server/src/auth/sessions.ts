@@ -1,4 +1,4 @@
-// EXERCISE 2.2: sessions. Make `npm run ex -- 2.2` pass.
+// EXERCISE 6.2: sessions. Make `npm run ex -- 6.2` pass.
 //
 // After a correct password the server gives the browser a random token (in a cookie). On every later request the
 // browser sends it back, and we look up who it belongs to. We store only a HASH of the token (sha256), so even
@@ -7,7 +7,7 @@ import { createHash, randomBytes } from 'node:crypto';
 
 export interface Session {
   userId: number;
-  /** A second secret that the page must send on every change (CSRF protection, see exercise 2.4). */
+  /** A second secret that the page must send on every change (CSRF protection, see exercise 6.4). */
   csrf: string;
   /** Milliseconds since 1970 when this session stops working. */
   expiresAt: number;

@@ -1,4 +1,4 @@
-// EXERCISE 3.1: the media repository. Make `npm run ex -- 3.1` pass.
+// EXERCISE 2.1: the media repository. Make `npm run ex -- 2.1` pass.
 //
 // A repository is a class that owns the SQL for one kind of thing. The rest of the app calls
 // `media.listReady(userId)` and never sees a SELECT. Two big ideas here:

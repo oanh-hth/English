@@ -1,5 +1,5 @@
 // Given: the contract every storage backend follows. "Program to an interface": the rest of the app only knows this
-// shape, so local disk (exercise 4.1) and a cloud bucket (exercise 7.2) can be swapped without touching any route.
+// shape, so local disk (exercise 2.2) and a cloud bucket (exercise 7.2) can be swapped without touching any route.
 
 export interface UploadTarget {
   /** Where the browser should PUT the file. Relative ("/api/...") means this server; absolute means the storage service. */

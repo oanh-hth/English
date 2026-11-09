@@ -1,4 +1,4 @@
-// EXERCISE 2.3: login lockout. Make `npm run ex -- 2.3` pass.
+// EXERCISE 6.3: login lockout. Make `npm run ex -- 6.3` pass.
 //
 // Without a limit, someone could try millions of passwords. After too many wrong tries we refuse for a while.
 // We count failures per "key". The server uses two keys for one login attempt: the visitor's address ("ip:1.2.3.4")

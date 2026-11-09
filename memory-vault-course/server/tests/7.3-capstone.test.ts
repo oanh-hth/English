@@ -9,6 +9,7 @@ import { createApp } from '../src/app';
 import { LoginLimiter } from '../src/auth/loginLimiter';
 import { hashPassword } from '../src/auth/password';
 import { SessionStore } from '../src/auth/sessions';
+import { realAuth } from '../src/auth/strategies';
 import { openDb } from '../src/db/schema';
 import { UserRepo } from '../src/db/userRepo';
 import { createLocalStorage } from '../src/storage/localStorage';
@@ -29,10 +30,9 @@ async function boot() {
   const users = new UserRepo(db);
   users.create('alice', await hashPassword('correct horse battery'));
   users.create('bob', await hashPassword('another long passphrase'));
-  const app = createApp({
-    config: { port: 0, host: '127.0.0.1', dataDir: dir, secure: false, maxUploadBytes: 5 * 1024 * 1024 },
-    db, storage: createLocalStorage(dir), sessions: new SessionStore(), limiter: new LoginLimiter(),
-  });
+  const config = { port: 0, host: '127.0.0.1', dataDir: dir, secure: false, maxUploadBytes: 5 * 1024 * 1024 };
+  const auth = realAuth({ users, sessions: new SessionStore(), limiter: new LoginLimiter(), config });
+  const app = createApp({ config, db, storage: createLocalStorage(dir), auth });
   return app;
 }
 

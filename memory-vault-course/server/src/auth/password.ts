@@ -1,4 +1,4 @@
-// EXERCISE 2.1: password hashing. Make `npm run ex -- 2.1` pass.
+// EXERCISE 6.1: password hashing. Make `npm run ex -- 6.1` pass.
 //
 // Never store a password. Store a hash: a one-way scramble. If the database leaks, the passwords do not.
 // scrypt is a deliberately slow hash built into Node (the `crypto` module), so guessing is expensive.

@@ -1,4 +1,4 @@
-// EXERCISE 4.1: store files on disk. Make `npm run ex -- 4.1` pass.
+// EXERCISE 2.2: store files on disk. Make `npm run ex -- 2.2` pass.
 //
 // Node's `fs.promises` API reads and writes files without blocking the server. Remember to `await` every call.
 //   import fs from 'node:fs/promises';

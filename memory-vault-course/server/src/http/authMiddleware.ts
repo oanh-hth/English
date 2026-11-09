@@ -1,4 +1,4 @@
-// EXERCISE 2.4: the gatekeeper. Make `npm run ex -- 2.4` pass.
+// EXERCISE 6.4: the gatekeeper. Make `npm run ex -- 6.4` pass.
 //
 // Express "middleware" is a function that runs before your route: (req, res, next) => ...
 // It can answer the request itself (res.status(401).json(...)) or call next() to let the request continue.

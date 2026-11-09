@@ -1,4 +1,4 @@
-// EXERCISE 4.2: byte ranges. Make `npm run ex -- 4.2` pass.
+// EXERCISE 2.3: byte ranges. Make `npm run ex -- 2.3` pass.
 //
 // A video player does not download a whole 2 GB file to jump to minute 40. It asks for a slice:
 //     Range: bytes=1000000-1999999

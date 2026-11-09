@@ -1,8 +1,8 @@
-// EXERCISE 1.3: what the library page shows. Make `npm run ex -- 1.3` pass.
+// EXERCISE 1.2: what the library page shows. Make `npm run ex -- 1.2` pass.
 //
 // The server sends two flat lists: all the media and all the series. The page wants a tidy list of "entries"
 // (a loose photo, or a whole series as one stack) grouped by year. Doing this as pure functions means you can test it
-// without any browser. The React component in exercise 6.4 will call these functions.
+// without any browser. The React component in exercise 2.6 will call these functions.
 import type { Library, LibraryEntry, LibraryFilter, MediaItem, YearGroup } from './types';
 
 /**

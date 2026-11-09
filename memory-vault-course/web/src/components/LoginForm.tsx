@@ -1,4 +1,4 @@
-// EXERCISE 6.2: the login form. Make `npm run ex -- 6.2` pass.
+// EXERCISE 6.6: the login form. Make `npm run ex -- 6.6` pass.
 //
 // A React component is a function that returns what the screen should look like for the current state.
 // State (`useState`) is memory that survives re-renders; changing it re-draws the component.

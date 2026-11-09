@@ -1,4 +1,4 @@
-// EXERCISE 6.1: the API client. Make `npm run ex -- 6.1` pass.
+// EXERCISE 2.5: the API client. Make `npm run ex -- 2.5` pass.
 //
 // Every component needs to call the server, and every call needs the same care: send JSON, send the CSRF token on
 // changes, turn errors into something readable. Doing it once, here, keeps the components simple.
