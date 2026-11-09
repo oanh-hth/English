@@ -1,4 +1,4 @@
-// REFERENCE SOLUTION for Phase 4. Try on your own first.
+// REFERENCE SOLUTION for Part 4. Try on your own first.
 export type Grade = 0 | 1 | 2 | 3;
 export interface CardState { ease: number; int: number; reps: number; due: number; lapses: number }
 export const DAY = 86_400_000;

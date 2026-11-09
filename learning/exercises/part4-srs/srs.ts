@@ -1,6 +1,6 @@
-// PHASE 4 EXERCISE: implement the spaced-repetition scheduler (SM-2 style).
+// PART 4 EXERCISE: implement the spaced-repetition scheduler (SM-2 style).
 // Run: npm test   (from the learning/exercises folder). Make every test in srs.test.ts pass.
-// Rules are in learning/phase-04-spaced-repetition.md.
+// Rules are in learning/part4/a-scheduler.md.
 
 export type Grade = 0 | 1 | 2 | 3; // 0 again, 1 hard, 2 good, 3 easy
 

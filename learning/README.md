@@ -1,43 +1,51 @@
-# Learn by rebuilding Speak Natural
+# Build Speak Natural: a full stack course
 
-You already have a finished app. This program teaches you to build it yourself, in **Node.js + TypeScript + React**, one phase at a time. Each phase has the same four steps:
+This course teaches you to build a complete English-learning app: **Node.js, TypeScript and React**, from an empty folder to a deployed, installable, offline-capable app. It follows the format of [Full Stack Open](https://fullstackopen.com): numbered **parts**, each split into **lessons** (a, b, c, d), with **exercises** at the end of every lesson. Every exercise adds to the **same project**, so when you finish Part 9 you have the finished app.
 
-1. **Learn**: read or watch the topics listed (search the keywords).
-2. **Study**: open the finished app's code where that idea appears. Read it; don't copy it.
-3. **Build**: finish the exercise in your own project. Each one has a checklist.
-4. **Check**: answer the self-check questions out loud, then compare with the finished app.
+You already own a finished version of the app (the vanilla JavaScript one in this repo). It is your **reference**, not your starting point: you build your own version in a new project.
 
-Rule of thumb: **don't move on until the checklist is ticked.** Track progress in [`PROGRESS.md`](PROGRESS.md).
+## How a part works
 
-## The path
+1. **Read the lessons in order.** Each lesson explains the ideas with code you can try.
+2. **Do the exercises as you go.** They are numbered by part (`3.1`, `3.2`, ...). Commit after each one.
+3. **Finish the part's checkpoint.** Each part ends with a checklist and a git tag (`git tag part3`). The app should work at every checkpoint.
+4. **Compare with the reference.** Only after your own version works, read the matching files in the finished app listed in the part.
 
-| # | Phase | You build | Proof you're done |
-|---|-------|-----------|-------------------|
-| 0 | [Setup & toolchain](phase-00-setup.md) | A Vite + React + TS project | `npm run dev` and `npm run build` work |
-| 1 | [TypeScript & data modeling](phase-01-typescript-data.md) | Types + a data validator | Validator accepts the sample data |
-| 2 | [React: components, props, lists](phase-02-react-basics.md) | Topic list and phrase list | Matches the Topics screen |
-| 3 | [State, events & audio](phase-03-state-and-audio.md) | A flip-and-speak flashcard | Card flips and reads aloud |
-| 4 | [Spaced repetition](phase-04-spaced-repetition.md) | The scheduler (**tests given**) | `npm test` passes |
-| 5 | [Persistence & app state](phase-05-persistence.md) | Progress that survives reload | Reload keeps your deck |
-| 6 | [Routing & mobile layout](phase-06-routing-mobile.md) | Tabs, pages, iPhone layout | Works at 390 px wide |
-| 7 | [The exercise engine](phase-07-exercise-engine.md) | Question generators (**tests given**) | `npm test` passes + a session UI |
-| 8 | [Edit & custom content](phase-08-edit-custom-content.md) | Add, edit, delete items | Changes survive reload |
-| 9 | [PWA & offline](phase-09-pwa-offline.md) | Installable, offline app | Works in airplane mode |
-| 10 | [Testing](phase-10-testing.md) | Unit, component and E2E tests | CI-ready test suite |
-| 11 | [Deploy & security](phase-11-deploy-security.md) | GitHub Pages deploy | Live URL, no secrets in repo |
-| 12 | [Stretch: Claude help & sync](phase-12-stretch.md) | A tiny server + feature | Key never reaches the browser |
+If an exercise is stuck for more than 30 minutes: re-read the lesson, then look at the reference file, close it, and write your own.
 
-Rough time: 6 to 10 weeks at 5 hours a week. Phases 0–6 give you a working app; 7–12 are where it gets professional.
+## The parts
 
-## Folder contents
+| Part | Title | The app can now... |
+|------|-------|--------------------|
+| [0](part0/README.md) | Getting ready | run an empty React + TypeScript project |
+| [1](part1/README.md) | TypeScript and the content | load and validate real phrases and words |
+| [2](part2/README.md) | React basics: browsing | browse topics and phrases on a phone-sized screen |
+| [3](part3/README.md) | State, events and audio | teach new phrases with audio (Learn session) |
+| [4](part4/README.md) | Spaced repetition and saving | schedule reviews and remember your progress |
+| [5](part5/README.md) | Routing and the app shell | navigate like a real app with tabs and pages |
+| [6](part6/README.md) | The exercise engine | generate practice questions and role-plays |
+| [7](part7/README.md) | Your own content | add, edit, delete, export and import items |
+| [8](part8/README.md) | Offline, tests and deployment | install on your phone, work offline, ship from GitHub |
+| [9](part9/README.md) | Going further | an AI helper behind a server, plus ideas |
 
-- `sample-data/`: real phrases, words and a role-play from the finished app, as JSON, for your exercises.
-- `exercises/`: starter code and tests for phases 4 and 7. Run `npm install` then `npm test` inside it.
-- `solutions/`: reference answers for those two exercises. **Look only after you've tried.**
+Plan on **6 to 10 weeks at about 5 hours a week**. Parts 0 to 4 give you a working study tool.
 
-## Working method
+## What you need
 
-- Build in your **own project folder**, not in this repo. Copy `sample-data/` into it.
-- Commit after every checklist item. Small commits make mistakes easy to undo.
-- When stuck for more than 30 minutes: read the matching file in the finished app, close it, and write your own version.
-- Never put an API key or `.env` file in git.
+- A computer (macOS, Windows or Linux), a code editor (VS Code is a good choice) and a GitHub account.
+- An iPhone or Android phone on the same Wi-Fi to test on a real device.
+- No prior React or TypeScript. Basic JavaScript (variables, functions, arrays, objects) helps.
+
+## Files in this folder
+
+- [`app-spec.md`](app-spec.md): what the finished app does and its data shapes. Read it in Part 0.
+- [`PROGRESS.md`](PROGRESS.md): tick off exercises and checkpoints.
+- `sample-data/`: real phrases, words and a role-play as JSON, for your exercises.
+- `exercises/`: starter code with **automated tests** for Part 4 (scheduler) and Part 6 (answer helpers). Run `npm install && npm test` inside it.
+- `solutions/`: reference answers for those two. Look only after you have tried.
+
+## Ground rules
+
+- Use your **own project folder** (`speak-natural`), separate from this repo.
+- Never put an API key or `.env` file in git. Part 8 explains why in detail.
+- Phrases in the sample data were written by an AI and have not been reviewed by a native speaker. Part 7 teaches you how to fix them.

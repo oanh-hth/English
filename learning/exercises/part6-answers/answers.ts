@@ -1,5 +1,5 @@
-// PHASE 7 EXERCISE: the small pure helpers behind the exercise engine.
-// Run: npm test. Make every test in answers.test.ts pass. Hints: learning/phase-07-exercise-engine.md
+// PART 6 EXERCISE: the small pure helpers behind the exercise engine.
+// Run: npm test. Make every test in answers.test.ts pass. Hints: learning/part6/a-helpers.md
 
 /** Normalize curly apostrophes, strip . , ! ? ; : " and split on whitespace. */
 export function tokens(s: string): string[] {

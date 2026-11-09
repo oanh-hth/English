@@ -1,4 +1,4 @@
-// REFERENCE SOLUTION for Phase 7. Try on your own first.
+// REFERENCE SOLUTION for Part 6. Try on your own first.
 export const tokens = (s: string): string[] =>
   s.replace(/[’]/g, "'").replace(/[.,!?;:"]/g, '').trim().split(/\s+/).filter(Boolean);
 

@@ -50,4 +50,4 @@ Open any phrase or word and tap **✏️ Edit** or **🗑 Delete** (also on the 
 Open a topic and tap **Add a word or phrase** to add your own word or phrase to that topic (or to My words). It joins that topic's lists, exercises and your review deck. You can edit it later, including moving it to a different topic. Your additions are stored on your device only.
 
 ## Learn to build it yourself
-The `learning/` folder is a 13-phase program (Node, TypeScript, React) with exercises and tests for rebuilding this app. Start at `learning/README.md`.
+The `learning/` folder is a Full Stack Open style course (Parts 0 to 9: Node, TypeScript, React) with lessons, numbered exercises and tests for rebuilding this app. Start at `learning/README.md`.
