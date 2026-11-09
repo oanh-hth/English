@@ -25,6 +25,8 @@ import { parseBillText } from '../domain/bills';
 
 const FILE = join(process.cwd(), 'data', 'items.json');
 const today = new Date();
+/** Local YYYY-MM-DD without using the learner's toISO, so the header works from the start. */
+const todayText = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 
@@ -50,7 +52,7 @@ function section(title: string, exercise: string, body: () => void): void {
 function report(): void {
   const items = load();
   if (items.length === 0) console.log(dim('The room is empty. Try: npm run room -- seed'));
-  console.log(bold(`Your room, ${toISO(today)}`) + dim(`  (${items.filter((i) => !i.used).length} items)`));
+  console.log(bold(`Your room, ${todayText}`) + dim(`  (${items.filter((i) => !i.used).length} items)`));
 
   section('Spending', '1.4', () => {
     const s = compareSpending(items, today);
@@ -148,10 +150,17 @@ function seed(): void {
 }
 
 const [command = 'report', ...args] = process.argv.slice(2);
-switch (command) {
-  case 'report': report(); break;
-  case 'seed': seed(); break;
-  case 'add': add(args); break;
-  case 'bill': bill(args); break;
-  default: console.log(`Unknown command "${command}". Try: report, seed, add, bill`);
+try {
+  switch (command) {
+    case 'report': report(); break;
+    case 'seed': seed(); break;
+    case 'add': add(args); break;
+    case 'bill': bill(args); break;
+    default: console.log(`Unknown command "${command}". Try: report, seed, add, bill`);
+  }
+} catch (error) {
+  if (error instanceof Error && error.message === 'Not implemented yet') {
+    console.log(`🔒 "${command}" needs a function you have not written yet. Run: npm run next`);
+    process.exitCode = 1;
+  } else throw error;
 }
