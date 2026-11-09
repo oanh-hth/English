@@ -1,4 +1,4 @@
-// Exercise 5.2: the maths behind smooth pencil lines. See curriculum/phase-5-graphics-and-pencil/5.2-stroke-geometry.md
+// Exercise 6.1: Stroke width, simplifying and smooth paths. Read curriculum/part-6/a-stroke-geometry.md first.
 
 export interface Point { x: number; y: number; pressure: number }
 export type PointerKind = "pen" | "touch" | "mouse";
@@ -8,14 +8,14 @@ export type PointerKind = "pen" | "touch" | "mouse";
  * width = size * (0.35 + pressure * 1.3), rounded to 2 decimals.
  */
 export function strokeWidth(size: number, pressure: number, kind: PointerKind): number {
-  // TODO 5.2
-  throw new Error("TODO 5.2");
+  // TODO 6.1
+  throw new Error("TODO 6.1");
 }
 
 /** Straight-line distance between two points. */
 export function distance(a: Point, b: Point): number {
-  // TODO 5.2
-  throw new Error("TODO 5.2");
+  // TODO 6.1
+  throw new Error("TODO 6.1");
 }
 
 /**
@@ -23,8 +23,8 @@ export function distance(a: Point, b: Point): number {
  * Pencils send 120+ points per second, so this keeps saved sketches small.
  */
 export function simplify(points: readonly Point[], minDistance: number): Point[] {
-  // TODO 5.2
-  throw new Error("TODO 5.2");
+  // TODO 6.1
+  throw new Error("TODO 6.1");
 }
 
 /**
@@ -35,6 +35,6 @@ export function simplify(points: readonly Point[], minDistance: number): Point[]
  * Round every number to 1 decimal (use Number(n.toFixed(1)) so 3.0 prints as 3).
  */
 export function toSvgPath(points: readonly Point[]): string {
-  // TODO 5.2
-  throw new Error("TODO 5.2");
+  // TODO 6.1
+  throw new Error("TODO 6.1");
 }

@@ -1,4 +1,4 @@
-// Exercise 2.2: the garden as a reducer. See curriculum/phase-2-domain-logic/2.2-garden-reducer.md
+// Exercise 2.2: The garden reducer: grow, harvest, unlock. Read curriculum/part-2/b-reducers.md first.
 import type { Day, GardenState, PlantKind } from "@app/shared/types";
 
 export const VARIETIES: Record<PlantKind, { name: string; plural: string; fruits: number; unlockAfter: number }> = {

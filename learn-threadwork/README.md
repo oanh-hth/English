@@ -1,68 +1,69 @@
-# Learn by building Threadwork
+# Learn to build Threadwork
 
-A self-paced course in **TypeScript, React and Node.js**. You build Threadwork, a personal workspace with linked tasks, Apple Pencil sketching and a garden that grows when you finish work, one tested feature at a time.
+A self-paced course in **TypeScript, React and Node.js**, in the style of [Full Stack Open](https://fullstackopen.com). You build **Threadwork**, a personal workspace for your iPad and computer: tasks you link together, notes, drafts and data tables, the resources you used, Apple Pencil sketches, and a garden that grows when you finish work.
 
-Each phase has two parts:
-1. **Learn:** a short lesson with the ideas, examples and links to the official docs, plus a knowledge checklist.
-2. **Apply:** exercises in the real app. Each one has starter code, instructions in the code comments, and **tests you make pass**.
+The course is split into **parts**, and each part into **sections**. A section teaches the ideas you need, with examples from Threadwork, and ends with **exercises** that build the next piece of the app. Most exercises come with tests that tell you when you're done. **When you finish the last exercise, Threadwork is finished**, deployed, and on your iPad's home screen.
 
-`npm run progress` runs every test, reads your ticked knowledge checks, and writes your checklist to [PROGRESS.md](PROGRESS.md).
+## Parts
 
-## The path
+| Part | What it covers | Sections | Exercises |
+|---|---|---|---|
+| **[Part 0: Fundamentals](curriculum/part-0/README.md)** | How the course works, the tools you need, and how a web app like Threadwork fits together: browser, server, data. | [0a](curriculum/part-0/a-how-this-course-works.md) · [0b](curriculum/part-0/b-how-threadwork-works.md) | 0.1–0.3 |
+| **[Part 1: TypeScript and the task model](curriculum/part-1/README.md)** | TypeScript through Threadwork's task model: types, unions, records, immutable updates, generics and checking data from outside. | [1a](curriculum/part-1/a-types-and-objects.md) · [1b](curriculum/part-1/b-unions-and-records.md) · [1c](curriculum/part-1/c-immutable-updates.md) · [1d](curriculum/part-1/d-generics-and-unknown.md) | 1.1–1.4 |
+| **[Part 2: Domain logic: streaks, garden and rewards](curriculum/part-2/README.md)** | The rules that make Threadwork motivating, written as pure functions and reducers: streaks, the growing garden, harvests, treats and badges. | [2a](curriculum/part-2/a-pure-functions-and-dates.md) · [2b](curriculum/part-2/b-reducers.md) · [2c](curriculum/part-2/c-rewards.md) | 2.1–2.4 |
+| **[Part 3: React components](curriculum/part-3/README.md)** | React components: the task card, the quick-capture bar, the board and the task drawer. Props, state, forms, lists and effects, tested the way people use them. | [3a](curriculum/part-3/a-components-and-props.md) · [3b](curriculum/part-3/b-state-and-forms.md) · [3c](curriculum/part-3/c-lists-and-composition.md) · [3d](curriculum/part-3/d-effects-and-editing.md) | 3.1–3.4 |
+| **[Part 4: State management and hooks](curriculum/part-4/README.md)** | One state for the whole app: custom hooks, useReducer, Context, saving on the device, navigation between pages, and the Today page. After this part the real app runs. | [4a](curriculum/part-4/a-custom-hooks.md) · [4b](curriculum/part-4/b-reducer-and-context.md) · [4c](curriculum/part-4/c-navigation-and-selectors.md) | 4.1–4.6 |
+| **[Part 5: Linked work: notes, resources and the link map](curriculum/part-5/README.md)** | Threadwork's central idea, everything linked to tasks: notes, drafts, data tables, resources you used, and a map that draws it all. | [5a](curriculum/part-5/a-feature-reducers.md) · [5b](curriculum/part-5/b-editors.md) · [5c](curriculum/part-5/c-resources.md) · [5d](curriculum/part-5/d-link-map.md) | 5.1–5.7 |
+| **[Part 6: Sketching with Apple Pencil](curriculum/part-6/README.md)** | Drawing with Apple Pencil: pressure, smooth strokes, palm rejection, undo, and sketches saved with your tasks. | [6a](curriculum/part-6/a-stroke-geometry.md) · [6b](curriculum/part-6/b-pointer-input.md) · [6c](curriculum/part-6/c-saving-sketches.md) | 6.1–6.4 |
+| **[Part 7: The garden and motivation](curriculum/part-7/README.md)** | Motivation: the plant drawn in SVG, harvests and seeds, the treat shop, the inspiration wall, a sky that follows the weather, animation and badge celebrations. | [7a](curriculum/part-7/a-svg-plant.md) · [7b](curriculum/part-7/b-garden-and-treats.md) · [7c](curriculum/part-7/c-inspiration.md) · [7d](curriculum/part-7/d-weather-and-motion.md) | 7.1–7.9 |
+| **[Part 8: A Node.js server](curriculum/part-8/README.md)** | A Node.js server with Express: a REST API, accounts with safe passwords and tokens, data saved in files with conflict checks, and live weather. | [8a](curriculum/part-8/a-express.md) · [8b](curriculum/part-8/b-rest-api.md) · [8c](curriculum/part-8/c-accounts.md) · [8d](curriculum/part-8/d-storage.md) · [8e](curriculum/part-8/e-external-apis.md) | 8.1–8.5 |
+| **[Part 9: Full stack and shipping](curriculum/part-9/README.md)** | Full stack and shipping: the API client, sync between devices, sign-in, offline support, installing on the iPad and deploying. | [9a](curriculum/part-9/a-api-client.md) · [9b](curriculum/part-9/b-sync.md) · [9c](curriculum/part-9/c-sign-in.md) · [9d](curriculum/part-9/d-offline-and-ipad.md) · [9e](curriculum/part-9/e-deploy.md) | 9.1–9.6 |
 
-| Phase | You learn | Exercises |
-|---|---|---|
-| **[0. Setup and your first test](curriculum/phase-0-setup/README.md)** | Install the tools, run the app, and make your first test pass. | [0.1](curriculum/phase-0-setup/0.1-hello.md) |
-| **[1. TypeScript through the task model](curriculum/phase-1-typescript/README.md)** | Types, unions, type guards, immutable updates, generics and validating unknown data. | [1.1](curriculum/phase-1-typescript/1.1-task-model.md), [1.2](curriculum/phase-1-typescript/1.2-growth.md), [1.3](curriculum/phase-1-typescript/1.3-immutable-updates.md), [1.4](curriculum/phase-1-typescript/1.4-generics-and-validation.md) |
-| **[2. Domain logic: dates, garden and rewards](curriculum/phase-2-domain-logic/README.md)** | Pure functions and reducers for streaks, plant growth, harvests, treats and badges. | [2.1](curriculum/phase-2-domain-logic/2.1-dates-and-streaks.md), [2.2](curriculum/phase-2-domain-logic/2.2-garden-reducer.md), [2.3](curriculum/phase-2-domain-logic/2.3-treats.md), [2.4](curriculum/phase-2-domain-logic/2.4-badges.md) |
-| **[3. React components](curriculum/phase-3-react-components/README.md)** | JSX, props, state, events, lists, forms and accessible markup, tested like a user would use them. | [3.1](curriculum/phase-3-react-components/3.1-task-card.md), [3.2](curriculum/phase-3-react-components/3.2-quick-capture.md), [3.3](curriculum/phase-3-react-components/3.3-board.md), [3.4](curriculum/phase-3-react-components/3.4-task-drawer.md) |
-| **[4. State management and hooks](curriculum/phase-4-state-and-hooks/README.md)** | Custom hooks, useReducer, Context, effects and timers. | [4.1](curriculum/phase-4-state-and-hooks/4.1-use-local-storage.md), [4.2](curriculum/phase-4-state-and-hooks/4.2-app-reducer.md), [4.3](curriculum/phase-4-state-and-hooks/4.3-app-context.md), [4.4](curriculum/phase-4-state-and-hooks/4.4-use-countdown.md) |
-| **[5. Graphics and Apple Pencil](curriculum/phase-5-graphics-and-pencil/README.md)** | SVG from data, stroke geometry and pointer events with palm rejection. | [5.1](curriculum/phase-5-graphics-and-pencil/5.1-plant.md), [5.2](curriculum/phase-5-graphics-and-pencil/5.2-stroke-geometry.md), [5.3](curriculum/phase-5-graphics-and-pencil/5.3-sketch-reducer.md) |
-| **[6. Node.js server with Express](curriculum/phase-6-node-server/README.md)** | HTTP, routing, REST, validation, password hashing, tokens, files and calling other APIs. | [6.1](curriculum/phase-6-node-server/6.1-express-app.md), [6.2](curriculum/phase-6-node-server/6.2-tasks-api.md), [6.3](curriculum/phase-6-node-server/6.3-auth.md), [6.4](curriculum/phase-6-node-server/6.4-file-store.md), [6.5](curriculum/phase-6-node-server/6.5-weather.md) |
-| **[7. Full stack: connect the app to the server](curriculum/phase-7-full-stack/README.md)** | A typed API client, sync decisions and an async login form. | [7.1](curriculum/phase-7-full-stack/7.1-api-client.md), [7.2](curriculum/phase-7-full-stack/7.2-sync.md), [7.3](curriculum/phase-7-full-stack/7.3-login-form.md) |
-| **[Capstone](curriculum/capstone.md)** | Put it all together, bring back the prototype's features, use it on your iPad | checklist |
-
-28 exercises in total. Expect roughly 30 to 50 hours if you are new to these tools.
+52 exercises: 47 with automatic tests, 5 you tick yourself (like installing on the iPad). Plan on 40–60 hours if these tools are new to you.
 
 ## Start
-You need Node.js 20 or newer (https://nodejs.org) and git.
+
+You need Node.js 20 or newer (<https://nodejs.org>) and git.
+
 ```
 cd learn-threadwork
 npm install
-npm run ex 0.1          # lesson + tests for the first exercise, re-run on every save
 ```
-Then read [Phase 0](curriculum/phase-0-setup/README.md).
+
+Then read [Part 0a: How this course works](curriculum/part-0/a-how-this-course-works.md).
 
 ## Commands
+
 | Command | What it does |
 |---|---|
-| `npm run ex <id>` | Shows the exercise (lesson, files, tests) and runs its tests on every save. `npm run ex next` picks the first unfinished one. Add `-- --once` to run once. |
-| `npm run progress` | Your checklist: exercises passed, knowledge checks ticked, capstone items. Writes `PROGRESS.md`. |
-| `npm test` | All tests in watch mode. |
-| `npm run dev` | Runs the server (port 3001) and the app (http://localhost:5173) together. |
+| `npm run ex <n>` | Shows exercise *n* (where to read, what to edit) and runs its tests every time you save. `npm run ex next` picks the first unfinished one. `npm run ex` lists them all. |
+| `npm run progress` | Your checklist: exercises done, knowledge checks ticked. Writes [PROGRESS.md](PROGRESS.md). |
+| `npm run dev` | Runs the server (port 3001) and the app (<http://localhost:5173>). Pages waiting for an exercise say which one. |
+| `npm test` | Every test, in watch mode. |
 | `npm run typecheck` | TypeScript checks the whole project. |
-| `npm run build` then `npm start` | One server that serves the built app and the API on port 3001. |
-| `npm run verify` | For the course maintainer: checks that every solution passes and every starter fails. |
+| `npm run build` then `npm start` | The production app: one server for the app and the API on port 3001, with offline support. |
+| `npm run verify` | For whoever maintains the course: every solution passes, every starter fails. |
 
-## How the repository is organised
+## The repository
+
 ```
-app/
-  shared/        TypeScript used by both sides: the task model, garden rules, sync rules
-  client/        React app (Vite). App.tsx, the playground and SketchPad are given; the components are yours
-  server/        Node.js + Express API. index.ts is given; app, auth, routes and storage are yours
-tests/           one test file per exercise (don't edit; they are the specification)
-curriculum/      lessons: a README per phase, a page per exercise, the capstone and course.json
-solutions/       reference solutions, only for when you are stuck
-scripts/         the ex, progress and verify commands
+app/shared/     TypeScript used by the browser and the server
+app/client/     the React app: your components, plus the given pages (views/) and app shell (App.tsx)
+app/server/     the Node.js + Express server
+tests/          one test file per exercise; don't change them, they are the specification
+curriculum/     the course: a folder per part, a file per section, and course.json
+solutions/      reference answers, for when you're really stuck
+scripts/        the ex, progress and verify commands
 ```
-The app runs from the start. Every part that depends on an unfinished exercise shows which exercise it is waiting for. Try your components with sample data at http://localhost:5173/#playground.
 
 ## Rules that help
-- **Don't change the tests.** If a test seems wrong, re-read the comments in the starter file first.
-- **One exercise at a time, in order.** Later exercises import earlier ones (for example 4.2 uses your code from Phases 1 and 2).
-- **Commit after every green exercise.** `git commit -am "Finish 2.2"`.
-- **Look at `solutions/` last.** Read it, close it, and write your own version.
-- **Tick knowledge checks honestly.** Tick one only when you can explain it to someone else.
+
+- **Go in order.** Later exercises use earlier ones. Every exercise passes using only the work before it.
+- **Don't change the tests.** If one seems wrong, re-read the starter file's comment.
+- **Commit after every green exercise:** `git add -A && git commit -m "Finish 4.3"`.
+- **Look at `solutions/` last.** Read, close, then write your own.
+- **Tick knowledge checks honestly**, only when you could explain the idea to a friend.
 
 ## Data and privacy
-The server stores accounts and app state as JSON files in `data/` (ignored by git). Passwords are stored as salted scrypt hashes. The token secret is created on first start in `data/secret.txt`, or set it with `TOKEN_SECRET`. Weather comes from Open-Meteo (free, no key); only coordinates are sent.
+
+The server keeps accounts and app state as JSON files in `data/` (ignored by git). Passwords are stored as salted scrypt hashes. Set `TOKEN_SECRET` in production; otherwise one is created in `data/secret.txt`. Weather comes from Open-Meteo (free, no key); only coordinates are sent.

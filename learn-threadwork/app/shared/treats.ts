@@ -1,8 +1,8 @@
-// Exercise 2.3: trading harvested fruit for treats. See curriculum/phase-2-domain-logic/2.3-treats.md
-import type { Day, Harvest, Result } from "@app/shared/types";
+// Exercise 2.3: Trade fruit for treats. Read curriculum/part-2/c-rewards.md first.
+import type { Claimed, Day, Harvest, Result, Treat } from "@app/shared/types";
 
-export interface Treat { id: string; name: string; cost: number }
-export interface Claimed { treatId: string; name: string; cost: number; day: Day }
+export type { Claimed, Treat };
+
 export interface Wallet { harvests: Harvest[]; claimed: Claimed[] }
 
 export const SUGGESTED_TREATS: Treat[] = [

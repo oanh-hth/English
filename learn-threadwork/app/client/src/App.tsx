@@ -1,23 +1,30 @@
-// Given: the app shell. It puts your components together. You don't need to change this file,
-// but reading it is a good way to see how the pieces connect.
+// Given: the app shell. It puts your components together into the finished Threadwork.
+// You don't need to change it, but reading it shows how every piece connects.
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch } from "react";
-import { createApi, type Api, type WeatherReply } from "@app/client/src/api/client";
+import { createApi, type Api } from "@app/client/src/api/client";
 import { AppProvider, useApp } from "@app/client/src/state/AppContext";
 import type { AppAction, AppState } from "@app/client/src/state/appReducer";
 import { useLocalStorage } from "@app/client/src/hooks/useLocalStorage";
-import { useCountdown } from "@app/client/src/hooks/useCountdown";
+import { useHashRoute } from "@app/client/src/hooks/useHashRoute";
 import { useServerSync, type SyncStatus } from "@app/client/src/hooks/useServerSync";
+import { useWeather, type Place } from "@app/client/src/hooks/useWeather";
+import { useBadgeToasts } from "@app/client/src/hooks/useBadgeToasts";
 import { ErrorBoundary } from "@app/client/src/components/ErrorBoundary";
 import { LoginForm } from "@app/client/src/components/LoginForm";
 import { QuickCapture } from "@app/client/src/components/QuickCapture";
-import { Board } from "@app/client/src/components/Board";
-import { TaskDrawer } from "@app/client/src/components/TaskDrawer";
-import { Plant } from "@app/client/src/components/Plant";
-import { SketchPad } from "@app/client/src/components/SketchPad";
 import { Playground } from "@app/client/src/Playground";
+import { computeStats } from "@app/shared/badges";
 import { todayKey } from "@app/client/src/format";
-import { stageOf, nextStage } from "@app/shared/growth";
-import { VARIETIES } from "@app/shared/garden";
+import { ROUTES, ROUTE_NAMES, ShellContext, newId, type Route, type ShellValue } from "@app/client/src/views/shared";
+import { TodayView } from "@app/client/src/views/TodayView";
+import { TasksView } from "@app/client/src/views/TasksView";
+import { MapView } from "@app/client/src/views/MapView";
+import { SketchView } from "@app/client/src/views/SketchView";
+import { NotesView } from "@app/client/src/views/NotesView";
+import { ResourcesView } from "@app/client/src/views/ResourcesView";
+import { InspireView } from "@app/client/src/views/InspireView";
+import { GardenView } from "@app/client/src/views/GardenView";
+import { SettingsView } from "@app/client/src/views/SettingsView";
 
 const OFFLINE = "offline";
 
@@ -32,23 +39,20 @@ function Main() {
   const [token, setToken] = useLocalStorage<string | null>("threadwork.token", null);
   const [mode, setMode] = useState<"login" | "register">("login");
   const api = useMemo(() => (token && token !== OFFLINE ? createApi({ getToken: () => token }) : null), [token]);
-
   if (!token) {
     const anon = createApi();
     return (
       <main className="center">
+        <h1 className="brand-big">Threadwork</h1>
         <ErrorBoundary area="Sign-in">
           <LoginForm mode={mode} onSwitchMode={() => setMode(m => (m === "login" ? "register" : "login"))}
             onSubmit={async (email, pw) => setToken(mode === "login" ? await anon.login(email, pw) : await anon.register(email, pw))} />
         </ErrorBoundary>
-        <p className="muted">
-          <button className="link" onClick={() => setToken(OFFLINE)}>Use without the server</button> ·{" "}
-          <a href="#playground">Component playground</a>
-        </p>
+        <p className="muted"><button className="link" onClick={() => setToken(OFFLINE)}>Use without the server</button> · <a href="#playground">Component playground</a></p>
       </main>
     );
   }
-  return <Synced api={api} onSignOut={() => setToken(null)} />;
+  return <Synced api={api} onSignOut={() => { setToken(null); location.hash = ""; }} />;
 }
 
 function Synced({ api, onSignOut }: { api: Api | null; onSignOut: () => void }) {
@@ -70,104 +74,58 @@ function Bridge({ onReady }: { onReady: (d: Dispatch<AppAction>, s: AppState) =>
   return null;
 }
 
-function SyncLine({ status, onResolve }: { status: SyncStatus; onResolve: (k: "this" | "other") => void }) {
-  if (status.kind === "conflict")
-    return <div className="banner" role="alert">Your data changed on another device too. Which copy do you want to keep?{" "}
-      <button onClick={() => onResolve("this")}>This device</button> <button onClick={() => onResolve("other")}>The other device</button></div>;
-  const text = { offline: "Saved on this device only", syncing: "Syncing…", synced: "Synced", error: `Sync problem: ${status.message ?? ""}` }[status.kind];
-  return <span className="sync">{text}</span>;
+function syncText(status: SyncStatus): string {
+  if (status.kind === "conflict") return "Changed on two devices";
+  return { offline: "Saved on this device only", syncing: "Syncing…", synced: "Synced", error: `Sync problem: ${status.message ?? ""}` }[status.kind];
 }
 
-function Shell({ api, status, onResolve, onSignOut }: { api: Api | null; status: SyncStatus; onResolve: (k: "this" | "other") => void; onSignOut: () => void }) {
-  const { state, dispatch } = useApp();
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"board" | "sketch">("board");
-  const today = todayKey();
-  const open = state.tasks.find(t => t.id === openId) ?? null;
-
+function Toasts() {
+  const { state } = useApp();
+  const stats = useMemo(() => { try { return computeStats(state.tasks, state.garden, state.streak, state.focusSessions); } catch { return null; } }, [state]);
+  const { toasts, dismiss } = useBadgeToasts(stats ?? { finished: 0, finishedCritical: 0, linkPairs: 0, resourcesUsed: 0, harvests: 0, streak: 0, focusSessions: 0 });
   return (
-    <div className="shell">
-      <header className="top">
-        <strong className="brand">Threadwork</strong>
-        <ErrorBoundary area="Quick capture">
-          <QuickCapture onAdd={title => dispatch({ type: "addTask", id: crypto.randomUUID(), title, today })} />
-        </ErrorBoundary>
-        <SyncLine status={status} onResolve={onResolve} />
-        <button className="link" onClick={onSignOut}>Sign out</button>
-      </header>
-      <div className="layout">
-        <main>
-          <nav className="tabs">
-            <button aria-pressed={tab === "board"} onClick={() => setTab("board")}>Tasks</button>
-            <button aria-pressed={tab === "sketch"} onClick={() => setTab("sketch")}>Sketch</button>
-            <a href="#playground">Playground</a>
-          </nav>
-          {tab === "board"
-            ? <ErrorBoundary area="The board"><Board tasks={state.tasks} today={today} onOpen={setOpenId} onMove={(id, s) => dispatch({ type: "move", id, status: s, today })} /></ErrorBoundary>
-            : <ErrorBoundary area="Sketching"><SketchPad /></ErrorBoundary>}
-        </main>
-        <aside className="side">
-          <ErrorBoundary area="The garden"><Garden /></ErrorBoundary>
-          <ErrorBoundary area="Focus timer"><Focus onDone={() => dispatch({ type: "focusDone" })} /></ErrorBoundary>
-          <ErrorBoundary area="Weather"><WeatherCard api={api} /></ErrorBoundary>
-        </aside>
-      </div>
-      {open && (
-        <ErrorBoundary area="Task details">
-          <TaskDrawer task={open} allTasks={state.tasks} onClose={() => setOpenId(null)}
-            onRename={(id, title) => dispatch({ type: "rename", id, title })}
-            onSetImportance={(id, importance) => dispatch({ type: "setImportance", id, importance })}
-            onLink={(id, other) => dispatch({ type: "link", a: id, b: other })}
-            onUnlink={(id, other) => dispatch({ type: "unlink", a: id, b: other })}
-            onComplete={id => dispatch({ type: "move", id, status: "done", today })} />
-        </ErrorBoundary>
-      )}
+    <div className="toasts" role="status">
+      {toasts.map(t => <button key={t.id} className="toast" onClick={() => dismiss(t.id)}><b>New badge: {t.name}</b><span>{t.description}</span></button>)}
     </div>
   );
 }
 
-function Garden() {
-  const { state, dispatch } = useApp();
-  const g = state.garden;
-  const next = nextStage(g.growth);
-  return (
-    <section className="card garden" aria-label="Garden">
-      <h2>{VARIETIES[g.kind].name} · {stageOf(g.growth)}</h2>
-      <Plant growth={g.growth} kind={g.kind} />
-      <p>{Math.round(g.growth)}% grown{next ? ` · ${Math.round(next.missing)}% to ${next.name.toLowerCase()}` : ""}</p>
-      {g.growth >= 100 && <button className="primary" onClick={() => dispatch({ type: "harvest", day: todayKey() })}>Harvest {VARIETIES[g.kind].fruits} {VARIETIES[g.kind].plural}</button>}
-      <p className="muted">{state.streak.streak}-day streak · {g.harvests.length} harvests</p>
-    </section>
-  );
-}
-
-function Focus({ onDone }: { onDone: () => void }) {
-  const t = useCountdown(25 * 60, onDone);
-  const mm = String(Math.floor(t.remaining / 60)).padStart(2, "0"), ss = String(t.remaining % 60).padStart(2, "0");
-  return (
-    <section className="card" aria-label="Focus timer">
-      <h2>Focus</h2>
-      <p className="timer">{mm}:{ss}</p>
-      <button onClick={t.running ? t.pause : t.start}>{t.running ? "Pause" : "Start 25 min"}</button> <button onClick={t.reset}>Reset</button>
-    </section>
-  );
-}
-
-function WeatherCard({ api }: { api: Api | null }) {
-  const [w, setW] = useState<WeatherReply | null>(null);
-  const [msg, setMsg] = useState("");
-  if (!api) return null;
-  const load = () => {
-    setMsg("Finding your location…");
-    navigator.geolocation.getCurrentPosition(
-      p => api.weather(+p.coords.latitude.toFixed(2), +p.coords.longitude.toFixed(2)).then(r => { setW(r); setMsg(""); }).catch((e: Error) => setMsg(e.message)),
-      () => setMsg("Location permission was declined."));
+function Shell({ api, status, onResolve, onSignOut }: { api: Api | null; status: SyncStatus; onResolve: (k: "this" | "other") => void; onSignOut: () => void }) {
+  const { dispatch } = useApp();
+  const [route, navigate] = useHashRoute(ROUTES, "today");
+  const [selected, setSelected] = useState<ShellValue["selected"]>({});
+  const [place] = useLocalStorage<Place | null>("threadwork.place", null);
+  const { weather } = useWeather(api, place);
+  const shell: ShellValue = {
+    go: (r: Route, select = {}) => { setSelected(select); navigate(r); },
+    selected, api, weather,
   };
+  const View = { today: TodayView, tasks: TasksView, map: MapView, sketch: SketchView, notes: NotesView, resources: ResourcesView,
+    inspire: InspireView, garden: GardenView, settings: () => <SettingsView onSignOut={onSignOut} syncText={syncText(status)} /> }[route];
+
   return (
-    <section className="card" aria-label="Weather">
-      <h2>Weather</h2>
-      {w ? <p>{w.kind}, {w.temp}°, wind {w.wind} km/h, {w.isDay ? "day" : "night"}</p> : <button onClick={load}>Show weather here</button>}
-      {msg && <p className="muted">{msg}</p>}
-    </section>
+    <ShellContext.Provider value={shell}>
+      <div className="shell">
+        <nav className="rail" aria-label="Main">
+          <strong className="brand">Threadwork</strong>
+          {ROUTES.map(r => <a key={r} href={`#${r}`} aria-current={route === r ? "page" : undefined} onClick={() => setSelected({})}>{ROUTE_NAMES[r]}</a>)}
+        </nav>
+        <div className="main">
+          <header className="top">
+            <ErrorBoundary area="Quick capture">
+              <QuickCapture onAdd={title => dispatch({ type: "addTask", id: newId(), title, today: todayKey() })} />
+            </ErrorBoundary>
+            {status.kind === "conflict"
+              ? <div className="banner" role="alert">Your data changed on another device too. Keep{" "}
+                  <button onClick={() => onResolve("this")}>this device's copy</button> or <button onClick={() => onResolve("other")}>the other copy</button>?</div>
+              : <span className="sync">{syncText(status)}</span>}
+          </header>
+          <main className="view">
+            <ErrorBoundary key={route} area={ROUTE_NAMES[route]}><View /></ErrorBoundary>
+          </main>
+        </div>
+        <ErrorBoundary area="Badges"><Toasts /></ErrorBoundary>
+      </div>
+    </ShellContext.Provider>
   );
 }

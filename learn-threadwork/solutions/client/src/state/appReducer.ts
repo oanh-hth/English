@@ -1,18 +1,16 @@
-import type { Day, GardenState, Importance, PlantKind, Status, StreakState, Task } from "@app/shared/types";
+import type { AppState, Day, Importance, PlantKind, Status, Task } from "@app/shared/types";
+import type { FeatureAction } from "@app/client/src/state/features";
+import { SUGGESTED_TREATS } from "@app/shared/treats";
 import { initialGarden, gardenReducer } from "@app/shared/garden";
 import { createTask } from "@app/shared/task-factory";
 import { linkTasks, unlinkTasks, moveTask, deleteTask } from "@app/shared/task-ops";
 import { growthFor, FOCUS_GROWTH } from "@app/shared/growth";
 import { updateStreak } from "@app/shared/dates";
 
-export interface AppState {
-  tasks: Task[];
-  garden: GardenState;
-  streak: StreakState;
-  focusSessions: number;
-}
+export type { AppState };
 
-export type AppAction =
+/** Actions handled here. Feature actions (notes, sketches, …) are handled by their own reducers in later parts. */
+export type CoreAction =
   | { type: "addTask"; id: string; title: string; today: Day }
   | { type: "rename"; id: string; title: string }
   | { type: "setImportance"; id: string; importance: Importance }
@@ -25,7 +23,12 @@ export type AppAction =
   | { type: "chooseSeed"; kind: PlantKind }
   | { type: "replace"; state: AppState };
 
-export const initialState: AppState = { tasks: [], garden: initialGarden, streak: { streak: 0, lastDone: null }, focusSessions: 0 };
+export type AppAction = CoreAction | FeatureAction;
+
+export const initialState: AppState = {
+  tasks: [], garden: initialGarden, streak: { streak: 0, lastDone: null }, focusSessions: 0,
+  notes: [], resources: [], sketches: [], pins: [], treats: SUGGESTED_TREATS, claimed: [],
+};
 
 const update = (tasks: Task[], id: string, fn: (t: Task) => Task) => tasks.map(t => (t.id === id ? fn(t) : t));
 
@@ -64,5 +67,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, garden: gardenReducer(state.garden, { type: "chooseSeed", kind: action.kind }) };
     case "replace":
       return action.state;
+    default:
+      return state;   // feature actions: handled by rootReducer
   }
 }

@@ -1,4 +1,4 @@
-// Exercise 7.2: deciding what to sync. See curriculum/phase-7-full-stack/7.2-sync.md
+// Exercise 9.2: Sync decisions and debounce. Read curriculum/part-9/b-sync.md first.
 
 export interface SyncInfo {
   localSavedAt: number;     // when this device last changed something
@@ -16,8 +16,8 @@ export type SyncDecision = "none" | "push" | "pull" | "conflict";
  * "Changed" means savedAt > lastSyncedAt. If neither changed but they differ, newer wins (push or pull).
  */
 export function decideSync(info: SyncInfo): SyncDecision {
-  // TODO 7.2
-  throw new Error("TODO 7.2");
+  // TODO 9.2
+  throw new Error("TODO 9.2");
 }
 
 /**
@@ -26,7 +26,7 @@ export function decideSync(info: SyncInfo): SyncDecision {
  * Used to send changes to the server a moment after you stop typing.
  */
 export function debounce<A extends unknown[]>(fn: (...args: A) => void, waitMs: number) {
-  // TODO 7.2
-  const call = (..._args: A) => { throw new Error("TODO 7.2"); };
+  // TODO 9.2
+  const call = (..._args: A) => { throw new Error("TODO 9.2"); };
   return Object.assign(call, { flush: () => {}, cancel: () => {} });
 }

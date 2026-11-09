@@ -46,12 +46,12 @@ export function Playground() {
         onLink={(id, o) => { say(`onLink(${id}, ${o})`); setTasks(ts => ts.map(x => x.id === id ? { ...x, links: [...x.links, o] } : x.id === o ? { ...x, links: [...x.links, id] } : x)); }}
         onUnlink={(id, o) => { say(`onUnlink(${id}, ${o})`); setTasks(ts => ts.map(x => x.id === id ? { ...x, links: x.links.filter(l => l !== o) } : x.id === o ? { ...x, links: x.links.filter(l => l !== id) } : x)); }}
         onComplete={id => { say(`onComplete(${id})`); edit(id, x => ({ ...x, status: "done", doneAt: today })); }} /></ErrorBoundary>}
-      <h2>5.1 Plant</h2>
+      <h2>7.1 Plant</h2>
       <label>Growth {growth}% <input type="range" min={0} max={100} value={growth} onChange={e => setGrowth(+e.target.value)} /></label>
       <ErrorBoundary area="Plant"><div className="plant-box"><Plant growth={growth} kind="tomato" /></div></ErrorBoundary>
-      <h2>5.2 + 5.3 SketchPad</h2>
-      <ErrorBoundary area="SketchPad"><SketchPad /></ErrorBoundary>
-      <h2>7.3 LoginForm</h2>
+      <h2>6.1–6.4 SketchPad</h2>
+      <ErrorBoundary area="SketchPad"><SketchPad onSave={strokes => say(`onSave(${strokes.length} strokes)`)} /></ErrorBoundary>
+      <h2>9.3 LoginForm</h2>
       <ErrorBoundary area="LoginForm"><LoginForm mode="register" onSwitchMode={() => say("onSwitchMode()")}
         onSubmit={(email) => new Promise((ok, no) => setTimeout(() => (email.startsWith("taken") ? no(new Error("An account with this email already exists")) : (say(`onSubmit(${email})`), ok())), 800))} /></ErrorBoundary>
     </div>

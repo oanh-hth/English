@@ -1,0 +1,194 @@
+/* Given: plain CSS for the app. Change it freely. */
+:root { --paper:#F2F3EF; --surface:#fff; --ink:#1D2227; --muted:#646B72; --line:#DCDFD8; --accent:#2F45C2; --accent-soft:#E6E9FA;
+  --good:#2C8A57; --gold:#D9930F; --warn:#B4541E; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --paper:#14161A; --surface:#1C1F24; --ink:#E8EAE5; --muted:#9AA1A8; --line:#30353C;
+  --accent:#8C9CFF; --accent-soft:#272D52; --good:#5CC48A; --gold:#F0B546; --warn:#E98A57; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; touch-action: manipulation; }
+button, input, select { font: inherit; color: inherit; }
+button { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.link { border: 0; background: none; color: var(--accent); text-decoration: underline; padding: 0; min-height: 0; }
+button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+input, select { min-height: 42px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); width: 100%; }
+.muted { color: var(--muted); }
+.error { color: var(--warn); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.todo { padding: 12px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); background: var(--surface); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.center { min-height: 100vh; display: grid; place-content: center; gap: 12px; padding: 16px; }
+.login { display: grid; gap: 8px; width: min(380px, 100%); background: var(--surface); padding: 24px; border-radius: 14px; border: 1px solid var(--line); }
+.top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px max(16px, env(safe-area-inset-left)); background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .capture { flex: 1; min-width: 220px; display: flex; gap: 8px; flex-wrap: wrap; }
+.top .capture input { flex: 1; width: auto; }
+.top .capture .error { width: 100%; margin: 0; }
+.sync { color: var(--muted); font-size: .85rem; }
+.banner { background: var(--accent-soft); padding: 8px 12px; border-radius: 8px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; padding: 16px; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+.board { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 12px; overflow-x: auto; }
+.column { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 10px; align-content: start; }
+.column h2 { font-size: 1rem; margin: 0; }
+.task-card { width: 100%; text-align: left; border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; min-height: 0; }
+.task-card h3 { margin: 0; font-size: 1rem; }
+.task-card[data-status="done"] h3 { text-decoration: line-through; color: var(--muted); }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: .8rem; color: var(--muted); }
+.pill { font-size: .7rem; font-weight: 700; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.pill.critical { background: var(--warn); color: #fff; } .pill.high { color: var(--gold); } .pill.low { color: var(--muted); background: transparent; border: 1px solid var(--line); }
+.moves { display: flex; gap: 4px; margin-top: 4px; } .moves button { min-height: 30px; font-size: .78rem; padding: 0 8px; }
+.empty { color: var(--muted); text-align: center; border: 1px dashed var(--line); border-radius: 8px; padding: 8px; margin: 0; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--surface); border-left: 1px solid var(--line); padding: 20px; display: grid; gap: 8px; align-content: start; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,.15); }
+.side { display: grid; gap: 16px; align-content: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.card h2 { font-size: 1.05rem; margin: 0 0 8px; }
+.plant { width: 100%; max-width: 260px; display: block; margin: 0 auto; }
+.timer { font-size: 2.4rem; font-weight: 800; margin: 0 0 8px; font-variant-numeric: tabular-nums; }
+.sketch .toolbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.swatch { width: 32px; padding: 0; } .hint { font-size: .8rem; color: var(--muted); }
+.paper { width: 100%; height: 60vh; min-height: 320px; background: #fff; border: 1px solid var(--line); border-radius: 12px; touch-action: none; -webkit-user-select: none; user-select: none; }
+.playground { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+.playground .row { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.plant-box { max-width: 300px; background: var(--surface); border-radius: 12px; padding: 8px; }
+.log { font-family: ui-monospace, monospace; font-size: .8rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 8px 8px 28px; min-height: 40px; margin: 0; }
+
+/* ---------- App shell ---------- */
+.brand-big { font-size: 2rem; margin: 0; text-align: center; }
+.shell { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+.rail { display: flex; flex-direction: column; gap: 2px; padding: 16px 10px; background: var(--surface); border-right: 1px solid var(--line); position: sticky; top: 0; height: 100vh; }
+.rail .brand { padding: 0 10px 12px; font-size: 1.15rem; }
+.rail a { padding: 10px; border-radius: 10px; color: var(--muted); text-decoration: none; font-weight: 600; }
+.rail a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+.main { min-width: 0; }
+.view { padding: 16px max(16px, env(safe-area-inset-right)) 48px 16px; display: grid; gap: 16px; }
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { flex-direction: row; height: auto; position: static; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .rail .brand { display: none; }
+  .rail a { white-space: nowrap; }
+}
+.top .sync { margin-left: auto; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: start; }
+.stack { display: grid; gap: 16px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.row > label { font-size: .85rem; color: var(--muted); }
+.row > input, .row > select { width: auto; flex: 1; min-width: 140px; }
+progress { width: 100%; height: 12px; accent-color: var(--good); }
+.warn { color: var(--warn); }
+.link.danger { color: var(--warn); margin-top: 12px; }
+.card h1 { margin: 0 0 8px; font-size: 1.5rem; }
+
+/* Today */
+.today { display: grid; gap: 16px; }
+.today-line { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.today-line .task-card { flex: 1; }
+.check { width: 36px; padding: 0; border-radius: 50%; color: var(--good); }
+.garden-mini { text-align: center; }
+.quote { font-size: 1.3rem; margin: 0; background: var(--accent); color: #fff; border: 0; }
+.quote cite { display: block; font-size: .85rem; opacity: .8; margin-top: 8px; }
+
+/* Notes */
+.notes { display: grid; grid-template-columns: 280px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .notes { grid-template-columns: 1fr; } }
+.note-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+.note-list button { width: 100%; text-align: left; border-radius: 8px; display: grid; padding: 8px 12px; min-height: 0; }
+.note-list button[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.note-list small { color: var(--muted); }
+.note-editor { display: grid; gap: 8px; }
+.note-editor textarea { width: 100%; font: inherit; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+.table-wrap { overflow-x: auto; }
+.note-editor table { border-collapse: collapse; }
+.note-editor td { border: 1px solid var(--line); padding: 0; min-width: 110px; }
+.note-editor td input { border: 0; border-radius: 0; font-family: ui-monospace, monospace; }
+
+/* Resources, attachments */
+.library table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.library th, .library td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.attachments ul { list-style: none; padding: 0; display: grid; gap: 6px; }
+.attachments li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Link map */
+.link-map { width: 100%; height: auto; background: var(--surface); border-radius: 12px; }
+.link-map line { stroke: var(--line); stroke-width: 1.6; }
+.link-map .edge-link { stroke: var(--accent); stroke-width: 2.5; }
+.link-map .edge-used { stroke: var(--gold); }
+.link-map .edge-attached, .link-map .edge-planned { stroke-dasharray: 5 5; }
+.link-map .node { cursor: pointer; }
+.link-map .node:focus { outline: none; }
+.link-map .node:focus circle, .link-map .node:focus rect, .link-map .node:focus path { stroke: var(--ink); stroke-width: 3; }
+.link-map text { font-size: 12px; fill: var(--ink); }
+.node-task { fill: var(--accent); } .node-note { fill: var(--surface); stroke: var(--ink); stroke-width: 2; } .node-sketch { fill: var(--warn); } .node-resource { fill: var(--gold); }
+.legend { display: flex; gap: 16px; color: var(--muted); font-size: .85rem; }
+
+/* Sketch gallery */
+.gallery { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.gallery li { display: grid; gap: 4px; }
+.thumb { display: grid; gap: 4px; border-radius: 10px; padding: 6px; min-height: 0; }
+.thumb svg { width: 100%; aspect-ratio: 4 / 3; background: #fff; border-radius: 6px; }
+
+/* Inspiration */
+.pins { list-style: none; padding: 0; display: grid; gap: 10px; }
+.pin { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.pin-quote blockquote { margin: 0 0 8px; font-size: 1.15rem; }
+.pin-quote cite { display: block; color: var(--muted); font-size: .85rem; }
+.pin-goal { background: #FCF1D9; border-color: var(--gold); color: #1D2227; }
+.wins { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.wins li { background: var(--accent-soft); color: var(--good); font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+
+/* Garden */
+.garden { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .garden { grid-template-columns: 1fr; } }
+.garden-panel { display: grid; gap: 8px; margin-top: 12px; }
+.seeds { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.seeds button { border-radius: 10px; display: grid; min-height: 48px; }
+.seeds small { color: var(--muted); }
+.shop ul { list-style: none; padding: 0; display: grid; gap: 6px; }
+.badges { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.badges li { border: 2px dashed var(--line); border-radius: 10px; padding: 8px; display: grid; opacity: .6; }
+.badges li.got { border: 2px solid var(--gold); opacity: 1; }
+.badges small { color: var(--muted); }
+.thirsty .plant { filter: saturate(.4) sepia(.4); }
+
+/* Sky (draws what sceneFor decides) */
+.sky { position: relative; overflow: hidden; border-radius: 12px; padding-top: 16px; background: linear-gradient(#CFE6F7, #EEF5E8); }
+.sky.night { background: linear-gradient(#131A38, #2C3758); }
+.sky.small { padding-top: 6px; }
+.sky .sky-plant { position: relative; z-index: 1; }
+.sky-label { position: absolute; left: 10px; top: 10px; z-index: 2; font-size: .75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.85); color: #1D2227; }
+.sky i { position: absolute; pointer-events: none; }
+.sun { right: 12%; top: 9%; width: 44px; height: 44px; border-radius: 50%; background: #FFD45C; box-shadow: 0 0 40px rgba(255,196,60,.7); }
+.moon { right: 14%; top: 10%; width: 36px; height: 36px; border-radius: 50%; box-shadow: inset -10px 5px 0 0 #F3E9C2; }
+.star { width: 2.5px; height: 2.5px; border-radius: 50%; background: #fff; animation: star 2.6s ease-in-out infinite; }
+@keyframes star { 50% { opacity: .2; } }
+.cloud { width: 86px; height: 26px; border-radius: 999px; background: #fff; opacity: .9; animation: drift 46s linear infinite; z-index: 0; }
+.night .cloud { background: #3B4566; }
+@keyframes drift { from { left: -140px; } to { left: 105%; } }
+.rain { top: -24px; width: 1.6px; height: 18px; background: linear-gradient(transparent, rgba(70,110,160,.6)); transform: rotate(12deg); animation: rain .75s linear infinite; z-index: 2; }
+.night .rain { background: linear-gradient(transparent, rgba(190,210,240,.6)); }
+@keyframes rain { to { top: 102%; } }
+.flake { top: -10px; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: snow 7s linear infinite; z-index: 2; }
+@keyframes snow { 50% { transform: translateX(16px); } to { top: 102%; } }
+.gust { height: 2px; width: 60px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent); animation: gust 1.6s linear infinite; z-index: 2; }
+@keyframes gust { from { left: -30%; } to { left: 110%; } }
+
+/* Badge toasts */
+.toasts { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); display: grid; gap: 8px; z-index: 50; }
+.toast { display: grid; text-align: left; border-radius: 12px; padding: 10px 14px; background: var(--ink); color: var(--paper); border: 0; min-height: 0; }
+
+/* ---------- Exercise 7.8: animate the plant ----------
+   Write your keyframes here. Ideas: sway the whole plant, flutter [data-part="leaf"], swing [data-part="fruit"].
+   Wrap them in @media (prefers-reduced-motion: no-preference) { ... } so people who turn motion off aren't affected. */
+
+@media (prefers-reduced-motion: reduce) { .sky i { animation: none !important; } .rain, .flake, .gust { display: none; } }
+
+/* Reference answer for 7.8 */
+@media (prefers-reduced-motion: no-preference) {
+  .plant { transform-origin: 50% 80%; animation: sway 5s ease-in-out infinite; }
+  .plant [data-part="leaf"] { transform-box: fill-box; transform-origin: 50% 50%; animation: flutter 3.2s ease-in-out infinite; }
+  .plant [data-part="leaf"]:nth-of-type(2n) { animation-delay: -1.3s; }
+  .plant [data-part="fruit"] { transform-box: fill-box; transform-origin: 50% 0; animation: swing 2.8s ease-in-out infinite; }
+  .plant [data-part="flower"] { transform-box: fill-box; transform-origin: center; animation: bloom 3.4s ease-in-out infinite; }
+  @keyframes sway { 50% { transform: rotate(1.6deg); } }
+  @keyframes flutter { 50% { transform: rotate(6deg); } }
+  @keyframes swing { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } }
+  @keyframes bloom { 50% { transform: scale(1.15); } }
+}

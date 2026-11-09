@@ -1,4 +1,4 @@
-// Exercise 4.1: your first custom hook. See curriculum/phase-4-state-and-hooks/4.1-use-local-storage.md
+// Exercise 4.1: useLocalStorage. Read curriculum/part-4/a-custom-hooks.md first.
 import { useState } from "react";
 
 /**

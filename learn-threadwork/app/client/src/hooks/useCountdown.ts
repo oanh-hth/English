@@ -1,4 +1,4 @@
-// Exercise 4.4: effects and timers. See curriculum/phase-4-state-and-hooks/4.4-use-countdown.md
+// Exercise 4.2: useCountdown, the focus timer. Read curriculum/part-4/a-custom-hooks.md first.
 
 export interface Countdown {
   remaining: number;       // seconds left
@@ -15,6 +15,6 @@ export interface Countdown {
  * - Clean up the interval when paused or unmounted (no timers left behind).
  */
 export function useCountdown(seconds: number, onDone: () => void): Countdown {
-  // TODO 4.4
+  // TODO 4.2
   return { remaining: seconds, running: false, start: () => {}, pause: () => {}, reset: () => {} };
 }

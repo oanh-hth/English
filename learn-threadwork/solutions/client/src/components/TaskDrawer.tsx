@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { IMPORTANCE, type Importance, type Task } from "@app/shared/types";
 import { GROWTH } from "@app/shared/growth";
 import { IMPORTANCE_LABEL } from "@app/client/src/format";
@@ -12,9 +12,11 @@ export interface TaskDrawerProps {
   onLink: (id: string, otherId: string) => void;
   onUnlink: (id: string, otherId: string) => void;
   onComplete: (id: string) => void;
+  /** Extra content shown at the bottom (the app puts the attachments from Part 5 here). */
+  children?: ReactNode;
 }
 
-export function TaskDrawer({ task, allTasks, onClose, onRename, onSetImportance, onLink, onUnlink, onComplete }: TaskDrawerProps) {
+export function TaskDrawer({ task, allTasks, onClose, onRename, onSetImportance, onLink, onUnlink, onComplete, children }: TaskDrawerProps) {
   const [title, setTitle] = useState(task.title);
   useEffect(() => setTitle(task.title), [task.id, task.title]);
   useEffect(() => {
@@ -56,6 +58,7 @@ export function TaskDrawer({ task, allTasks, onClose, onRename, onSetImportance,
       {task.status === "done"
         ? <p>Finished on {task.doneAt}</p>
         : <button type="button" className="primary" onClick={() => onComplete(task.id)}>Complete · +{GROWTH[task.importance]}% growth</button>}
+      {children}
     </aside>
   );
 }

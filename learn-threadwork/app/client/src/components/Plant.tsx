@@ -1,4 +1,4 @@
-// Exercise 5.1: drawing with SVG from data. See curriculum/phase-5-graphics-and-pencil/5.1-plant.md
+// Exercise 7.1: Draw the plant with SVG. Read curriculum/part-7/a-svg-plant.md first.
 import type { PlantKind } from "@app/shared/types";
 import { Todo } from "@app/client/src/components/Todo";
 
@@ -14,8 +14,8 @@ export const MAX_FRUITS: Record<PlantKind, number> = { tomato: 5, chili: 6, lemo
 
 /** Which parts to draw for a growth value (clamp growth to 0..100 first). */
 export function plantParts(growth: number, kind: PlantKind): PlantParts {
-  // TODO 5.1
-  throw new Error("TODO 5.1");
+  // TODO 7.1
+  throw new Error("TODO 7.1");
 }
 
 /**
@@ -25,6 +25,6 @@ export function plantParts(growth: number, kind: PlantKind): PlantParts {
  * per fruit data-part="fruit" (add data-ripe="true" on fruits when ripe). Shapes and colours are up to you.
  */
 export function Plant({ growth, kind }: { growth: number; kind: PlantKind }) {
-  // TODO 5.1
-  return <Todo exercise="5.1" what="Your plant" />;
+  // TODO 7.1
+  return <Todo exercise="7.1" what="Your plant" />;
 }

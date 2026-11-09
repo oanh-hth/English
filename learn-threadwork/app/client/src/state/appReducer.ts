@@ -1,16 +1,14 @@
-// Exercise 4.2: one reducer for the whole app. See curriculum/phase-4-state-and-hooks/4.2-app-reducer.md
+// Exercise 4.3: The app reducer. Read curriculum/part-4/b-reducer-and-context.md first.
 // It combines what you built in Phases 1 and 2.
-import type { Day, GardenState, Importance, PlantKind, Status, StreakState, Task } from "@app/shared/types";
+import type { AppState, Day, Importance, PlantKind, Status, Task } from "@app/shared/types";
+import type { FeatureAction } from "@app/client/src/state/features";
+import { SUGGESTED_TREATS } from "@app/shared/treats";
 import { initialGarden } from "@app/shared/garden";
 
-export interface AppState {
-  tasks: Task[];
-  garden: GardenState;
-  streak: StreakState;
-  focusSessions: number;
-}
+export type { AppState };
 
-export type AppAction =
+/** Actions handled here. Feature actions (notes, sketches, …) are handled by their own reducers in later parts. */
+export type CoreAction =
   | { type: "addTask"; id: string; title: string; today: Day }
   | { type: "rename"; id: string; title: string }
   | { type: "setImportance"; id: string; importance: Importance }
@@ -23,7 +21,12 @@ export type AppAction =
   | { type: "chooseSeed"; kind: PlantKind }
   | { type: "replace"; state: AppState };
 
-export const initialState: AppState = { tasks: [], garden: initialGarden, streak: { streak: 0, lastDone: null }, focusSessions: 0 };
+export type AppAction = CoreAction | FeatureAction;
+
+export const initialState: AppState = {
+  tasks: [], garden: initialGarden, streak: { streak: 0, lastDone: null }, focusSessions: 0,
+  notes: [], resources: [], sketches: [], pins: [], treats: SUGGESTED_TREATS, claimed: [],
+};
 
 /**
  * - addTask: createTask (1.1), added to the START of the list
@@ -34,8 +37,9 @@ export const initialState: AppState = { tasks: [], garden: initialGarden, streak
  * - focusDone: focusSessions + 1 and grow by FOCUS_GROWTH
  * - harvest / chooseSeed: pass to gardenReducer (2.2)
  * - replace: return action.state
+ * - any other action (notes, sketches, …): return state unchanged; rootReducer passes those to the feature reducers
  */
 export function appReducer(state: AppState, action: AppAction): AppState {
-  // TODO 4.2
-  throw new Error("TODO 4.2");
+  // TODO 4.3
+  throw new Error("TODO 4.3");
 }

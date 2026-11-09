@@ -1,4 +1,4 @@
-// Exercise 6.3: passwords, tokens and protected routes. See curriculum/phase-6-node-server/6.3-auth.md
+// Exercise 8.3: Password hashing, tokens and protected routes. Read curriculum/part-8/c-accounts.md first.
 import { Router, type RequestHandler } from "express";
 import { randomBytes, scrypt as scryptCb, timingSafeEqual, createHmac, randomUUID } from "node:crypto";
 import { promisify } from "node:util";
@@ -8,14 +8,14 @@ const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number) =>
 
 /** Returns "scrypt$<salt hex>$<hash hex>" with a random 16-byte salt and a 32-byte scrypt hash. */
 export async function hashPassword(password: string): Promise<string> {
-  // TODO 6.3
-  throw new Error("TODO 6.3");
+  // TODO 8.3
+  throw new Error("TODO 8.3");
 }
 
 /** True when the password matches. Compare with timingSafeEqual. Malformed stored values return false. */
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
-  // TODO 6.3
-  throw new Error("TODO 6.3");
+  // TODO 8.3
+  throw new Error("TODO 8.3");
 }
 
 export interface TokenPayload { sub: string; exp: number }   // user id, expiry in seconds since 1970
@@ -25,20 +25,20 @@ export interface TokenPayload { sub: string; exp: number }   // user id, expiry 
  * exp = nowSeconds + ttlSeconds.
  */
 export function signToken(userId: string, secret: string, ttlSeconds: number, nowSeconds = Math.floor(Date.now() / 1000)): string {
-  // TODO 6.3
-  throw new Error("TODO 6.3");
+  // TODO 8.3
+  throw new Error("TODO 8.3");
 }
 
 /** The payload when the signature is right and it has not expired, else null. Never throws. */
 export function verifyToken(token: string, secret: string, nowSeconds = Math.floor(Date.now() / 1000)): TokenPayload | null {
-  // TODO 6.3
-  throw new Error("TODO 6.3");
+  // TODO 8.3
+  throw new Error("TODO 8.3");
 }
 
 /** Reads "Authorization: Bearer <token>". Valid: res.locals.userId = sub, next(). Else 401 { error: "Sign in first" }. */
 export function requireAuth(secret: string): RequestHandler {
-  // TODO 6.3
-  throw new Error("TODO 6.3");
+  // TODO 8.3
+  throw new Error("TODO 8.3");
 }
 
 /**
@@ -49,6 +49,6 @@ export function requireAuth(secret: string): RequestHandler {
  * POST /login { email, password }: 401 { error: "Email or password is wrong" } | 200 { token }
  */
 export function authRouter(users: UserRepo, secret: string): Router {
-  // TODO 6.3
+  // TODO 8.3
   return Router();
 }

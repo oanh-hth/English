@@ -1,7 +1,7 @@
-import type { Day, Harvest, Result } from "@app/shared/types";
+import type { Claimed, Day, Harvest, Result, Treat } from "@app/shared/types";
 
-export interface Treat { id: string; name: string; cost: number }
-export interface Claimed { treatId: string; name: string; cost: number; day: Day }
+export type { Claimed, Treat };
+
 export interface Wallet { harvests: Harvest[]; claimed: Claimed[] }
 
 export const SUGGESTED_TREATS: Treat[] = [

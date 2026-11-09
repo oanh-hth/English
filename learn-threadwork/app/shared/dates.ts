@@ -1,4 +1,4 @@
-// Exercise 2.1: days and streaks. See curriculum/phase-2-domain-logic/2.1-dates-and-streaks.md
+// Exercise 2.1: Days, streaks and a thirsty plant. Read curriculum/part-2/a-pure-functions-and-dates.md first.
 // Work with "YYYY-MM-DD" strings. Use UTC (Date.UTC / getUTC*) so time zones can't shift the day.
 import type { Day, StreakState } from "@app/shared/types";
 

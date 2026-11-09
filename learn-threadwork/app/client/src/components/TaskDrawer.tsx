@@ -1,4 +1,5 @@
-// Exercise 3.4: forms, selects and keyboard. See curriculum/phase-3-react-components/3.4-task-drawer.md
+// Exercise 3.4: TaskDrawer: edit, link and complete. Read curriculum/part-3/d-effects-and-editing.md first.
+import type { ReactNode } from "react";
 import type { Importance, Task } from "@app/shared/types";
 import { Todo } from "@app/client/src/components/Todo";
 
@@ -11,6 +12,8 @@ export interface TaskDrawerProps {
   onLink: (id: string, otherId: string) => void;
   onUnlink: (id: string, otherId: string) => void;
   onComplete: (id: string) => void;
+  /** Extra content shown at the bottom (the app puts the attachments from Part 5 here). */
+  children?: ReactNode;
 }
 
 /**
@@ -25,6 +28,7 @@ export interface TaskDrawerProps {
  *   task that is not this task and not already linked. Choosing one calls onLink, then resets to "".
  * - if not done: a button "Complete · +N% growth"; if done: the text "Finished on <doneAt>"
  * When the task prop changes to another task, the title input shows the new title.
+ * Render `children` at the very end.
  */
 export function TaskDrawer(props: TaskDrawerProps) {
   // TODO 3.4

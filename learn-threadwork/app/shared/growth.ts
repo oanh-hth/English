@@ -1,5 +1,4 @@
-// Exercise 1.2: how much a task grows the plant, and which stage the plant is in.
-// See curriculum/phase-1-typescript/1.2-growth.md
+// Exercise 1.2: Growth per importance and plant stages. Read curriculum/part-1/b-unions-and-records.md first.
 import type { Importance } from "@app/shared/types";
 
 /** Growth in percent for finishing a task of each importance. */

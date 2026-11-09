@@ -1,4 +1,4 @@
-// Exercise 6.5: calling another API from the server, with a cache. See curriculum/phase-6-node-server/6.5-weather.md
+// Exercise 8.5: Weather from Open-Meteo with a cache. Read curriculum/part-8/e-external-apis.md first.
 import { Router } from "express";
 
 export type WeatherKind = "sun" | "cloud" | "rain" | "snow" | "wind";
@@ -10,8 +10,8 @@ export interface Weather { kind: WeatherKind; isDay: boolean; temp: number; wind
  * otherwise cloud for code >= 2; otherwise sun.
  */
 export function weatherKind(code: number, windKmh: number): WeatherKind {
-  // TODO 6.5
-  throw new Error("TODO 6.5");
+  // TODO 8.5
+  throw new Error("TODO 8.5");
 }
 
 export type FetchLike = (url: string) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
@@ -24,8 +24,8 @@ export type FetchLike = (url: string) => Promise<{ ok: boolean; status: number; 
  * - A response that is not ok throws new Error("Weather service error <status>").
  */
 export function createWeatherService(fetchFn: FetchLike, ttlMs = 30 * 60_000, now: () => number = Date.now) {
-  // TODO 6.5
-  return { async get(lat: number, lon: number): Promise<Weather> { throw new Error("TODO 6.5"); } };
+  // TODO 8.5
+  return { async get(lat: number, lon: number): Promise<Weather> { throw new Error("TODO 8.5"); } };
 }
 
 /**
@@ -34,6 +34,6 @@ export function createWeatherService(fetchFn: FetchLike, ttlMs = 30 * 60_000, no
  * 502 { error: "Weather is unavailable right now" } when the service throws; else 200 Weather.
  */
 export function weatherRouter(service: { get(lat: number, lon: number): Promise<Weather> }): Router {
-  // TODO 6.5
+  // TODO 8.5
   return Router();
 }

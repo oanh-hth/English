@@ -1,4 +1,4 @@
-// Exercise 3.2: a controlled form. See curriculum/phase-3-react-components/3.2-quick-capture.md
+// Exercise 3.2: QuickCapture. Read curriculum/part-3/b-state-and-forms.md first.
 import { Todo } from "@app/client/src/components/Todo";
 
 export interface QuickCaptureProps {

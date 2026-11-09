@@ -1,4 +1,4 @@
-// Exercise 7.3: an async form with errors and loading state. See curriculum/phase-7-full-stack/7.3-login-form.md
+// Exercise 9.3: LoginForm. Read curriculum/part-9/c-sign-in.md first.
 import { Todo } from "@app/client/src/components/Todo";
 
 export interface LoginFormProps {
@@ -18,6 +18,6 @@ export interface LoginFormProps {
  * - a button "Create an account instead" (login) / "I already have an account" (register) that calls onSwitchMode
  */
 export function LoginForm(props: LoginFormProps) {
-  // TODO 7.3
-  return <Todo exercise="7.3" what="The sign-in form" />;
+  // TODO 9.3
+  return <Todo exercise="9.3" what="The sign-in form" />;
 }

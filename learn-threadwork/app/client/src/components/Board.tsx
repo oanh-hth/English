@@ -1,4 +1,4 @@
-// Exercise 3.3: lists, keys and composing components. See curriculum/phase-3-react-components/3.3-board.md
+// Exercise 3.3: Board with columns and move buttons. Read curriculum/part-3/c-lists-and-composition.md first.
 import type { Day, Status, Task } from "@app/shared/types";
 import { Todo } from "@app/client/src/components/Todo";
 

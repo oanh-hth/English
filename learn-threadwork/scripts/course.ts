@@ -6,9 +6,10 @@ import { fileURLToPath } from "node:url";
 
 export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-export interface Phase { id: string; folder: string; title: string; goal: string }
-export interface Exercise { id: string; phase: string; slug: string; title: string; files: string[]; test: string; lesson: string }
-export interface Course { phases: Phase[]; exercises: Exercise[] }
+export interface Section { id: string; file: string; title: string }
+export interface Part { id: string; folder: string; slug: string; title: string; sections: Section[] }
+export interface Exercise { id: string; part: string; section: string; slug: string; title: string; files: string[]; lesson: string; test?: string; manual?: boolean }
+export interface Course { parts: Part[]; exercises: Exercise[] }
 
 export const course: Course = JSON.parse(readFileSync(path.join(root, "curriculum/course.json"), "utf8"));
 
@@ -51,3 +52,18 @@ export const c = {
   green: (s: string) => `\x1b[32m${s}\x1b[0m`, red: (s: string) => `\x1b[31m${s}\x1b[0m`, yellow: (s: string) => `\x1b[33m${s}\x1b[0m`,
   dim: (s: string) => `\x1b[2m${s}\x1b[0m`, bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
 };
+
+/** Manual exercises (no tests) are done when their line is ticked in the section file: "- [x] **9.5** …". */
+export function manualDone(e: Exercise): boolean {
+  const full = path.join(root, e.lesson);
+  if (!existsSync(full)) return false;
+  return new RegExp(`^\\s*- \\[(x|X)\\] \\*\\*${e.id.replace(".", "\\.")}\\*\\*`, "m").test(readFileSync(full, "utf8"));
+}
+
+export type Status = { done: boolean; passed: number; total: number };
+
+export function statusOf(e: Exercise, results: Map<string, FileResult>): Status {
+  if (e.manual) { const d = manualDone(e); return { done: d, passed: d ? 1 : 0, total: 1 }; }
+  const r = results.get(e.test!) ?? { passed: 0, failed: 1 };
+  return { done: r.failed === 0 && r.passed > 0, passed: r.passed, total: r.passed + r.failed };
+}

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useRef, type Dispatch, type ReactNode } from "react";
-import { appReducer, initialState, type AppAction, type AppState } from "@app/client/src/state/appReducer";
+import type { AppAction, AppState } from "@app/client/src/state/appReducer";
+import { rootReducer, withDefaults } from "@app/client/src/state/features";
 
 export interface AppContextValue { state: AppState; dispatch: Dispatch<AppAction> }
 
@@ -14,14 +15,14 @@ export interface AppProviderProps {
 function load(key: string): AppState {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as AppState) : initialState;
+    return withDefaults(raw ? (JSON.parse(raw) as Partial<AppState>) : null);
   } catch {
-    return initialState;
+    return withDefaults(null);
   }
 }
 
 export function AppProvider({ children, storageKey = "threadwork.state", onChange }: AppProviderProps) {
-  const [state, dispatch] = useReducer(appReducer, storageKey, load);
+  const [state, dispatch] = useReducer(rootReducer, storageKey, load);
   const lastSaved = useRef(state);          // the state we already know about
   const changed = useRef(onChange);
   changed.current = onChange;

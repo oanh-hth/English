@@ -1,4 +1,4 @@
-// Exercise 7.1: a typed API client. See curriculum/phase-7-full-stack/7.1-api-client.md
+// Exercise 9.1: A typed API client. Read curriculum/part-9/a-api-client.md first.
 import type { WeatherKind } from "@app/server/src/weather";
 
 export class ApiError extends Error {
@@ -28,8 +28,8 @@ export interface ApiOptions {
  *   weather(lat, lon)                GET  /api/weather?lat=..&lon=.. -> WeatherReply
  */
 export function createApi(options: ApiOptions = {}) {
-  // TODO 7.1
-  const todo = (): never => { throw new Error("TODO 7.1"); };
+  // TODO 9.1
+  const todo = (): never => { throw new Error("TODO 9.1"); };
   return {
     health: async (): Promise<{ ok: boolean }> => todo(),
     register: async (email: string, password: string): Promise<string> => todo(),

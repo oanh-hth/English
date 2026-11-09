@@ -1,4 +1,4 @@
-// Exercise 1.3: change tasks without mutating them. See curriculum/phase-1-typescript/1.3-immutable-updates.md
+// Exercise 1.3: Link, move and delete tasks without mutation. Read curriculum/part-1/c-immutable-updates.md first.
 // Every function returns NEW arrays/objects and leaves its inputs untouched.
 import type { Day, Status, Task } from "@app/shared/types";
 

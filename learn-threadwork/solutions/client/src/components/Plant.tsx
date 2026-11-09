@@ -28,7 +28,8 @@ export function Plant({ growth, kind }: { growth: number; kind: PlantKind }) {
       {!p.seed && <path d={`M100 200 Q110 ${(200 + top) / 2} 100 ${top}`} stroke="#3E7D3A" strokeWidth={2 + g * 0.035} fill="none" />}
       {Array.from({ length: p.leaves }, (_, i) => {
         const y = along(i, p.leaves), side = i % 2 ? 1 : -1;
-        return <ellipse key={`l${i}`} data-part="leaf" cx={100 + side * 12} cy={y} rx={11} ry={5} fill="#4C9A43" transform={`rotate(${side * -25} ${100 + side * 12} ${y})`} />;
+        // The position and tilt go on the <g>; the leaf itself has no transform, so CSS can animate it (7.8).
+        return <g key={`l${i}`} transform={`translate(${100 + side * 12} ${y}) rotate(${side * -25})`}><ellipse data-part="leaf" rx={11} ry={5} fill="#4C9A43" /></g>;
       })}
       {Array.from({ length: p.flowers }, (_, i) => <circle key={`f${i}`} data-part="flower" cx={100 + (i % 2 ? 22 : -22)} cy={along(i + 2, 8)} r={4} fill="#F4C842" />)}
       {Array.from({ length: p.fruits }, (_, i) => (

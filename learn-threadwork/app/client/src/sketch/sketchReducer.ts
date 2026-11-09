@@ -1,4 +1,4 @@
-// Exercise 5.3: pencil input with palm rejection. See curriculum/phase-5-graphics-and-pencil/5.3-sketch-reducer.md
+// Exercise 6.2: Pencil input with palm rejection. Read curriculum/part-6/b-pointer-input.md first.
 import type { Point, PointerKind } from "@app/client/src/sketch/geometry";
 
 export type Tool = "pen" | "marker" | "eraser";
@@ -29,6 +29,6 @@ export const emptySketch: SketchState = { strokes: [], current: null, activePoin
  * Never mutate the state.
  */
 export function sketchReducer(state: SketchState, action: SketchAction): SketchState {
-  // TODO 5.3
-  throw new Error("TODO 5.3");
+  // TODO 6.2
+  throw new Error("TODO 6.2");
 }

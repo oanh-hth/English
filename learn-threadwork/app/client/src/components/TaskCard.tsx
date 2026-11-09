@@ -1,4 +1,4 @@
-// Exercise 3.1: your first component. See curriculum/phase-3-react-components/3.1-task-card.md
+// Exercise 3.1: TaskCard. Read curriculum/part-3/a-components-and-props.md first.
 import type { Day, Task } from "@app/shared/types";
 import { IMPORTANCE_LABEL, dueLabel } from "@app/client/src/format";
 import { Todo } from "@app/client/src/components/Todo";

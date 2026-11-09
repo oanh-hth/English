@@ -1,4 +1,4 @@
-// Exercise 0.1: make the test pass. See curriculum/phase-0-setup/0.1-hello.md
+// Exercise 0.1: Make your first test pass. Read curriculum/part-0/a-how-this-course-works.md first.
 
 export function greet(name: string): string {
   // TODO 0.1: return "Hello, <name>!" (for example "Hello, Oanh!")

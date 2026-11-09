@@ -1,4 +1,4 @@
-// Exercise 1.1: create tasks and check values at runtime. See curriculum/phase-1-typescript/1.1-task-model.md
+// Exercise 1.1: Create tasks and check importance. Read curriculum/part-1/a-types-and-objects.md first.
 import { IMPORTANCE, type Importance, type Day, type Task } from "@app/shared/types";
 
 export interface NewTaskOptions {

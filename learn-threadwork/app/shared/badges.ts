@@ -1,4 +1,4 @@
-// Exercise 2.4: badges from your history. See curriculum/phase-2-domain-logic/2.4-badges.md
+// Exercise 2.4: Badges from your history. Read curriculum/part-2/c-rewards.md first.
 import type { GardenState, StreakState, Task } from "@app/shared/types";
 
 export interface Stats {

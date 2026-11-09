@@ -1,4 +1,4 @@
-// Exercise 1.4: generics and validating unknown data. See curriculum/phase-1-typescript/1.4-generics-and-validation.md
+// Exercise 1.4: groupBy, sorting and parsing unknown data. Read curriculum/part-1/d-generics-and-unknown.md first.
 import { STATUSES, type Result, type Task } from "@app/shared/types";
 import { isImportance } from "@app/shared/task-factory";
 

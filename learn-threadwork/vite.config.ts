@@ -10,5 +10,13 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { "@app": here + "app" } },
   server: { port: 5173, proxy: { "/api": "http://localhost:3001" } },
-  build: { outDir: here + "dist", emptyOutDir: true },
+  build: {
+    outDir: here + "dist",
+    emptyOutDir: true,
+    rollupOptions: {
+      // The service worker is built as its own file at /sw.js
+      input: { main: here + "app/client/index.html", sw: here + "app/client/src/sw.ts" },
+      output: { entryFileNames: chunk => (chunk.name === "sw" ? "sw.js" : "assets/[name]-[hash].js") },
+    },
+  },
 });
