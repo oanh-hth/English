@@ -1,4 +1,7 @@
 # Your notes
 
-Write your answers to each phase's checkpoint questions here, in your own words:
-`notes/phase-1.md`, `notes/phase-2.md`, and so on. Writing them down is how you find out what you really understood.
+At the end of each part, write your answers to its **review questions** here, in your own words:
+`notes/part0.md`, `notes/part1.md`, and so on. The questions are at the end of each part's `README.md` in `docs/`.
+
+Writing them down is how you find out what you really understood. Then tick the item:
+`npm run learn check p1.notes`.

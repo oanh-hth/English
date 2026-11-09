@@ -7,6 +7,7 @@ import { RowCard } from '../components/RowCard';
 import { RowHints } from '../components/RowHints';
 import { WrittenPattern } from '../components/WrittenPattern';
 import { SymbolChart } from '../chart/SymbolChart';
+import { RoundChart } from '../chart/RoundChart';
 import { ExerciseBoundary } from '../ExerciseBoundary';
 
 /**
@@ -100,9 +101,15 @@ export function EditorPage({ initial, uk, onSave, onBack }: { initial: Chart; uk
 
         <div className="card viz-pane">
           <h2>Chart</h2>
-          <ExerciseBoundary feature="the symbol chart">
-            <div className="viz"><SymbolChart chart={chart} activeRowId={rowId} uk={uk} onSelectRow={setActiveRowId} /></div>
-          </ExerciseBoundary>
+          {chart.mode === 'round' ? (
+            <ExerciseBoundary feature="the round chart">
+              <div className="viz"><RoundChart chart={chart} activeRowId={rowId} uk={uk} onSelectRow={setActiveRowId} /></div>
+            </ExerciseBoundary>
+          ) : (
+            <ExerciseBoundary feature="the symbol chart">
+              <div className="viz"><SymbolChart chart={chart} activeRowId={rowId} uk={uk} onSelectRow={setActiveRowId} /></div>
+            </ExerciseBoundary>
+          )}
           <ExerciseBoundary feature="the written pattern">
             <WrittenPattern chart={chart} uk={uk} />
           </ExerciseBoundary>

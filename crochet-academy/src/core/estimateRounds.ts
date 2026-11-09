@@ -21,22 +21,27 @@ export function movingAverage(values: number[], radius: number): number[] {
 }
 
 /**
- * `profile[i]` is the brightness at distance (i + 0.5) / profile.length from the centre (0 = centre, 1 = edge).
+ * Each profile is a list of brightness measurements along ONE line from the centre of the piece to its edge:
+ * `profile[i]` is the brightness at distance (i + 0.5) / profile.length (0 = centre, 1 = edge).
+ * The photo importer takes 12 such lines, one per sector of the circle. A single line can be fooled by a
+ * shadow or a bump, but twelve lines voting together are much harder to fool.
  *
- *  1. Throw a RangeError when the profile has fewer than 20 samples.
- *  2. Keep only the part between 10% and 94% of the way out: lo = floor(n * 0.1), hi = floor(n * 0.94).
- *     (The very centre is a knot and the very edge is the background.)
- *  3. Remove the slow drift (lighting): subtract movingAverage(segment, max(3, round(segment.length * 0.075))).
- *  4. Try every wave count N from `min` to `max` (defaults 5 and 18) in steps of 0.25. For each N compute
- *     the strength of a wave with N cycles between centre and edge:
- *         re  = sum of  value * window * cos(2 * PI * N * t)
- *         im  = sum of  value * window * sin(2 * PI * N * t)
+ *  1. Throw a RangeError when there are no profiles, or when any profile has fewer than 20 samples.
+ *  2. For EACH profile separately:
+ *       n = profile.length; keep only the part between 10% and 94% of the way out: lo = floor(n * 0.1), hi = floor(n * 0.94).
+ *       (The very centre is a knot and the very edge is the background.)
+ *       Remove the slow drift (lighting): detail[k] = segment[k] - movingAverage(segment, max(3, round(segment.length * 0.075)))[k].
+ *  3. Try every wave count N from `min` to `max` (defaults 5 and 18) in steps of 0.25. For each N and each profile
+ *     compute the strength of a wave with N cycles between centre and edge:
+ *         re  = sum of  detail[k] * window * cos(2 * PI * N * t)
+ *         im  = sum of  detail[k] * window * sin(2 * PI * N * t)
  *         power = re * re + im * im
  *     where t = (lo + k + 0.5) / n for the k-th value of the segment and
  *     window = 0.5 - 0.5 * cos(2 * PI * (k + 0.5) / segment.length)   (a Hann window: it fades the ends in and out).
- *  5. Return the N with the greatest power, rounded to a whole number.
+ *     ADD the powers of all the profiles for each N.
+ *  4. Return the N with the greatest total power, rounded to a whole number.
  */
-export function estimateRounds(profile: number[], options: { min?: number; max?: number } = {}): number {
+export function estimateRounds(profiles: number[][], options: { min?: number; max?: number } = {}): number {
   // TODO(5.3)
   return todo('5.3');
 }

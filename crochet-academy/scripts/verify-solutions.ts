@@ -8,6 +8,7 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } fr
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
+import { PARTS, partDoc, sectionDoc, exercisePath } from '../curriculum/curriculum';
 
 const root = resolve(import.meta.dirname, '..');
 const bin = (name: string) => join(root, 'node_modules', '.bin', name);
@@ -37,6 +38,15 @@ function exerciseResults(cwd: string): Map<string, { passed: number; failed: num
 
 let ok = true;
 const fail = (message: string) => { ok = false; console.error(`  FAIL ${message}`); };
+
+console.log('0/2  Course material: every part, section and exercise has its files');
+for (const part of PARTS) {
+  const files = [partDoc(part), ...part.sections.map((s) => sectionDoc(part, s)), ...part.exercises.flatMap((e) => [`${exercisePath({ part, dir: e.dir })}/README.md`, `${exercisePath({ part, dir: e.dir })}/hints.md`, ...e.files, ...e.files.map((f) => `solutions/${f}`)])];
+  for (const f of files) if (!existsSync(join(root, f))) fail(`missing ${f}`);
+  const inSections = part.sections.flatMap((s) => s.exercises).sort().join();
+  if (inSections !== part.exercises.map((e) => e.id).sort().join()) fail(`part ${part.id}: sections and exercises do not list the same exercises`);
+}
+console.log('  ok   files present');
 
 console.log('1/2  Starter code: every exercise should start red');
 for (const [id, r] of [...exerciseResults(root)].sort()) {

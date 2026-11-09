@@ -7,6 +7,7 @@ import { useCharts, type UseChartsResult } from './hooks/useCharts';
 import { useLocalCharts } from './hooks/useLocalCharts';
 import { ChartListPage } from './pages/ChartListPage';
 import { EditorPage } from './pages/EditorPage';
+import { ExerciseBoundary } from './ExerciseBoundary';
 
 /** PROVIDED: the app shell. */
 export function App() {
@@ -18,9 +19,11 @@ export function App() {
         <button type="button" className="btn sm" aria-pressed={uk} onClick={() => setUk(!uk)}>{uk ? 'UK terms' : 'US terms'}</button>
       </header>
       <main>
+        <ExerciseBoundary feature="the chart editor">
         <UseLocalUntilBuilt fallback={<ChartsApp uk={uk} api={localApi} useList={useLocalCharts} notice="Saving in this browser only. Build exercises 5.1 and 5.2 (and reload) to save on your own server instead." />}>
           <RemoteCharts uk={uk} />
         </UseLocalUntilBuilt>
+        </ExerciseBoundary>
       </main>
     </>
   );
@@ -36,7 +39,7 @@ function RemoteCharts({ uk }: { uk: boolean }) {
 
 /**
  * While exercise 5.1 or 5.2 is still a stub, show the same app backed by the browser's localStorage,
- * so the importer (phase 2) and the editor (phase 3) can be tried as soon as they are built.
+ * so the importer (part 2) and the editor (part 3) can be tried as soon as they are built.
  * Any other error is passed on to the next boundary.
  * (It does not reset itself on hot updates, which would remount the editor and lose your place:
  * after finishing 5.1 and 5.2, reload the page once.)

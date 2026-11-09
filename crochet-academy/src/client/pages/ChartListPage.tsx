@@ -5,6 +5,7 @@ import { DEFAULT_ROW_COLOR } from '@/shared/palette';
 import type { UseChartsResult } from '../hooks/useCharts';
 import type { ApiClient } from '../api/client';
 import { ImportForm } from '../components/ImportDialog';
+import { PhotoImport } from '../photo/PhotoImport';
 import { ExerciseBoundary } from '../ExerciseBoundary';
 
 const BLANK: ChartInput = { name: 'New chart', mode: 'flat', rows: [{ id: 'first', color: DEFAULT_ROW_COLOR, note: '', items: [] }] };
@@ -19,7 +20,7 @@ export function ChartListPage({ api, useList, uk, notice, onOpen }: {
   onOpen: (chart: Chart) => void;
 }) {
   const { status, charts, error, create, remove, refresh } = useList(api);
-  const [importing, setImporting] = useState(false);
+  const [importing, setImporting] = useState<'text' | 'photo' | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
   async function run(action: () => Promise<unknown>) {
@@ -34,9 +35,10 @@ export function ChartListPage({ api, useList, uk, notice, onOpen }: {
   return (
     <section>
       <div className="page-head">
-        <div><h1>My charts</h1><p className="muted">Saved on the server you built in phase 4.</p></div>
+        <div><h1>My charts</h1><p className="muted">Saved on the server you built in part 4.</p></div>
         <div className="head-actions">
-          <button type="button" className="btn" onClick={() => setImporting(true)}>Import pattern</button>
+          <button type="button" className="btn" onClick={() => setImporting('photo')}>Import from photo</button>
+          <button type="button" className="btn" onClick={() => setImporting('text')}>Import pattern</button>
           <button type="button" className="btn primary" onClick={() => run(async () => onOpen(await create({ ...BLANK, rows: [{ ...BLANK.rows[0], id: newId() }] })))}>+ New chart</button>
         </div>
       </div>
@@ -66,12 +68,18 @@ export function ChartListPage({ api, useList, uk, notice, onOpen }: {
       </ul>
 
       {importing ? (
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Import a pattern">
+        <div className="modal" role="dialog" aria-modal="true" aria-label={importing === 'photo' ? 'Import from a photo' : 'Import a pattern'}>
           <div className="card sheet">
-            <ExerciseBoundary feature="the pattern importer">
-              <ImportForm uk={uk} onClose={() => setImporting(false)} onCreate={(input) => { setImporting(false); void run(async () => onOpen(await create(input))); }} />
-            </ExerciseBoundary>
-            <div className="actions"><button type="button" className="btn" onClick={() => setImporting(false)}>Close</button></div>
+            {importing === 'text' ? (
+              <ExerciseBoundary feature="the pattern importer">
+                <ImportForm uk={uk} onClose={() => setImporting(null)} onCreate={(input) => { setImporting(null); void run(async () => onOpen(await create(input))); }} />
+              </ExerciseBoundary>
+            ) : (
+              <ExerciseBoundary feature="the photo importer">
+                <PhotoImport onCreate={(input) => { setImporting(null); void run(async () => onOpen(await create(input))); }} />
+              </ExerciseBoundary>
+            )}
+            <div className="actions"><button type="button" className="btn" onClick={() => setImporting(null)}>Close</button></div>
           </div>
         </div>
       ) : null}

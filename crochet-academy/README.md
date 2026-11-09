@@ -1,52 +1,76 @@
 # Crochet Academy
 
-**Learn React, TypeScript and Node by rebuilding a real app, one tested exercise at a time.**
+**Learn React, TypeScript and Node by building a real app, part by part.** The course is organised like [Full Stack Open](https://fullstackopen.com): each **part** is a chapter, each part has lettered **sections** (1a, 1b, ...) that explain what you need to know, and each section ends with **exercises** that put it to work. Finish all the parts and you have a finished, full-stack app.
 
-You start with a project where every important function is a stub that says *"not built yet"*. Each exercise has a lesson to read, a spec, and a test file that fails until your code is right. When the tests pass, the exercise ticks itself on your checklist and a new piece of the app comes alive in the browser. At the end you have built a full-stack crochet chart maker: pattern parser, React editor with an SVG symbol chart, and a Node API that saves to disk.
+The app is a crochet chart maker. You build a pattern row by row from a list of stitches, see it drawn as a chart (rows or rings), paste a written pattern to import it, or upload a photo of a finished coaster to get a starting chart. The original, plain-JavaScript version is in [`../crochet/`](../crochet/index.html): open it to see where you are heading.
 
 ```
- read the lesson ─► open the exercise ─► run its tests (red) ─► write code ─► green ─► checklist ticks
+ read a section  ─►  do its exercises (tests go red → green)  ─►  checklist ticks  ─►  the app gains a feature
 ```
 
-The app you are rebuilding is the vanilla JavaScript one in [`../crochet/`](../crochet/index.html). Open it to see where you are heading.
-
-## Quick start
+## Start here
 
 ```bash
 cd crochet-academy
-npm install
+npm install            # needs Node 20+
 npm run learn          # runs every test and shows your checklist (all red at first)
-npm run learn next     # what to do now
+npm run learn next     # what to do now, and which section to read
 ```
+Read [Part 0](docs/part0-getting-started/README.md), then work through the parts in order.
 
-Then read [`docs/phases/phase-0-setup.md`](docs/phases/phase-0-setup.md) and do exercise 0.1.
+## The parts
 
-Requires **Node 20+**.
-
-## The path
-
-| Phase | You learn | You build | Exercises |
+| Part | Sections | You learn | The app gains |
 |---|---|---|---|
-| **0** Setup | the red → green loop | a greeting | 0.1 |
-| **1** TypeScript | types, unions, narrowing, recursion, immutability, Vitest | the pattern data model: lookup, expand, count, write, check, edit | 1.1 – 1.6 |
-| **2** Parsing | regular expressions, scanning, recursion, tolerant input | the importer for written patterns | 2.1 – 2.3 |
-| **3** React + TS | components, props, reducers, accessibility, SVG, Testing Library | stitch picker, row cards, reducer, layout maths, symbol chart | 3.1 – 3.5 |
-| **4** Node | validation, repository pattern, Express, status codes, async files | the REST API and file persistence | 4.1 – 4.4 |
-| **5** Full stack | typed `fetch`, custom hooks, state machines, algorithms | API client, data hook, round counter | 5.1 – 5.3 |
+| [**0** Getting started](docs/part0-getting-started/README.md) | 0a 0b | how the course works, the red → green loop | a working project |
+| [**1** TypeScript and the data model](docs/part1-typescript/README.md) | 1a 1b 1c | types, unions, narrowing, recursion, `reduce`, immutability, Vitest | the pattern model, written pattern, mistake hints |
+| [**2** Parsing written patterns](docs/part2-parsing/README.md) | 2a 2b 2c | regular expressions, scanning, recursion, tolerant input | **Import pattern** |
+| [**3** React and TypeScript UI](docs/part3-react/README.md) | 3a 3b 3c 3d | components, props, `useReducer`, events, accessibility, SVG, Testing Library | **the editor** and both chart drawings |
+| [**4** The Node API](docs/part4-node/README.md) | 4a 4b 4c | `unknown` and validation, repository pattern, Express, status codes, async files | **the server** that saves charts |
+| [**5** Full stack and the finish](docs/part5-fullstack/README.md) | 5a 5b 5c 5d | typed `fetch`, hooks, algorithms, generating data | the connection to the server and **Import from photo** |
 
-Every phase has: a **lesson** (`docs/phases/`), **exercises** with tests (`exercises/`), **checkpoint questions** to answer in `notes/`, and a **milestone** where you see it work in the running app.
+24 exercises, each with a test file, three hints and a reference solution.
+
+## What a section looks like
+
+Every section is a short tutorial: an idea, a small example, how it shows up in the app, then an **Exercises** box such as:
+
+> **Exercises 1.1.-1.2.**
+> 1.1 Stitch lookup, `src/core/stitchLookup.ts` · 1.2 Expand items into stitches, `src/core/expand.ts`
+
+Each exercise has a folder:
+
+```
+exercises/part1-typescript/1.2-expand/
+  README.md        what to build, why it matters, "done when"
+  hints.md         three hints, shown one at a time by `learn hint`
+  expand.test.ts   the specification, written as tests (never edit)
+src/core/expand.ts            ← the stub you edit: replace todo('1.2') with real code
+solutions/src/core/expand.ts  ← the reference solution
+```
+The stubs live **in the real app**, so finishing an exercise changes the running app. While one is still a stub, the page shows a purple "Waiting for exercise 3.1" card where its feature will appear, and the rest keeps working.
 
 ## The checklist
 
-`npm run learn` prints your progress and writes it to [`CHECKLIST.md`](CHECKLIST.md):
+`npm run learn` prints your progress and saves it in [`CHECKLIST.md`](CHECKLIST.md), in the order you study:
 
+```
+Part 1 · TypeScript and the data model
+  ✔ Read 1a Describing a pattern with types
+      ✔ Exercise 1.1 Stitch lookup           9/9 tests
+      ✖ Exercise 1.2 Expand items            3/10 tests
+  ✖ Read 1b Small functions over the model
+  ...
+  ✖ Write the review answers for part 1 in notes/part1.md
+  ✖ Milestone: npm run typecheck is clean, and ...
+```
 * **Exercises** tick themselves when *all* their tests pass.
-* **Reading, checkpoint questions and milestones** are ticked by you: `npm run learn check p1.read`.
+* **Reading the sections, the review answers and the milestones** you tick yourself: `npm run learn check p1a.read`.
 
 | Command | |
 |---|---|
 | `npm run learn` | run all tests, print and save the checklist |
-| `npm run learn next` | the next exercise, with files to edit and what to read |
+| `npm run learn next` | the next exercise, the section to read, the files to edit |
 | `npm run learn test 1.2` | run one exercise (`... 1.2 watch` re-runs on save) |
 | `npm run learn hint 1.2` | the next hint of three, each stronger than the last |
 | `npm run learn solution 1.2 yes` | print the reference solution (try the hints first!) |
@@ -55,40 +79,24 @@ Every phase has: a **lesson** (`docs/phases/`), **exercises** with tests (`exerc
 | `npm run typecheck` | check every file with TypeScript |
 | `npm run dev` | start the API (3001) and the web app (http://localhost:5173) |
 
-## How an exercise is laid out
-
-```
-exercises/phase-1-typescript/1.2-expand/
-  README.md        what to build, why it matters, "done when"
-  hints.md         three hints, shown one at a time by `learn hint`
-  expand.test.ts   the spec, written as tests (never edit)
-src/core/expand.ts            ← the stub you edit; replace todo('1.2') with real code
-solutions/src/core/expand.ts  ← the reference solution
-```
-
-The stubs live in the real app (`src/core`, `src/parse`, `src/client`, `src/server`), not in a sandbox. Finishing an exercise therefore *changes the running app*: while an exercise is still a stub, the page shows a purple card ("Waiting for exercise 3.1 …") where its feature will appear, and the rest keeps working.
-
 ## Rules
 
 1. Edit only the stub files an exercise names. **Never edit the tests.**
 2. Keep exported names and signatures; replace the `todo()` calls.
 3. Work in order: later exercises call your earlier code.
-4. Stuck 15 minutes? `learn hint`. Done? compare with `learn solution`.
+4. Stuck for 15 minutes? `learn hint`. Done? compare with `learn solution`.
 5. Commit each green exercise on your own branch. Your history is your journal.
 
-## What is provided (you do not write it)
+## What is provided
 
-The data model and catalogue (`src/shared/`), the glyph drawings, the app shell, pages and styles (`src/client/App.tsx`, `pages/`, `styles.css`), the server entry point (`src/server/index.ts`), test helpers and the checklist tool. Reading this code is part of the course: it shows how your pieces fit together.
+The data model and stitch catalogue (`src/shared/`), the stitch drawings, the app shell, pages and styles (`src/client/`), the photo analysis (`src/client/photo/`), the server entry point (`src/server/index.ts`), test helpers and the checklist tool. Reading this code is part of the course: it shows how your pieces fit together.
 
 ## Tech
 
-TypeScript 7 · React 18 · Vite · Express 4 · Vitest · Testing Library · supertest · tsx. No database, no build tooling to configure.
+TypeScript 7 · React 18 · Vite · Express 4 · Vitest · Testing Library · supertest · tsx.
 
 ## For maintainers
 
-Every exercise must be solvable and every test fair. `npm run verify` checks that:
+`npm run verify` checks that: every part, section and exercise has its files; each exercise **starts red** against the starter code; and with `solutions/` copied over the starter, the **type check, all tests and the client build pass**. Run it after changing any exercise, test, solution or lesson.
 
-1. each exercise **starts red** against the starter code;
-2. with `solutions/` copied over the starter, the **type check, all tests and the client build pass**.
-
-Run it after changing any exercise, test or solution. To add an exercise: write the stub, the solution (same path under `solutions/`), the test, `README.md`, `hints.md` (three `## Hint N` sections), and add it to `curriculum/curriculum.ts`.
+To add an exercise: write the stub, the solution (same path under `solutions/`), the test, `README.md` and `hints.md` (three `## Hint N` sections), add it to `curriculum/curriculum.ts` (in a section), and link it from that section's page.

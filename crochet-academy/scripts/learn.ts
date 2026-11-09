@@ -14,7 +14,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
-import { ALL_EXERCISES, MANUAL_ITEMS, PHASES, exercisePath, findExercise, type Phase } from '../curriculum/curriculum';
+import { ALL_EXERCISES, MANUAL_ITEMS, PARTS, exercisePath, findExercise, partDoc, readId, sectionDoc, type Part } from '../curriculum/curriculum';
 
 const root = resolve(import.meta.dirname, '..');
 const stateDir = join(root, '.learn');
@@ -73,22 +73,25 @@ function readResults(): Map<string, Result> {
 const isDone = (r?: Result) => !!r && r.failed === 0 && r.passed > 0;
 
 /* ------------------------------------------------------------------ checklist model */
-interface Line { kind: 'manual' | 'exercise'; id: string; label: string; done: boolean; detail?: string }
-interface PhaseView { phase: Phase; lines: Line[]; done: number; total: number }
+interface Line { kind: 'manual' | 'exercise'; id: string; label: string; done: boolean; detail?: string; indent?: boolean }
+interface PartView { part: Part; lines: Line[]; done: number; total: number }
 
-function buildView(results: Map<string, Result>, progress: Progress): PhaseView[] {
-  return PHASES.map((phase) => {
-    const lines: Line[] = [
-      ...phase.knowledge.map((m): Line => ({ kind: 'manual', id: m.id, label: m.label, done: progress.done.includes(m.id) })),
-      ...phase.exercises.map((e): Line => {
+function buildView(results: Map<string, Result>, progress: Progress): PartView[] {
+  return PARTS.map((part) => {
+    const lines: Line[] = [];
+    for (const section of part.sections) {
+      lines.push({ kind: 'manual', id: readId(part, section), label: `Read ${part.id}${section.letter} ${section.title}`, done: progress.done.includes(readId(part, section)) });
+      for (const id of section.exercises) {
+        const e = part.exercises.find((x) => x.id === id)!;
         const r = results.get(e.id);
         const total = r ? r.passed + r.failed : 0;
         const detail = !r ? 'not run yet' : r.loadError && r.passed === 0 ? 'not built yet' : `${r.passed}/${total} tests`;
-        return { kind: 'exercise', id: e.id, label: `${e.id} ${e.title}`, done: isDone(r), detail };
-      }),
-      { kind: 'manual', id: phase.milestone.id, label: `Milestone: ${phase.milestone.label}`, done: progress.done.includes(phase.milestone.id) },
-    ];
-    return { phase, lines, done: lines.filter((l) => l.done).length, total: lines.length };
+        lines.push({ kind: 'exercise', id: e.id, label: `Exercise ${e.id} ${e.title}`, done: isDone(r), detail, indent: true });
+      }
+    }
+    lines.push({ kind: 'manual', id: part.notes.id, label: part.notes.label, done: progress.done.includes(part.notes.id) });
+    lines.push({ kind: 'manual', id: part.milestone.id, label: `Milestone: ${part.milestone.label}`, done: progress.done.includes(part.milestone.id) });
+    return { part, lines, done: lines.filter((l) => l.done).length, total: lines.length };
   });
 }
 
@@ -97,24 +100,24 @@ const bar = (done: number, total: number, width = 12) => {
   return '█'.repeat(filled) + '░'.repeat(width - filled);
 };
 
-function printStatus(view: PhaseView[]) {
+function printStatus(view: PartView[]) {
   const done = view.reduce((n, p) => n + p.done, 0);
   const total = view.reduce((n, p) => n + p.total, 0);
   console.log(`\n${bold('Crochet Academy')}  ${done}/${total} checklist items  ${green(bar(done, total, 20))} ${Math.round((done / total) * 100)}%\n`);
   for (const p of view) {
     const complete = p.done === p.total;
-    console.log(`${bold(`Phase ${p.phase.id} · ${p.phase.title}`)}  ${complete ? green(bar(p.done, p.total)) : bar(p.done, p.total)} ${p.done}/${p.total}`);
+    console.log(`${bold(`Part ${p.part.id} · ${p.part.title}`)}  ${complete ? green(bar(p.done, p.total)) : bar(p.done, p.total)} ${p.done}/${p.total}`);
     for (const l of p.lines) {
       const mark = l.done ? green('✔') : red('✖');
       const detail = l.detail ? dim(`  ${l.detail}`) : '';
       const hint = !l.done ? dim(l.kind === 'manual' ? `  npm run learn check ${l.id}` : `  npm run learn test ${l.id}`) : '';
-      console.log(`  ${mark} ${l.label}${detail}${hint}`);
+      console.log(`  ${l.indent ? '  ' : ''}${mark} ${l.label}${detail}${hint}`);
     }
     console.log('');
   }
 }
 
-function writeChecklist(view: PhaseView[]) {
+function writeChecklist(view: PartView[]) {
   const done = view.reduce((n, p) => n + p.done, 0);
   const total = view.reduce((n, p) => n + p.total, 0);
   const out = [
@@ -126,11 +129,12 @@ function writeChecklist(view: PhaseView[]) {
     '',
   ];
   for (const p of view) {
-    out.push(`## Phase ${p.phase.id} · ${p.phase.title} (${p.done}/${p.total})`, '', `_${p.phase.goal}_`, '');
+    out.push(`## Part ${p.part.id} · ${p.part.title} (${p.done}/${p.total})`, '', `_${p.part.goal}_ [Part overview](${partDoc(p.part)})`, '');
     for (const l of p.lines) {
       const ex = l.kind === 'exercise' ? findExercise(l.id) : undefined;
-      const link = ex ? ` ([instructions](${exercisePath(ex)}/README.md))` : ` \`${l.id}\``;
-      out.push(`- [${l.done ? 'x' : ' '}] ${l.label}${link}${l.detail ? ` — ${l.detail}` : ''}`);
+      const section = l.kind === 'manual' && /\.read$/.test(l.id) ? p.part.sections.find((s) => readId(p.part, s) === l.id) : undefined;
+      const link = ex ? ` ([instructions](${exercisePath(ex)}/README.md))` : section ? ` ([open](${sectionDoc(p.part, section)})) \`${l.id}\`` : ` \`${l.id}\``;
+      out.push(`${l.indent ? '  ' : ''}- [${l.done ? 'x' : ' '}] ${l.label}${link}${l.detail ? ` — ${l.detail}` : ''}`);
     }
     out.push('');
   }
@@ -154,13 +158,15 @@ function next(results: Map<string, Result>, brief = false) {
     return;
   }
   const blockers = todo.needs.filter((n) => !isDone(results.get(n)));
-  console.log(`${bold('Next up:')} ${cyan(`${todo.id} ${todo.title}`)}  ${dim(`(Phase ${todo.phase.id})`)}`);
+  console.log(`${bold('Next up:')} ${cyan(`${todo.id} ${todo.title}`)}  ${dim(`(Part ${todo.part.id})`)}`);
   if (brief) {
     console.log(dim(`  npm run learn next   for the full briefing`));
     return;
   }
+  const section = todo.part.sections.find((sec) => sec.exercises.includes(todo.id))!;
+  console.log(`  Learn it:  ${sectionDoc(todo.part, section)}   ${dim(`(part ${todo.part.id}${section.letter})`)}`);
   console.log(`  Practise:  ${todo.concepts.join(', ')}`);
-  console.log(`  Read:      ${exercisePath(todo)}/README.md`);
+  console.log(`  Task:      ${exercisePath(todo)}/README.md`);
   console.log(`  Edit:      ${todo.files.join(', ')}`);
   console.log(`  Test:      npm run learn test ${todo.id}`);
   console.log(`  Stuck?     npm run learn hint ${todo.id}`);

@@ -17,7 +17,7 @@ export interface ApiClient {
 }
 
 /**
- * Exercise 5.1: a typed client for the API you built in phase 4.
+ * Exercise 5.1: a typed client for the API you built in part 4.
  *
  *   list()            GET    {baseUrl}/api/charts
  *   create(input)     POST   {baseUrl}/api/charts            JSON body
