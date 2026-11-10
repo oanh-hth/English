@@ -74,7 +74,7 @@ window.TOPICS = [
     ["Sorry for the wait.", "I apologize that you waited.", "Staff or hosts say this; you can too after keeping someone waiting.", "Sorry for the wait. | No problem.", "polite", "\"SOR-ee fer the WAIT\""],
     ["Sorry to bother you.", "Apologizing for interrupting.", "Before asking a stranger or busy person for something.", "Sorry to bother you, but do you know the time? | Sure, it's 3:30.", "polite", "\"SOR-ee ta BOTH-er ya\""],
     ["I didn't mean to ___.", "It was not my intention to do that.", "Explaining an accident or misunderstanding.", "I didn't mean to hurt your feelings. | I know. It's okay.", "neutral", "\"I DID-n't MEAN ta\""],
-    ["Thanks a lot!", "Thank you very much!", "Everyday thanks; friendly and natural.", "I saved you a seat. | Thanks a lot!", "casual", "\"THANKS a LOT\""],
+    ["Thanks a lot!", "Thank you very much!", "Everyday thanks. Careful with tone: said flatly, \"Thanks a lot\" can sound sarcastic.", "I saved you a seat. | Thanks a lot!", "casual", "\"THANKS a LOT\""],
   ]},
   { key: "react", icon: "😮", name: "Reactions & feelings", blurb: "Sound alive in conversation", phrases: [
     ["No way!", "That's surprising! I can't believe it!", "Reacting with surprise (good or bad).", "I got the job! | No way! Congratulations!", "casual", "Rising tone: \"No WAY!\""],

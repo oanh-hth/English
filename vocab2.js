@@ -130,7 +130,7 @@ rating | n | a score | The rating is 8.
 box office | n | ticket sales | It's a box office hit.
 premiere | n | the first showing | The premiere is Friday.
 audience | n | people watching | The audience clapped.
-cinema | n | movie theater | See it in the cinema.
+movie theater | n | a place to watch films | See it at the movie theater.
 episode | n | one part of a show | A new episode drops.
 series | n | a TV show with episodes | A new series on Netflix.
 lyrics | n | the words of a song | I know the lyrics.
@@ -146,11 +146,11 @@ player | n | a person who plays | The best player.
 referee | n | a game official | The referee blew the whistle.
 score | n/v | points; to get points | Who scored?
 goal | n | a point in soccer | What a goal!
-match | n | a game | The match was close.
+match | n | a game in tennis, soccer or boxing (most US sports say "game") | The match was close.
 tournament | n | a competition | The tournament starts today.
 champion | n | a winner | He's the champion.
 defeat | v/n | to beat; a loss | They defeated us.
-draw | n | a tied game | It ended in a draw.
+draw | n | a game with no winner (Americans usually say "a tie") | It ended in a draw.
 tied | adj | with equal scores | The game was tied.
 win | v | to be victorious | We won!
 lose | v | to be defeated | We lost.
@@ -371,7 +371,7 @@ crowded | adj | with many people | A crowded bus.
 quiet | adj | making little noise | A quiet room.
 noisy | adj | loud | A noisy street.
 messy | adj | untidy | A messy room.
-tidy | adj | neat | A tidy desk.
+neat | adj | clean and organized (British: tidy) | A neat desk.
 clean | adj | not dirty | Clean sheets.
 dirty | adj | not clean | Dirty hands.
 brand-new | adj | completely new | A brand-new car.
@@ -411,8 +411,8 @@ absolutely | adv | completely | Absolutely not.
 barely | adv | hardly | I barely slept.
 hardly | adv | almost not | I hardly know him.
 nearly | adv | almost | I nearly fell.
-quite | adv | fairly | It's quite good.
-rather | adv | somewhat | Rather expensive.
+quite | adv | very, in American English (in British English: fairly) | It's quite good.
+rather | adv | somewhat (sounds formal in the US; people say "kind of" or "pretty") | Rather expensive.
 pretty | adv | fairly | Pretty good.
 extremely | adv | very | Extremely tired.
 completely | adv | fully | Completely wrong.
@@ -441,11 +441,11 @@ sweet | adj | great (casual) | Sweet! Thanks!
 lame | adj | boring or uncool | That party was lame.
 nuts | adj | crazy | That's nuts.
 crazy | adj | wild | A crazy day.
-epic | adj | amazing | An epic fail.
+epic | adj | amazing (slang, a little dated) | An epic fail.
 legit | adj | genuine | Is this legit?
 sketchy | adj | suspicious | A sketchy place.
 sick | adj | great (slang) | That trick was sick.
-dope | adj | cool (slang) | Dope shoes.
+dope | adj | cool (slang, a little dated) | Dope shoes.
 chill | v/adj | to relax; relaxed | Let's chill.
 hang out | v | to spend time | Let's hang out.
 freak out | v | to panic | Don't freak out.
@@ -457,7 +457,7 @@ ghost | v | to stop replying | She ghosted me.
 vibe | n | the mood | Good vibes.
 flex | v | to show off | Stop flexing.
 slay | v | to do very well | You slayed!
-lit | adj | exciting | The party was lit.
+lit | adj | exciting (2010s slang, now a little dated) | The party was lit.
 cringe | adj | embarrassing | That's cringe.
 ugh | interj | expression of annoyance | Ugh, Mondays.
 wow | interj | expression of surprise | Wow, nice!

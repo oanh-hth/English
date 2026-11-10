@@ -6,7 +6,7 @@ TOPICS.push(
     [`We're just friends.`, `We are not in a romantic relationship.`, `Clarifying a relationship.`, `Is she your girlfriend? | No, we're just friends.`, `casual`, `"just FRENDZ"`],
     [`We've been seeing each other.`, `We are dating.`, `Describing a new relationship.`, `Are you two together? | We've been seeing each other for a month.`, `casual`, `"SEE-ing each OTH-er"`],
     [`I'm kind of seeing someone.`, `I have a romantic partner, but it's early.`, `Casual, not-yet-official dating.`, `Are you single? | I'm kind of seeing someone.`, `casual`, `"kind-uh SEE-ing SUM-wun"`],
-    [`She's my other half.`, `She is my life partner.`, `Talking warmly about a partner.`, `Is that your wife? | Yes, she's my other half.`, `casual`, `"other HAF"`],
+    [`She's my better half.`, `A warm, joking way to say "my wife / husband / partner".`, `Introducing or talking about your spouse or long-term partner.`, `Is that your wife? | Yes, she's my better half.`, `casual`, `"BET-er HAF"`],
     [`We broke up.`, `Our relationship ended.`, `Telling friends.`, `Where's Mike? | We broke up last week.`, `casual`, `"BROKE UP"`],
     [`I've got a crush on ___.`, `I like someone romantically.`, `Telling a friend a secret.`, `Why are you smiling? | I've got a crush on Jess.`, `casual`, `"got a CRUSH on"`],
   ]},

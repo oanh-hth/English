@@ -117,7 +117,7 @@ TOPICS.push(
     [`It doesn't matter to me.`, `I have no preference.`, `Neutral.`, `Which one? | It doesn't matter to me.`, `neutral`],
     [`I'll go with ___.`, `I choose this.`, `Deciding.`, `I'll go with the blue one. | Nice.`, `casual`],
     [`I'm all ears.`, `I'm ready to listen.`, `Inviting someone to speak.`, `I have news. | I'm all ears.`, `casual`],
-    [`I'm easy.`, `I'm flexible; I don't mind.`, `Casual: letting others choose.`, `Where to eat? | I'm easy.`, `casual`],
+    [`I'm flexible.`, `I don't mind; any option works for me.`, `Letting others choose. (Avoid "I'm easy" in the US: it can sound sexual.)`, `Where should we eat? | I'm flexible.`, `casual`],
   ]},
   { key: "clarify", group: "Everyday conversation", icon: "🔍", name: "Checking understanding", blurb: "Clarify without stress", phrases: [
     [`Are you saying that ___?`, `Do you mean this?`, `Clarifying.`, `Are you saying that I'm late? | No, just checking.`, `neutral`],
@@ -132,7 +132,7 @@ TOPICS.push(
     [`Wait, back up.`, `Return to the earlier part.`, `Interrupting politely.`, `Wait, back up. Who called? | Mark.`, `casual`],
     [`Hold on, I lost you.`, `I no longer understand.`, `Explanation too fast.`, `Hold on, I lost you. | Let me slow down.`, `casual`],
     [`Sorry, I missed that.`, `I didn't catch what you said.`, `Polite.`, `Sorry, I missed that. | No worries.`, `polite`],
-    [`Come again?`, `What did you say?`, `Casual repetition request.`, `We're leaving at six. | Come again?`, `casual`],
+    [`Come again?`, `What did you say?`, `Casual; a little old-fashioned and can sound abrupt. "Sorry, what was that?" is safer.`, `We're leaving at six. | Come again?`, `casual`],
     [`Run that by me again.`, `Explain it once more.`, `Casual.`, `Run that by me again. | Sure.`, `casual`],
     [`What does ___ mean?`, `Please define this word.`, `New words.`, `What does "swamped" mean? | Very busy.`, `neutral`],
   ]},

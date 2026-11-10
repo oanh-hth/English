@@ -328,7 +328,7 @@ attend | v | to be present at | Attend all lectures.
 miss | v | to fail to attend | I missed class.
 submit | v | to hand in | Submit your essay online.
 deadline | n | the last time to finish | The deadline is Monday.
-revise | v | to review and improve | Revise your notes.
+revise | v | to change a piece of writing to improve it (not "study", which is British use) | Revise your essay before you submit it.
 memorize | v | to learn by heart | I memorized the list.
 cheat | v | to break rules in a test | Don't cheat.
 fail | v | to not pass | I failed the test.
@@ -409,7 +409,7 @@ rent | n/v | payment for a home; to pay to use | Rent is due Friday.
 mortgage | n | a loan for buying a house | We have a mortgage.
 loan | n | borrowed money | He took out a loan.
 debt | n | money owed | She's in debt.
-saving | n | money kept for later | I have savings.
+savings | n | money kept for later | I have some savings.
 budget | n/v | a spending plan | We're on a budget.
 invest | v | to put money in to earn more | He invests in stocks.
 afford | v | to have enough money for | I can't afford it.
@@ -510,14 +510,14 @@ bakery | n | a shop that sells bread | The bakery smells great.
 pharmacy | n | a place for medicine | Pick it up at the pharmacy.
 post office | n | where you mail letters | Go to the post office.
 bank | n | a place for money | I went to the bank.
-town hall | n | the local government building | The meeting is at town hall.
+city hall | n | the local government building (also: town hall) | The meeting is at city hall.
 police station | n | where police work | Report it at the police station.
 fire station | n | where firefighters are based | The fire station is nearby.
 church | n | a Christian place of worship | They go to church.
 cafe | n | a small restaurant for coffee | Let's meet at a cafe.
 bar | n | a place that serves alcohol | They met in a bar.
 nightclub | n | a place for dancing | We went to a nightclub.
-cinema | n | a movie theater | See it at the cinema.
+movie theater | n | a place to watch films (British: cinema) | Let's meet at the movie theater.
 farm | n | land for growing crops | He grew up on a farm.
 village | n | a small rural community | They live in a village.
 `);
