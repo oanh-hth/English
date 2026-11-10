@@ -23,7 +23,7 @@ TOPICS.forEach(t => t.phrases.forEach((r, i) => {
 
 /* ---------- storage ---------- */
 const KEY = 'speakNatural.v1';
-const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, rate: 0.9, voice: '' }, flags: {}, custom: [], edits: {}, deleted: {} });
+const defaults = () => ({ cards: {}, log: {}, roles: {}, settings: { newPerDay: 8, newWordsPerDay: 10, dailyGoal: 20, rate: 0.9, voice: '' }, flags: {}, custom: [], edits: {}, deleted: {} });
 let S = (() => {
   try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) { const d = defaults(); return { ...d, ...o, settings: { ...d.settings, ...(o.settings || {}) } }; } } catch (e) { /* ignore */ }
   return defaults();
@@ -52,7 +52,34 @@ const FIELDS = ['p', 'm', 'c', 'ex', 'tone', 's'];
 Object.entries(S.edits).forEach(([id, e]) => { const c = BY_ID[id]; if (c && !c.custom) { c._orig = Object.fromEntries(FIELDS.map(f => [f, c[f]])); Object.assign(c, e); } });
 rebuildALL();
 const today = () => (S.log[dayKey()] ||= { rev: 0, learned: 0, roles: 0, lw: 0, ex: 0 });
-const bump = (f, n = 1) => { const t = today(); t[f] = (t[f] || 0) + n; save(); };
+const studied = t => t.rev + t.learned + (t.lw || 0) + (t.ex || 0);
+const bump = (f, n = 1) => {
+  const t = today(), before = studied(t), goal = S.settings.dailyGoal;
+  t[f] = (t[f] || 0) + n;
+  if (!t.g && before < goal && studied(t) >= goal) { t.g = 1; setTimeout(() => { confetti(); toast('🎯 Daily goal reached! Amazing work.'); }, 400); }
+  save();
+};
+/* ---------- motivation: XP, levels, cheers, confetti ---------- */
+const LEVELS = ['Newcomer', 'Explorer', 'Chatter', 'Storyteller', 'Smooth talker', 'Conversation pro', 'Almost native'];
+const XP_PER_LEVEL = 250;
+function xpInfo() {
+  const xp = Object.values(S.log).reduce((a, l) => a + l.rev * 10 + (l.learned + (l.lw || 0) + (l.ex || 0)) * 5 + l.roles * 25, 0);
+  const level = Math.floor(xp / XP_PER_LEVEL) + 1;
+  return { xp, level, name: LEVELS[Math.min(level, LEVELS.length) - 1], into: xp % XP_PER_LEVEL, toNext: XP_PER_LEVEL - (xp % XP_PER_LEVEL) };
+}
+const CHEERS = ['Nice one!', 'Nailed it!', 'You got it!', 'Exactly right!', 'Great job!', 'Boom!', 'Spot on!', 'Look at you go!'];
+const cheer = () => CHEERS[Math.floor(Math.random() * CHEERS.length)];
+function confetti() {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const box = document.createElement('div'); box.className = 'confetti-box'; box.setAttribute('aria-hidden', 'true');
+  const colors = ['#ffc93c', '#ff6b6b', '#4dabf7', '#51cf66', '#b197fc', '#ff922b'];
+  for (let i = 0; i < 44; i++) {
+    const p = document.createElement('i');
+    p.style.cssText = `left:${Math.random() * 100}%;background:${colors[i % colors.length]};animation-delay:${Math.random() * 0.4}s;animation-duration:${1.4 + Math.random() * 1.1}s;transform:rotate(${Math.random() * 360}deg);width:${6 + Math.random() * 6}px;height:${8 + Math.random() * 8}px`;
+    box.appendChild(p);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 3000);
+}
 
 /* ---------- text to speech ---------- */
 const TTS = {
@@ -200,25 +227,37 @@ const VIEWS = {
     const wLeft = Math.min(newLeftToday('word'), newIds('word').length);
     const inDeck = Object.keys(S.cards).length, st = streak();
     const nextSc = SCENARIOS.find(s => !S.roles[s.id]) || SCENARIOS[0];
+    const hr = new Date().getHours();
+    const hello = hr < 5 ? ['Still up?', '🌙'] : hr < 12 ? ['Good morning!', '☀️'] : hr < 18 ? ['Good afternoon!', '🌤️'] : ['Good evening!', '🌙'];
+    const done = studied(t), goal = S.settings.dailyGoal, pct = Math.min(1, done / goal), x = xpInfo();
+    const C = 2 * Math.PI * 30;
+    const mot = done >= goal ? 'Goal crushed. Anything more today is a bonus! 🎉'
+      : done > 0 ? `You're warmed up. Just ${goal - done} more to hit today's goal!`
+      : st > 1 ? `You're on a ${st}-day streak. Keep the fire going! 🔥`
+      : inDeck ? 'Five minutes today keeps your English growing. 🌱' : 'Ready for your first phrase? It only takes a minute. 🚀';
     return `
-      <h1>Speak Natural</h1>
-      <p class="muted">Real American English, one conversation at a time.</p>
+      <p class="brand">Speak Natural</p>
+      <h1>${hello[0]} ${hello[1]}</h1>
+      <p class="muted">${mot}</p>
+      <div class="card goal-card">
+        <div class="ring"><svg viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="30" class="ring-bg"/><circle cx="36" cy="36" r="30" class="ring-fg" stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}"/></svg><div class="ring-num"><b>${done}</b><span>/ ${goal}</span></div></div>
+        <div class="grow">
+          <b>Today's goal</b>
+          <div class="chips"><span class="chipstat">🔥 ${st} day${st === 1 ? '' : 's'}</span><span class="chipstat">⭐ Level ${x.level} · ${x.name}</span></div>
+          <div class="bar xp"><i style="width:${x.into / XP_PER_LEVEL * 100}%"></i></div>
+          <span class="muted small">${x.toNext} XP to level ${x.level + 1}</span>
+        </div>
+      </div>
       <div class="card hero">
-        <p class="small" style="margin:0">Today's review</p>
         <div class="big">${due}</div>
-        <p>${due ? `phrase${due > 1 ? 's' : ''} ready to review` : 'Nothing due — you\'re all caught up! 🎉'}</p>
-        <button class="btn" data-a="review" ${due ? '' : 'disabled'}>Start review</button>
+        <p>${due ? `card${due > 1 ? 's are' : ' is'} waiting for you` : inDeck ? 'All caught up. Nice work! 🎉' : 'Your deck is empty. Let\'s add your first phrases!'}</p>
+        ${due ? '<button class="btn" data-a="review">Let\'s review ›</button>' : '<button class="btn" data-a="learn">Learn something new ›</button>'}
       </div>
-      <div class="grid2">
-        <div class="card stat"><b>🔥 ${st}</b><span>day streak</span></div>
-        <div class="card stat"><b>${t.rev + t.learned + (t.lw || 0) + (t.ex || 0)}</b><span>studied today</span></div>
-      </div>
-      <button class="item" data-a="learn" ${left ? '' : 'disabled style="opacity:.55"'}><span class="ico">✨</span><span class="grow"><h3>Learn new phrases</h3><span class="muted small">${left ? `${left} left for today` : newIds().length ? 'Daily goal reached' : 'You\'ve seen everything!'}</span></span><span class="chev">›</span></button>
-      <button class="item" data-a="learn" data-kind="word" ${wLeft ? '' : 'disabled style="opacity:.55"'}><span class="ico">📚</span><span class="grow"><h3>Learn new words</h3><span class="muted small">${wLeft ? `${wLeft} left for today` : newIds('word').length ? 'Daily goal reached' : 'You\'ve seen every word!'}</span></span><span class="chev">›</span></button>
+      <button class="item" data-a="learn" ${left ? '' : 'disabled style="opacity:.55"'}><span class="ico">✨</span><span class="grow"><h3>Learn new phrases</h3><span class="muted small">${left ? `${left} left for today` : newIds().length ? 'Done for today. Come back tomorrow!' : 'You\'ve seen everything!'}</span></span><span class="chev">›</span></button>
+      <button class="item" data-a="learn" data-kind="word" ${wLeft ? '' : 'disabled style="opacity:.55"'}><span class="ico">📚</span><span class="grow"><h3>Learn new words</h3><span class="muted small">${wLeft ? `${wLeft} left for today` : newIds('word').length ? 'Done for today. Come back tomorrow!' : 'You\'ve seen every word!'}</span></span><span class="chev">›</span></button>
       <button class="item" data-a="addWord"><span class="ico">✍️</span><span class="grow"><h3>Save a word I looked up</h3><span class="muted small">From a movie, video or podcast</span></span><span class="chev">＋</span></button>
       <button class="item" data-a="scenario" data-id="${nextSc.id}"><span class="ico">${nextSc.icon}</span><span class="grow"><h3>Role-play: ${esc(nextSc.title)}</h3><span class="muted small">${S.roles[nextSc.id] ? 'Practice again' : 'Recommended next'} · ${nextSc.level}</span></span><span class="chev">›</span></button>
-      <h2>How it works</h2>
-      <div class="card small"><p><b>1. Learn</b> phrases with audio, meaning, and real situations.</p><p><b>2. Review</b> them with spaced repetition — right before you'd forget.</p><p><b>3. Practice</b> in role-plays: read the situation, build the sentence, and say it out loud.</p><p class="muted" style="margin:0">You have ${inDeck} of ${ALL.length} phrases in your deck.</p></div>`;
+      <div class="card small cheer-card"><b>💡 Tip of the day</b><p style="margin:4px 0 0">${['Say every phrase out loud. Your mouth needs practice too!', 'Short sessions every day beat one long session a week.', 'Missed a card? Great, that\'s exactly how memory gets stronger.', 'Try a role-play after learning: using a phrase makes it stick.', 'Heard a new word in a video? Save it and it joins your reviews.'][new Date().getDate() % 5]}</p></div>`;
   },
 
   review() {
@@ -295,6 +334,7 @@ const VIEWS = {
       </div>
       <h2>Settings</h2>
       <div class="card stack">
+        <label class="row"><span class="grow">Daily goal (items)</span><select data-s="dailyGoal">${[10, 20, 30, 50].map(n => `<option ${n === S.settings.dailyGoal ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
         <label class="row"><span class="grow">New words per day</span><select data-s="newWordsPerDay">${[5, 10, 15, 20, 30].map(n => `<option ${n === S.settings.newWordsPerDay ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
         <label class="row"><span class="grow">New phrases per day</span><select data-s="newPerDay">${[3, 5, 8, 12, 20].map(n => `<option ${n === S.settings.newPerDay ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
         <div><div class="row"><span class="grow">Speaking speed</span><span class="muted">${S.settings.rate.toFixed(2)}×</span></div><input type="range" min="0.6" max="1.1" step="0.05" value="${S.settings.rate}" data-s="rate"></div>
@@ -320,9 +360,11 @@ function phraseList(list) {
 
 function sessionDone() {
   const learn = ses.kind === 'learn';
-  return `<div class="card" style="margin-top:40px;text-align:center"><div class="confetti">${learn ? '✨' : '🎉'}</div>
-    <h2 style="margin-top:6px">${learn ? 'New phrases added!' : 'Review complete!'}</h2>
-    <p class="muted">${learn ? `${ses.done} phrase${ses.done === 1 ? '' : 's'} added to your deck. Review them now while they're fresh.` : `You reviewed ${ses.done} card${ses.done === 1 ? '' : 's'}. See you when the next ones are due.`}</p></div>
+  if (!ses.cele && ses.done) { ses.cele = 1; confetti(); }
+  return `<div class="card done-card"><div class="confetti">${learn ? '✨' : '🎉'}</div>
+    <h2 style="margin-top:6px">${learn ? (ses.done ? 'Fresh phrases unlocked!' : 'Nothing added this time') : 'Review crushed!'}</h2>
+    ${ses.done ? `<span class="xp-pill">+${ses.done * (learn ? 5 : 10)} XP</span>` : ''}
+    <p class="muted">${learn ? `${ses.done} new item${ses.done === 1 ? '' : 's'} in your deck. Review them now while they're fresh!` : `You reviewed ${ses.done} card${ses.done === 1 ? '' : 's'}. Your future self says thanks. 🙌`}</p></div>
     <div class="stack">${learn && ses.done ? '<button class="btn" data-a="review">Review now</button>' : ''}<button class="btn plain" data-a="exit">Done</button></div>`;
 }
 
@@ -383,8 +425,10 @@ function rpDone() {
   const { sc } = rp, n = sc.turns.length;
   const lines = rp.hist.map(h => h.text);
   const stars = rp.good === n ? '🌟' : rp.good >= n / 2 ? '👏' : '💪';
-  return `<div class="card" style="text-align:center"><div class="confetti">${stars}</div><h2 style="margin-top:6px">Conversation complete</h2>
-      <p class="muted">${rp.good} of ${n} sentences without hints or mistakes.</p></div>
+  if (!rp.cele) { rp.cele = 1; confetti(); }
+  return `<div class="card done-card" style="margin-top:0"><div class="confetti">${stars}</div><h2 style="margin-top:6px">${rp.good === n ? 'Flawless conversation!' : 'Conversation complete!'}</h2>
+      <span class="xp-pill">+25 XP</span>
+      <p class="muted">${rp.good} of ${n} sentences with no hints or slips.${rp.good === n ? ' You sounded like a local.' : ' Try again to beat your score!'}</p></div>
     <div class="card small"><b>Now speak it!</b><p class="muted" style="margin:4px 0 0">Play the whole dialogue, then read <i>your</i> lines out loud along with it. Repeat 2–3 times until it feels automatic.</p></div>
     <div class="stack"><button class="btn ghost" data-a="playall">🔊 Play full conversation</button><button class="btn" data-a="scenario" data-id="${sc.id}">Try again</button><button class="btn plain" data-a="exit">Back to practice</button></div>`;
 }
@@ -582,6 +626,7 @@ document.addEventListener('change', e => {
   const k = e.target.dataset && e.target.dataset.s; if (!k) return;
   if (k === 'newPerDay') S.settings.newPerDay = +e.target.value;
   else if (k === 'newWordsPerDay') S.settings.newWordsPerDay = +e.target.value;
+  else if (k === 'dailyGoal') S.settings.dailyGoal = +e.target.value;
   else if (k === 'voice') S.settings.voice = e.target.value;
   else if (k === 'rate') { S.settings.rate = +e.target.value; }
   save(); if (k === 'rate') render(true);
@@ -595,6 +640,7 @@ document.addEventListener('keydown', e => {
 window.SN = {
   get S() { return S; }, get V() { return V; }, ALL, BY_ID, TTS, esc, shuffle, speakBtn, dialog, toast, save, bump, addToDeck, today,
   go, render, VIEWS, A, newIds, newLeftToday, startLearn, statusOf, phraseList, phraseDetail, openSheet, closeSheet, tokens, norm,
+  cheer, confetti, xpInfo,
   registerCustom, get PHRASE_COUNT() { return PHRASE_COUNT; }, get WORD_COUNT() { return WORD_COUNT; }, FEATURES, ygUrl,
 };
 

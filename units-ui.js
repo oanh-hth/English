@@ -90,7 +90,8 @@ function toDeck(id) {
 }
 function finish(ok, firstTry) {
   const q = cur();
-  if (ok && firstTry) XS.correct++;
+  if (ok && firstTry) { XS.correct++; XS.combo = (XS.combo || 0) + 1; } else XS.combo = 0;
+  XS.cheer = SN.cheer();
   if (!ok || !firstTry) { if (!XS.flagged) { XS.flagged = true; XS.missed.push(q.id); toDeck(q.id); } }
   XS.status = ok ? 'ok' : 'bad';
   SN.bump('ex');
@@ -133,7 +134,7 @@ SN.VIEWS.xs = () => {
     foot += `<div class="row"><button class="btn plain sm" data-a="xskip">I don't know</button>${q.kind === 'build' ? '<button class="btn plain sm" data-a="xclear">Clear</button>' : ''}</div></div>`;
   } else {
     const good = XS.status === 'ok';
-    foot = `<div class="${good ? 'tip' : 'tip bad-tip'}">${good ? '✅ Correct!' : `❌ Answer: <b>${esc(q.kind === 'mcq' ? q.options[q.answer] : q.target)}</b>`}</div>
+    foot = `<div class="${good ? 'tip' : 'tip bad-tip'}">${good ? `✅ <b>${XS.cheer}</b>${XS.combo >= 3 ? ` <span class="combo">🔥 ${XS.combo} in a row</span>` : ''}` : `💡 So close! It's: <b>${esc(q.kind === 'mcq' ? q.options[q.answer] : q.target)}</b>`}</div>
       <div class="card small"><div class="row"><b class="grow" style="font-size:18px">${esc(c.p)}</b>${speakBtn(c.p, false, true)}</div><p style="margin:6px 0">${esc(c.m)}</p>${c.ex ? dlgHtml(c.ex) : ''}</div>
       <button class="btn" data-a="xnext">${XS.i + 1 >= XS.qs.length ? 'See results' : 'Continue'}</button>`;
   }
@@ -144,9 +145,11 @@ const dlgHtml = ex => SN.dialog(ex);
 function xsDone() {
   const n = XS.qs.length, pct = Math.round(XS.correct / n * 100), u = XS.unit === '*' ? null : unitByKey(XS.unit);
   const miss = XS.missed.map(id => BY_ID[id]).filter(Boolean);
-  return `<div class="card" style="margin-top:20px;text-align:center"><div class="confetti">${pct >= 90 ? '🌟' : pct >= 60 ? '👏' : '💪'}</div>
-      <h2 style="margin-top:6px">${XS.correct} / ${n} correct</h2>
-      <p class="muted">${miss.length ? `${miss.length} missed item${miss.length > 1 ? 's' : ''} added to your review deck.` : 'Perfect round — nothing to review.'}</p></div>
+  if (!XS.cele && pct >= 60) { XS.cele = 1; SN.confetti(); }
+  return `<div class="card done-card"><div class="confetti">${pct >= 90 ? '🌟' : pct >= 60 ? '👏' : '💪'}</div>
+      <h2 style="margin-top:6px">${pct === 100 ? 'Perfect round!' : pct >= 90 ? 'So close to perfect!' : pct >= 60 ? 'Nice work!' : 'Good practice!'}</h2>
+      <span class="xp-pill">${XS.correct} / ${n} correct · +${n * 5} XP</span>
+      <p class="muted">${miss.length ? `${miss.length} tricky item${miss.length > 1 ? 's' : ''} saved to your reviews, so you'll get ${miss.length > 1 ? 'them' : 'it'} next time.` : 'Not a single slip. You really know these!'}</p></div>
     ${miss.length ? `<h2>Review these</h2>${miss.map(c => `<div class="card small"><div class="row"><b class="grow">${esc(c.p)}</b>${speakBtn(c.p, false, true)}</div><span class="muted">${esc(c.m)}</span></div>`).join('')}` : ''}
     <div class="stack"><button class="btn" data-a="xagain">Practice again</button>${miss.length ? '<button class="btn ghost" data-a="review">Review now</button>' : ''}<button class="btn plain" data-a="exit">${u ? 'Back to ' + esc(u.name) : 'Done'}</button></div>`;
 }

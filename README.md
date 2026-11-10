@@ -51,3 +51,6 @@ Open a topic and tap **Add a word or phrase** to add your own word or phrase to 
 
 ## Learn to build it yourself
 The `learning/` folder is a Full Stack Open style course (Parts 0 to 9: Node, TypeScript, React) with lessons, numbered exercises and tests for rebuilding this app. Start at `learning/README.md`.
+
+## Motivation features
+Home shows a daily goal ring (set the goal in Me), streak, XP and level. Finishing sessions and hitting the goal triggers confetti (off when the device asks for reduced motion). XP is computed from your activity log: review 10, new item or exercise 5, role-play 25.
