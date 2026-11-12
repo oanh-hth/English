@@ -1,0 +1,20 @@
+{
+  "name": "memory-vault",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private, login-protected vault for original-quality photos/videos with notes.",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning src/server.js",
+    "test": "node test/api.mjs",
+    "create-user": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning scripts/create-user.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1164.0",
+    "@aws-sdk/s3-request-presigner": "^3.1164.0",
+    "express": "^4.21.2"
+  }
+}

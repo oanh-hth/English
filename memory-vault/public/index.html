@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <title>Memory Vault</title>
+  <link rel="stylesheet" href="/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="wrap">
+  <section class="login" id="login" hidden>
+    <form id="login-form">
+      <h1><span data-mascot="48"></span>Memory Vault</h1>
+      <p class="muted">Your cosy little scrapbook. Sign in to peek inside!</p>
+      <label for="u">Username<input id="u" name="username" autocomplete="username" required></label>
+      <label for="p">Password<input id="p" name="password" type="password" autocomplete="current-password" required></label>
+      <p id="login-error" class="status" role="alert"></p>
+      <button class="btn primary" type="submit">Sign in</button>
+      <p class="lock">Only the owner can make accounts. No one else gets in.</p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <div class="bar">
+      <h1><span data-mascot="38"></span>Memory Vault</h1>
+      <input class="search" id="q" type="search" placeholder="Search titles, notes, tags" aria-label="Search">
+      <select id="kind" aria-label="Filter by type"><option value="">All</option><option value="image">Photos</option><option value="video">Videos</option></select>
+      <label class="btn primary" for="pick">Upload</label>
+      <input id="pick" type="file" accept="image/*,video/*,.heic,.heif" multiple hidden>
+      <button class="btn" id="out" type="button">Sign out (<span id="who"></span>)</button>
+    </div>
+    <div class="hint" id="drop">Drop your photos and videos here! Pick lots at once to make a series. Originals stay exactly as they are.</div>
+
+    <div class="stage-up" id="staging" hidden>
+      <h2 id="st-head">Ready to upload</h2>
+      <div class="muted" id="st-sub"></div>
+      <div class="modes" id="modes">
+        <label class="on" for="m-series"><input type="radio" name="mode" id="m-series" value="series" checked> One series, in the order below</label>
+        <label for="m-sep"><input type="radio" name="mode" id="m-sep" value="sep"> Separate items</label>
+      </div>
+      <div class="sfields" id="sfields">
+        <label for="s-title">Series title<input id="s-title" placeholder="e.g. Hanoi trip"></label>
+        <label for="s-date">Date<input type="date" id="s-date"></label>
+      </div>
+      <div class="queue" id="queue"></div>
+      <div class="row"><button class="btn primary" id="st-go" type="button">Add to library</button><button class="btn" id="st-cancel" type="button">Cancel</button></div>
+    </div>
+    <ul id="uploads" aria-live="polite"></ul>
+
+    <div class="stats" id="stats"></div>
+    <div id="lib"></div>
+  </section>
+</div>
+
+<div class="veil" id="veil" hidden>
+  <div class="reader" role="dialog" aria-modal="true" aria-label="Memory">
+    <div class="left">
+      <div class="stage" id="stage"></div>
+      <div class="strip" id="strip" hidden></div>
+    </div>
+
+    <form class="side" id="form">
+      <label for="f-title">Title<input class="title" id="f-title" maxlength="200" placeholder="Name this memory"></label>
+      <div class="two">
+        <label for="f-date">Date of the memory<input type="date" id="f-date"></label>
+        <label for="f-tags">Tags<input id="f-tags" maxlength="300" placeholder="family, beach"></label>
+      </div>
+      <div class="chips" id="chips"></div>
+      <label for="f-note">Notes<textarea class="note" id="f-note" maxlength="50000" placeholder="What was happening? Who was there? How did it feel?"></textarea></label>
+      <label for="f-add">Add to a series<select id="f-add"></select></label>
+      <p class="facts" id="facts"></p>
+      <p class="status" id="status" role="status"></p>
+      <div class="row">
+        <button class="btn primary" type="submit">Save notes</button>
+        <a class="btn" id="dl" href="#">Download original</a>
+        <button class="btn danger" type="button" id="del">Delete</button>
+        <button class="btn" type="button" id="close">Close</button>
+      </div>
+    </form>
+
+    <form class="side" id="sform" hidden>
+      <label for="s-t2">Series title<input class="title" id="s-t2" maxlength="200"></label>
+      <div class="two">
+        <label for="s-d2">Date<input type="date" id="s-d2"></label>
+        <label for="s-tg2">Tags<input id="s-tg2" maxlength="300"></label>
+      </div>
+      <label for="s-n2">Note for the whole series<textarea class="note" id="s-n2" maxlength="50000" placeholder="The story of this set of photos"></textarea></label>
+      <div class="photo-box">
+        <h3 id="pb-h">Photo 1 of 1</h3>
+        <label for="p-cap">Caption<input id="p-cap" maxlength="200"></label>
+        <label for="p-note">Note on this photo<textarea id="p-note" maxlength="50000"></textarea></label>
+        <div class="row">
+          <button class="btn sm" type="button" id="p-left">Move earlier</button>
+          <button class="btn sm" type="button" id="p-right">Move later</button>
+          <button class="btn sm" type="button" id="p-cover">Set as cover</button>
+          <button class="btn sm danger" type="button" id="p-remove">Remove from series</button>
+        </div>
+      </div>
+      <p class="facts" id="sfacts"></p>
+      <p class="status" id="sstatus" role="status"></p>
+      <div class="row">
+        <button class="btn primary" type="submit">Save</button>
+        <label class="btn" for="add-more">Add photos</label>
+        <input id="add-more" type="file" accept="image/*,video/*,.heic,.heif" multiple hidden>
+        <a class="btn" id="s-dl" href="#">Download original</a>
+        <button class="btn danger" type="button" id="s-del">Delete series</button>
+        <button class="btn" type="button" id="s-close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>
