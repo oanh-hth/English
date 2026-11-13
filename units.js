@@ -30,3 +30,13 @@ window.UNITS = [
   { key: 'u-media', group: 'Media & technology', icon: '🎬', name: 'Movies, music & hobbies', blurb: 'Entertainment and sports', p: ['media', 'hobbies'], v: ['v-media', 'v-sports'], s: ['movie'] },
   { key: 'u-world', group: 'Media & technology', icon: '📰', name: 'News, law & emergencies', blurb: 'Words from news and thrillers', p: ['emergency'], v: ['v-news', 'v-law', 'v-emergency'], s: [] },
 ];
+
+/* Doodle name and card colour for each unit (used by the card-style screens). */
+window.UNIT_ART = {
+  'u-social': ['face', 'sage'], 'u-friends': ['heart', 'pink'], 'u-feelings': ['smile', 'blue'], 'u-polite': ['sparkle', 'coral'],
+  'u-opinions': ['bulb', 'olive'], 'u-flow': ['chain', 'sage'], 'u-spoken': ['lips', 'pink'], 'u-expr': ['flower', 'coral'],
+  'u-cafe': ['cup', 'coral'], 'u-shop': ['bag', 'blue'], 'u-home': ['house', 'olive'], 'u-health': ['cross', 'pink'],
+  'u-plans': ['calendar', 'sage'], 'u-nature': ['leaf', 'olive'], 'u-work': ['briefcase', 'blue'], 'u-career': ['target', 'coral'],
+  'u-school': ['cap', 'sage'], 'u-travel': ['plane', 'pink'], 'u-move': ['compass', 'blue'], 'u-tech': ['phone', 'olive'],
+  'u-media': ['clapper', 'coral'], 'u-world': ['globe', 'sage'], 'my': ['pencil', 'sand'],
+};

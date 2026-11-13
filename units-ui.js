@@ -104,7 +104,7 @@ function finish(ok, firstTry) {
 SN.VIEWS.xs = () => {
   if (XS.i >= XS.qs.length) return xsDone();
   const q = cur(), c = BY_ID[q.id], pct = Math.round(XS.i / XS.qs.length * 100), done = XS.status !== 'ask';
-  const top = `<div class="topbar"><button class="back" data-a="exit">✕</button><div class="progress"><i style="width:${pct}%"></i></div><span class="muted small">${XS.i + 1}/${XS.qs.length}</span></div>`;
+  const top = `<div class="topbar"><button class="back" data-a="exit">✕</button><div class="progress"><i style="width:${pct}%"></i></div><span class="counter">${XS.i + 1}/${XS.qs.length}</span></div>`;
   let body = `<div class="card"><div class="label" style="margin-top:0">${esc(q.head)}</div>`;
   if (q.kind === 'mcq' || q.kind === 'build') {
     if (q.audio && q.kind === 'mcq') body += `<div class="row">${q.prompt ? `<div class="phrase grow" style="font-size:26px">${esc(q.prompt)}</div>` : '<div class="grow muted">Tap to listen again</div>'}${speakBtn(q.audio)}${speakBtn(q.audio, true)}</div>`;
@@ -134,7 +134,7 @@ SN.VIEWS.xs = () => {
     foot += `<div class="row"><button class="btn plain sm" data-a="xskip">I don't know</button>${q.kind === 'build' ? '<button class="btn plain sm" data-a="xclear">Clear</button>' : ''}</div></div>`;
   } else {
     const good = XS.status === 'ok';
-    foot = `<div class="${good ? 'tip' : 'tip bad-tip'}">${good ? `✅ <b>${XS.cheer}</b>${XS.combo >= 3 ? ` <span class="combo">🔥 ${XS.combo} in a row</span>` : ''}` : `💡 So close! It's: <b>${esc(q.kind === 'mcq' ? q.options[q.answer] : q.target)}</b>`}</div>
+    foot = `<div class="${good ? 'tip' : 'tip bad-tip'}">${good ? `<b>✓ ${XS.cheer}</b>${XS.combo >= 3 ? ` <span class="combo">🔥 ${XS.combo} in a row</span>` : ''}` : `So close! It's: <b>${esc(q.kind === 'mcq' ? q.options[q.answer] : q.target)}</b>`}</div>
       <div class="card small"><div class="row"><b class="grow" style="font-size:18px">${esc(c.p)}</b>${speakBtn(c.p, false, true)}</div><p style="margin:6px 0">${esc(c.m)}</p>${c.ex ? dlgHtml(c.ex) : ''}</div>
       <button class="btn" data-a="xnext">${XS.i + 1 >= XS.qs.length ? 'See results' : 'Continue'}</button>`;
   }
@@ -145,13 +145,17 @@ const dlgHtml = ex => SN.dialog(ex);
 function xsDone() {
   const n = XS.qs.length, pct = Math.round(XS.correct / n * 100), u = XS.unit === '*' ? null : unitByKey(XS.unit);
   const miss = XS.missed.map(id => BY_ID[id]).filter(Boolean);
+  const got = [...new Set(XS.qs.map(q => q.id).filter(id => !XS.missed.includes(id)))].map(id => BY_ID[id]).filter(Boolean);
   if (!XS.cele && pct >= 60) { XS.cele = 1; SN.confetti(); }
-  return `<div class="card done-card"><div class="confetti">${pct >= 90 ? '🌟' : pct >= 60 ? '👏' : '💪'}</div>
-      <h2 style="margin-top:6px">${pct === 100 ? 'Perfect round!' : pct >= 90 ? 'So close to perfect!' : pct >= 60 ? 'Nice work!' : 'Good practice!'}</h2>
-      <span class="xp-pill">${XS.correct} / ${n} correct · +${n * 5} XP</span>
-      <p class="muted">${miss.length ? `${miss.length} tricky item${miss.length > 1 ? 's' : ''} saved to your reviews, so you'll get ${miss.length > 1 ? 'them' : 'it'} next time.` : 'Not a single slip. You really know these!'}</p></div>
-    ${miss.length ? `<h2>Review these</h2>${miss.map(c => `<div class="card small"><div class="row"><b class="grow">${esc(c.p)}</b>${speakBtn(c.p, false, true)}</div><span class="muted">${esc(c.m)}</span></div>`).join('')}` : ''}
-    <div class="stack"><button class="btn" data-a="xagain">Practice again</button>${miss.length ? '<button class="btn ghost" data-a="review">Review now</button>' : ''}<button class="btn plain" data-a="exit">${u ? 'Back to ' + esc(u.name) : 'Done'}</button></div>`;
+  const minis = list => `<div class="minis">${list.slice(0, 6).map(c => SN.miniCard(c)).join('')}</div>`;
+  return `<div class="topbar"><span></span></div>
+    <div class="bigpct">${pct}<small>%</small></div>
+    <div class="congrats">${pct === 100 ? 'Perfect round!' : pct >= 90 ? 'So close to perfect!' : pct >= 60 ? 'Congratulations!' : 'Good practice!'}</div>
+    <span class="xp-pill">${XS.correct} of ${n} first try · +${n * 5} XP</span>
+    ${got.length ? `<h3 style="margin:14px 0 10px">Got it!</h3>${minis(got)}` : ''}
+    ${miss.length ? `<h3 style="margin:22px 0 4px">Needs review</h3><p class="muted small" style="margin-bottom:10px">Saved to your reviews, so they come back soon.</p>${minis(miss)}
+      <div style="margin-top:14px">${miss.map(c => `<div class="row" style="margin:6px 0"><b class="grow">${esc(c.p)}</b>${speakBtn(c.p, false, true)}</div>`).join('')}</div>` : '<p class="muted" style="margin-top:18px">Not a single slip. You really know these!</p>'}
+    <div class="stack" style="margin-top:22px"><button class="btn" data-a="xagain">Practice again</button>${miss.length ? '<button class="btn ghost" data-a="review">Review now</button>' : ''}<button class="btn plain" data-a="exit">${u ? 'Back to ' + esc(u.name) : 'Done'}</button></div>`;
 }
 
 /* ---------- actions ---------- */
@@ -192,21 +196,22 @@ const unitCounts = u => {
   const inDeck = [...ph, ...wd].filter(c => S().cards[c.id]).length, total = ph.length + wd.length;
   return { ph, wd, inDeck, total };
 };
+const art = key => SN.unitArt(key);
 function unitItem(u) {
-  const { ph, wd, inDeck, total } = unitCounts(u);
-  return `<button class="item" data-a="unit" data-key="${u.key}"><span class="ico">${u.icon}</span><span class="grow"><h3>${esc(u.name)}</h3><span class="muted small">${ph.length} phrases · ${wd.length} words</span><div class="bar"><i style="width:${total ? inDeck / total * 100 : 0}%"></i></div></span><span class="muted small">${inDeck}/${total}</span></button>`;
+  const { ph, wd, inDeck, total } = unitCounts(u), [d, t] = art(u.key);
+  return `<button class="topic-card t-${t}" data-a="unit" data-key="${u.key}"><h3>${esc(u.name)}</h3><span class="sub">${ph.length} phrases · ${wd.length} words</span>${SN.doodle(d)}<div class="bar"><i style="width:${total ? inDeck / total * 100 : 0}%"></i></div></button>`;
 }
 SN.libraryResults = () => {
   const q = (SN.V.q || '').trim().toLowerCase();
   if (q) return SN.phraseList(ALL.filter(c => (c.p + ' ' + c.m + ' ' + (c.topicName || '')).toLowerCase().includes(q)).slice(0, 120));
   const groups = [...new Set(UNITS.map(u => u.group))];
-  return groups.map(g => `<h2>${esc(g)}</h2>` + UNITS.filter(u => u.group === g).map(unitItem).join('')).join('');
+  return groups.map(g => `<h2 class="display">${esc(g)}</h2><div class="tgrid">${UNITS.filter(u => u.group === g).map(unitItem).join('')}</div>`).join('');
 };
 SN.VIEWS.library = () => {
   const mine = items('my').length;
   return `<h1>Topics</h1>
     <input class="search" id="search" type="search" placeholder="Search ${SN.PHRASE_COUNT} phrases and ${SN.WORD_COUNT} words…" value="${esc(SN.V.q || '')}" autocomplete="off" autocapitalize="off">
-    <button class="item" data-a="unit" data-key="my"><span class="ico">📓</span><span class="grow"><h3>My words</h3><span class="muted small">${mine ? `${mine} saved` : 'Save words you look up while watching'}</span></span><span class="chev">›</span></button>
+    <button class="item" data-a="unit" data-key="my"><span class="ico t-sand">${SN.doodle('pencil')}</span><span class="grow"><h3>My words</h3><span class="muted small">${mine ? `${mine} saved` : 'Save words you look up while watching'}</span></span><span class="chev">›</span></button>
     <div id="results">${SN.libraryResults()}</div>`;
 };
 
@@ -218,18 +223,18 @@ SN.VIEWS.unit = () => {
   const tab = SN.V.tab || (ph.length ? 'phrases' : 'words');
   const scen = (u.s || []).map(id => SCENARIOS.find(s => s.id === id)).filter(Boolean);
   const exCount = TYPES.reduce((n, t) => n + eligibleCount(u.key, t), 0);
-  const learnBtn = (kind, n, label) => `<button class="item" data-a="learn" data-topic="u:${u.key}" data-kind="${kind}" ${n ? '' : 'disabled style="opacity:.5"'}><span class="ico">${kind === 'word' ? '📚' : '💬'}</span><span class="grow"><h3>Learn ${label}</h3><span class="muted small">${n ? `${n} new` : 'All added'}</span></span><span class="chev">›</span></button>`;
+  const learnBtn = (kind, n, label) => `<button class="item" data-a="learn" data-topic="u:${u.key}" data-kind="${kind}" ${n ? '' : 'disabled style="opacity:.5"'}><span class="ico t-${kind === 'word' ? 'blue' : 'sage'}">${SN.doodle(kind === 'word' ? 'book' : 'speech')}</span><span class="grow"><h3>Learn ${label}</h3><span class="muted small">${n ? `${n} new` : 'All added'}</span></span><span class="chev">›</span></button>`;
   return `
     <div class="topbar"><button class="back" data-a="tab" data-v="library">‹ Topics</button></div>
-    <h1>${u.icon} ${esc(u.name)}</h1><p class="muted">${esc(u.blurb)}</p>
-    ${isMy ? '' : `<div class="bar" style="margin:0 0 4px"><i style="width:${total ? inDeck / total * 100 : 0}%"></i></div><p class="muted small">${inDeck} of ${total} in your deck</p>`}
+    <div class="unit-hero t-${art(u.key)[1]}">${SN.doodle(art(u.key)[0])}<h1>${esc(u.name)}</h1><p>${esc(u.blurb)}</p>
+      ${isMy ? '' : `<div class="bar"><i style="width:${total ? inDeck / total * 100 : 0}%"></i></div><p class="small" style="margin:6px 0 0">${inDeck} of ${total} in your deck</p>`}</div>
     <h2>Learn</h2>
     ${isMy ? '' : (ph.length ? learnBtn('phrase', newPh, 'phrases') : '') + (wd.length ? learnBtn('word', newWd, 'words') : '')}
-    <button class="item" data-a="addItem" data-unit="${u.key}"><span class="ico">✍️</span><span class="grow"><h3>Add a word or phrase</h3><span class="muted small">${isMy ? 'Words you looked up or heard' : 'Your own addition to this topic'}</span></span><span class="chev">＋</span></button>
-    <h2>Practice <span class="muted small" style="font-weight:400">· ${exCount} questions available</span></h2>
+    <button class="item" data-a="addItem" data-unit="${u.key}"><span class="ico t-pink">${SN.doodle('pencil')}</span><span class="grow"><h3>Add a word or phrase</h3><span class="muted small">${isMy ? 'Words you looked up or heard' : 'Your own addition to this topic'}</span></span><span class="chev">＋</span></button>
+    <h2 class="display">Practice <span class="muted small" style="font-family:-apple-system,system-ui,sans-serif;font-weight:500;letter-spacing:0">· ${exCount} questions available</span></h2>
     ${exCount ? `<button class="btn" data-a="xstart" data-unit="${u.key}" data-type="mixed" style="margin-bottom:10px">🔀 Mixed practice (12 questions)</button>
     <div class="grid2">${TYPES.map(t => { const n = eligibleCount(u.key, t); return `<button class="item" style="flex-direction:column;align-items:flex-start;gap:4px;margin:0" data-a="xstart" data-unit="${u.key}" data-type="${t.key}" ${n ? '' : 'disabled style="opacity:.45"'}><span style="font-size:24px">${t.icon}</span><b style="font-size:15px;line-height:1.2">${esc(t.name)}</b><span class="muted small">${n} items</span></button>`; }).join('')}</div>` : '<p class="muted">Save a few words to unlock exercises.</p>'}
-    ${scen.length ? `<h2>Role-plays</h2>${scen.map(s => `<button class="item" data-a="scenario" data-id="${s.id}"><span class="ico">${s.icon}</span><span class="grow"><h3>${esc(s.title)}</h3><span class="muted small">${s.level} · ${s.turns.length} turns${S().roles[s.id] ? ` · best ${S().roles[s.id].best}/${s.turns.length}` : ''}</span></span><span class="chev">›</span></button>`).join('')}` : ''}
+    ${scen.length ? `<h2>Role-plays</h2>${scen.map(s => `<button class="item" data-a="scenario" data-id="${s.id}"><span class="ico t-${SN.scenArt(s)[1]}">${SN.doodle(SN.scenArt(s)[0])}</span><span class="grow"><h3>${esc(s.title)}</h3><span class="muted small">${s.level} · ${s.turns.length} turns${S().roles[s.id] ? ` · best ${S().roles[s.id].best}/${s.turns.length}` : ''}</span></span><span class="chev">›</span></button>`).join('')}` : ''}
     <h2>Browse</h2>
     <div class="seg" style="display:flex;width:100%"><button style="flex:1" class="${tab === 'phrases' ? 'on' : ''}" data-a="utab" data-t="phrases">Phrases · ${ph.length}</button><button style="flex:1" class="${tab === 'words' ? 'on' : ''}" data-a="utab" data-t="words">Words · ${wd.length}</button></div>
     <div style="margin-top:10px">${SN.phraseList(tab === 'phrases' ? ph : wd)}</div>`;
@@ -242,12 +247,12 @@ SN.VIEWS.practice = () => {
   return `
     <h1>Practice</h1>
     <p class="muted">${total.toLocaleString()} exercises across ${UNITS.length} topics, built from every phrase and word.</p>
-    <div class="card hero"><p class="small" style="margin:0">Mixed practice</p><p style="margin:4px 0 0">${deck >= 8 ? `12 questions from the ${deck} items in your deck` : '12 questions from all topics (add items to your deck to focus them)'}</p>
+    <div class="card hero"><h2 class="display" style="margin:0 0 6px;font-size:28px">Mixed practice</h2><p style="margin:0;max-width:75%">${deck >= 8 ? `12 questions from the ${deck} items in your deck` : '12 questions from all topics (add items to your deck to focus them)'}</p>
       <button class="btn" data-a="xstart" data-unit="*" data-type="mixed">Start</button></div>
     <h2>Practice by topic</h2>
-    ${UNITS.map(u => { const { ph, wd } = unitCounts(u); return `<button class="item" data-a="unit" data-key="${u.key}"><span class="ico">${u.icon}</span><span class="grow"><h3>${esc(u.name)}</h3><span class="muted small">${ph.length + wd.length} items · ${TYPES.reduce((n, t) => n + eligibleCount(u.key, t), 0)} questions</span></span><span class="chev">›</span></button>`; }).join('')}
+    ${UNITS.map(u => { const { ph, wd } = unitCounts(u); return `<button class="item" data-a="unit" data-key="${u.key}"><span class="ico t-${art(u.key)[1]}">${SN.doodle(art(u.key)[0])}</span><span class="grow"><h3>${esc(u.name)}</h3><span class="muted small">${ph.length + wd.length} items · ${TYPES.reduce((n, t) => n + eligibleCount(u.key, t), 0)} questions</span></span><span class="chev">›</span></button>`; }).join('')}
     <h2>Role-plays</h2>
-    ${SCENARIOS.map(s => { const r = S().roles[s.id]; return `<button class="item" data-a="scenario" data-id="${s.id}"><span class="ico">${s.icon}</span><span class="grow"><h3>${esc(s.title)}</h3><span class="muted small">${s.level} · ${s.turns.length} turns${r ? ` · best ${r.best}/${s.turns.length}` : ''}</span></span>${r ? '<span class="pill good">Done</span>' : '<span class="chev">›</span>'}</button>`; }).join('')}`;
+    ${SCENARIOS.map(s => { const r = S().roles[s.id]; return `<button class="item" data-a="scenario" data-id="${s.id}"><span class="ico t-${SN.scenArt(s)[1]}">${SN.doodle(SN.scenArt(s)[0])}</span><span class="grow"><h3>${esc(s.title)}</h3><span class="muted small">${s.level} · ${s.turns.length} turns${r ? ` · best ${r.best}/${s.turns.length}` : ''}</span></span>${r ? '<span class="pill good">Done</span>' : '<span class="chev">›</span>'}</button>`; }).join('')}`;
 };
 
 /* ---------- save a word ---------- */
@@ -266,7 +271,7 @@ function openAdd(pre = {}) {
     <input type="hidden" id="aw-kind" value="${kind}">
     <div id="aw-word-grp" ${kind === 'word' ? '' : 'hidden'}>
       ${f('Word', 'aw-word', 'e.g. reluctant', pre.word || '')}
-      <button class="btn ghost sm" data-a="lookup">🔎 Look up meaning online</button>
+      <button class="btn ghost sm" data-a="lookup">Look up meaning online</button>
       ${f('Meaning', 'aw-mean', 'Short definition')}
       ${f('Example sentence (optional)', 'aw-ex', 'The sentence you heard')}
       ${f('Where did you hear it? (optional)', 'aw-note', 'e.g. a YouTube video, a podcast, a show')}

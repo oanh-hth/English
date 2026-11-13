@@ -54,3 +54,6 @@ The `learning/` folder is a Full Stack Open style course (Parts 0 to 9: Node, Ty
 
 ## Motivation features
 Home shows a daily goal ring (set the goal in Me), streak, XP and level. Finishing sessions and hitting the goal triggers confetti (off when the device asks for reduced motion). XP is computed from your activity log: review 10, new item or exercise 5, role-play 25.
+
+## Design
+The visual style follows a warm "easy language" look: beige canvas, colour-blocked cards (sage, blue, pink, coral, olive), Syne headlines (self-hosted in `fonts/`, SIL OFL licence in `fonts/Syne-OFL.txt`), hand-drawn line doodles (`DOODLES` in `app.js`, one per topic in `UNIT_ART` in `units.js`), a streak calendar, a daily-goal ring and card-stack flashcards.
