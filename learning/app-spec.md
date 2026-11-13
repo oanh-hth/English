@@ -45,7 +45,7 @@ interface CardState { ease: number; int: number; reps: number; due: number; laps
 
 ## The reference implementation
 
-The finished vanilla JavaScript app in the repo root is the reference. Files you will meet:
+The finished vanilla JavaScript app in `legacy-v1/` (at the repository root before the Listen & Learn rewrite) is the reference. Files you will meet:
 
 | File | Role |
 |---|---|

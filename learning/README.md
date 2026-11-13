@@ -2,7 +2,7 @@
 
 This course teaches you to build a complete English-learning app: **Node.js, TypeScript and React**, from an empty folder to a deployed, installable, offline-capable app. It follows the format of [Full Stack Open](https://fullstackopen.com): numbered **parts**, each split into **lessons** (a, b, c, d), with **exercises** at the end of every lesson. Every exercise adds to the **same project**, so when you finish Part 9 you have the finished app.
 
-You already own a finished version of the app (the vanilla JavaScript one in this repo). It is your **reference**, not your starting point: you build your own version in a new project.
+You already own a finished version of the app: the original phrase trainer, now stored in [`../legacy-v1/`](../legacy-v1/) (the repository root now holds the newer *Listen & Learn* app). File names in these lessons (`app.js`, `data.js`, `units-ui.js`, ...) refer to the files inside `legacy-v1/`. It is your **reference**, not your starting point: you build your own version in a new project.
 
 ## How a part works
 

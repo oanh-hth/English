@@ -1,59 +1,65 @@
-# Speak Natural – American English
+# Listen & Learn
 
-A mobile-first web app (installable on iPhone as a PWA) for learning the phrases native American speakers really use.
+Practice English listening with any YouTube video. Add a link and its transcript, and the app turns it into exercises, recommends the phrases and words worth learning, and gives you a notebook to save them. A **Hear it on YouGlish** link sits next to every phrase and word.
 
-- **Learn**: 1,024 phrases in 92 topics, plus 953 daily-life words in 30 topics (Learn → Words), each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
-- **Review**: spaced repetition (SM-2 style: Again / Hard / Good / Easy). Cards alternate between speaking and listening.
-- **Practice**: 20 role-play conversations. You see the context and a goal, then build the sentence from a word bank (or type it), then hear it and repeat it out loud.
-- Works offline, no build step, no backend. Progress is stored in `localStorage`.
+A mobile-first web app with no build step and no backend. It installs on your iPhone (Share, then Add to Home Screen) and keeps everything on your device.
 
-## Run
+## How it works
+
+1. **Add a video.** Paste the YouTube link and the transcript (copy it from YouTube: **…more → Show transcript**, or upload an `.srt` / `.vtt` file). Timestamps are kept, so the video plays exactly the line you are practicing. Without a link, or without timestamps, lines are read aloud by your phone.
+2. **Practice.** Exercises are generated from the real lines:
+   - **Dictation:** type what you hear, with a word-by-word diff.
+   - **Fill the gaps:** catch the missing words.
+   - **Pick the word:** multiple choice for a hidden word.
+   - **Word order:** rebuild the sentence from tiles.
+   - **Shadowing:** listen, say it out loud, rate yourself.
+   - **Comprehension** (optional, with Claude): questions about the video.
+3. **Recommended for you.** Natural phrases found in the video (matched against a library of about 1,000 American phrases and 950 everyday words), chunks the speaker repeats, and frequent words you may not know yet. One tap saves them.
+4. **Notebook.** Tap a word in any line, tap another to select a phrase, and save it with a meaning and a note. Every item links to YouGlish.
+
+## Run it
+
+```bash
+python3 -m http.server 8000   # open http://localhost:8000
 ```
-python3 -m http.server 8000   # then open http://localhost:8000
+
+Host the folder on any static host. For GitHub Pages: **Settings → Pages → Deploy from a branch**, pick the branch and `/ (root)`.
+
+## Tests
+
+```bash
+node tests/run.js                              # parser, segmentation, analysis and exercise tests (no dependencies)
+python3 -m http.server 8123 &                  # then, with Playwright installed:
+node tests/e2e.js                              # iPhone-sized end-to-end test with YouTube and Claude mocked
 ```
-Host the folder on any static host (GitHub Pages, Netlify…) over HTTPS, open it in Safari on iPhone, then **Share → Add to Home Screen**.
 
-## Audio
-Uses the device's built-in text-to-speech (`speechSynthesis`, en-US). On iPhone, install an Enhanced voice for better quality: Settings → Accessibility → Spoken Content → Voices → English (US).
+## Optional: Claude picks
 
-## Add content
-Edit `data.js`: phrases are rows `[phrase, meaning, context, "A | B" example, tone, sound tip]`; append only, so saved progress stays valid. Role-plays are in `SCENARIOS`.
+In **Me**, paste your own Claude API key to get hand-picked phrases and words and comprehension questions for a video. The key is stored only in your browser and sent only to Anthropic (the official SDK is bundled in `vendor/`). Set a spend limit on the key. **Never commit a key or `.env` file** (see `.gitignore`).
 
-## Hosting on GitHub Pages
-Repo → **Settings → Pages → Build and deployment → Source: Deploy from a branch**, choose the branch and folder `/ (root)`, then Save. The site appears at `https://<user>.github.io/<repo>/` after a minute. All paths are relative, so it works from the sub-path.
+## Limits to know
 
-## Content accuracy
-Phrases were written by an AI from its knowledge of American English and have **not** been reviewed by a native speaker. Verify doubtful ones with YouGlish (real video clips), COCA/Google Ngram frequencies, or a tutor, and edit `data*.js`.
+- **Transcripts are pasted, not fetched.** YouTube does not let web pages download transcripts, so you copy them. A small server could automate this later.
+- **Some videos cannot be embedded.** If the owner disallows it, the app falls back to your phone's voice for the lines.
+- **The phrase library is AI-written** and has not been reviewed by a native speaker. Use YouGlish to check anything that sounds odd.
+- Data lives in `localStorage` on one device. A long transcript or many videos can fill it; delete old videos if the app says storage is full.
+- The video player loads YouTube's embedded player, which sets YouTube cookies.
 
-## Validating content
-`node tools/validate.js` checks every phrase and role-play (field counts, "A | B" examples, tones, duplicates, whether examples contain the phrase). In the app, **🏳️ Sounds odd?** flags a phrase and **Me → Copy flagged list** exports your flags so they can be corrected.
+## Layout
 
-## Structure
-Content is organised into **22 topics (units)** in `units.js`. Each topic combines phrase topics, vocabulary topics and role-plays. Exercises are generated automatically from every phrase and word in a topic: meaning, find-the-word, listening, fill-the-blank / finish-the-chat, build-the-phrase and dictation, plus a mixed round. Missed items are added to the spaced-repetition deck.
+| File | Role |
+|---|---|
+| `core.js` | State, navigation, doodles, toast, confetti |
+| `transcript.js` | Link, transcript and caption parsing; segmentation |
+| `analyze.js`, `lexicon.js` | Finds phrases and words worth learning |
+| `exercises.js` | Exercise generators and answer checking |
+| `player.js` | YouTube player with "play this line", plus voice fallback |
+| `views.js`, `session.js`, `notes.js` | Screens: home, video, practice, notebook, settings |
+| `claude.js` | Optional Claude picks |
+| `legacy-v1/` | The earlier phrase trainer (topics, spaced repetition, role-plays), kept as a reference |
 
-## Saving words you look up
-**Home → Save a word I looked up** (or Topics → My words). Type the word, optionally tap *Look up meaning online* (uses the free dictionaryapi.dev service), add the meaning, and it joins your review deck. A bookmark to `index.html?add=word` opens the form directly.
+The design follows a warm "easy language" look: beige canvas, colour-blocked cards, Syne headlines (self-hosted in `fonts/`, SIL OFL licence), hand-drawn doodles, a streak calendar and a daily-goal ring.
 
-## Resources tab
-Edit `resources.js` to add external links (YouTube channels, podcasts…).
+## Learning to build it
 
-## YouGlish and Ask Claude
-Every phrase and word has a **🔎 Hear it in real videos** box that opens YouGlish.com in the browser (link-out only, no embed). The in-app **Ask Claude** box and API-key settings are built (`claude-ui.js`, `vendor/anthropic-sdk.js`) but hidden behind `FEATURES.claude` in `app.js` until we enable it. The key would be typed on-device and kept in localStorage; never commit one.
-
-## Secrets
-No API keys or `.env` files belong in this repo (see `.gitignore`). The Claude key is typed into the app on your own device and kept only in that browser.
-
-## Editing and deleting
-Open any phrase or word and tap **✏️ Edit** or **🗑 Delete** (also on the review answer card). Changes to built-in items are saved on your device as overrides (not in the repo); **Me → Your changes** can restore deleted items or undo edits. Your own saved words are edited or deleted for real.
-
-## Adding your own items
-Open a topic and tap **Add a word or phrase** to add your own word or phrase to that topic (or to My words). It joins that topic's lists, exercises and your review deck. You can edit it later, including moving it to a different topic. Your additions are stored on your device only.
-
-## Learn to build it yourself
-The `learning/` folder is a Full Stack Open style course (Parts 0 to 9: Node, TypeScript, React) with lessons, numbered exercises and tests for rebuilding this app. Start at `learning/README.md`.
-
-## Motivation features
-Home shows a daily goal ring (set the goal in Me), streak, XP and level. Finishing sessions and hitting the goal triggers confetti (off when the device asks for reduced motion). XP is computed from your activity log: review 10, new item or exercise 5, role-play 25.
-
-## Design
-The visual style follows a warm "easy language" look: beige canvas, colour-blocked cards (sage, blue, pink, coral, olive), Syne headlines (self-hosted in `fonts/`, SIL OFL licence in `fonts/Syne-OFL.txt`), hand-drawn line doodles (`DOODLES` in `app.js`, one per topic in `UNIT_ART` in `units.js`), a streak calendar, a daily-goal ring and card-stack flashcards.
+`learning/` is a Full Stack Open style course (Node, TypeScript, React) built around the original phrase trainer, which now lives in `legacy-v1/`. File names in the course refer to that app.
