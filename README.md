@@ -25,7 +25,6 @@ A notebook for the English you pick up, with spaced review, exercises built from
 | `notebook.js`, `views.js`, `session.js` | Notes, Garden, Review and Me screens, flashcard review |
 | `practice.js` | Write-your-sentences, say-it-out-loud and the daily mission |
 | `sw.js`, `manifest.webmanifest` | Offline and install |
-| `legacy-v1/`, `learning/` | The earlier phrase trainer and the course that teaches how to build it |
 
 ## Run and test
 
