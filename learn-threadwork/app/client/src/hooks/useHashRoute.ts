@@ -1,4 +1,4 @@
-// Exercise 4.5: useHashRoute: moving between pages. Read curriculum/part-4/c-navigation-and-selectors.md first.
+// Exercise 4.3: useHashRoute. Read curriculum/part-4/c-navigation-and-search.md first.
 
 /**
  * Returns [route, navigate].
@@ -7,6 +7,6 @@
  * - Updates when the hash changes (listen to "hashchange" on window; remove the listener on unmount).
  */
 export function useHashRoute<R extends string>(routes: readonly R[], fallback: R): [R, (route: R) => void] {
-  // TODO 4.5
+  // TODO 4.3
   return [fallback, () => {}];
 }

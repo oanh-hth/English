@@ -1,38 +1,32 @@
-import type { Day, Status, Task } from "@app/shared/types";
+import type { Complexity, Day, Outcome, Task } from "@app/shared/types";
 
-export function linkTasks(tasks: Task[], a: string, b: string): Task[] {
-  if (a === b) return tasks;
-  if (!tasks.some(t => t.id === a) || !tasks.some(t => t.id === b)) return tasks;
-  return tasks.map(t => {
-    if (t.id === a && !t.links.includes(b)) return { ...t, links: [...t.links, b] };
-    if (t.id === b && !t.links.includes(a)) return { ...t, links: [...t.links, a] };
-    return t;
-  });
+const update = (tasks: Task[], id: string, fn: (t: Task) => Task): Task[] => {
+  let changed = false;
+  const out = tasks.map(t => { if (t.id !== id) return t; const n = fn(t); if (n !== t) changed = true; return n; });
+  return changed ? out : tasks;
+};
+
+export function renameTask(tasks: Task[], id: string, title: string): Task[] {
+  const t = title.trim();
+  return t ? update(tasks, id, x => ({ ...x, title: t })) : tasks;
 }
 
-export function unlinkTasks(tasks: Task[], a: string, b: string): Task[] {
-  return tasks.map(t => {
-    if (t.id === a) return { ...t, links: t.links.filter(x => x !== b) };
-    if (t.id === b) return { ...t, links: t.links.filter(x => x !== a) };
-    return t;
-  });
+export function setComplexity(tasks: Task[], id: string, complexity: Complexity): Task[] {
+  return update(tasks, id, x => (x.status === "todo" && x.complexity !== complexity ? { ...x, complexity } : x));
 }
 
-export function moveTask(tasks: Task[], id: string, status: Status, today: Day): Task[] {
-  return tasks.map(t => {
-    if (t.id !== id || t.status === status) return t;
-    return { ...t, status, doneAt: status === "done" ? today : null };
-  });
+export function completeSimple(tasks: Task[], id: string, today: Day): Task[] {
+  return update(tasks, id, x => (x.complexity === "simple" && x.status === "todo" ? { ...x, status: "done", doneAt: today } : x));
+}
+
+export function recordOutcome(tasks: Task[], id: string, outcome: Outcome, today: Day): Task[] {
+  return update(tasks, id, x => (x.complexity === "complex" ? { ...x, status: "done", outcome: { ...outcome }, doneAt: x.doneAt ?? today } : x));
+}
+
+export function reopenTask(tasks: Task[], id: string): Task[] {
+  return update(tasks, id, x => (x.status === "done" ? { ...x, status: "todo", doneAt: null } : x));
 }
 
 export function deleteTask(tasks: Task[], id: string): Task[] {
-  return tasks.filter(t => t.id !== id).map(t => (t.links.includes(id) ? { ...t, links: t.links.filter(x => x !== id) } : t));
-}
-
-export function setResourceUsed(task: Task, resourceId: string, used: boolean): Task {
-  const has = task.resources.some(r => r.resourceId === resourceId);
-  const resources = has
-    ? task.resources.map(r => (r.resourceId === resourceId ? { ...r, used } : r))
-    : [...task.resources, { resourceId, used }];
-  return { ...task, resources };
+  return tasks.some(t => t.id === id) ? tasks.filter(t => t.id !== id) : tasks;
 }

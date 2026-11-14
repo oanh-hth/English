@@ -1,11 +1,8 @@
-import type { WeatherKind } from "@app/server/src/weather";
-
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = "ApiError"; }
 }
 
 export interface Saved<T> { state: T | null; savedAt: number }
-export interface WeatherReply { kind: WeatherKind; isDay: boolean; temp: number; wind: number; code: number }
 
 export interface ApiOptions {
   baseUrl?: string;
@@ -37,7 +34,6 @@ export function createApi({ baseUrl = "", fetchFn, getToken = () => null }: ApiO
     login: async (email: string, password: string) => (await request<{ token: string }>("POST", "/api/auth/login", { email, password })).token,
     getState: <T,>() => request<Saved<T>>("GET", "/api/state"),
     putState: async <T,>(state: T, savedAt: number, baseSavedAt: number) => { await request("PUT", "/api/state", { state, savedAt, baseSavedAt }); },
-    weather: (lat: number, lon: number) => request<WeatherReply>("GET", `/api/weather?lat=${lat}&lon=${lon}`),
   };
 }
 

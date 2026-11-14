@@ -1,36 +1,41 @@
-// Exercise 1.3: Link, move and delete tasks without mutation. Read curriculum/part-1/c-immutable-updates.md first.
-// Every function returns NEW arrays/objects and leaves its inputs untouched.
-import type { Day, Status, Task } from "@app/shared/types";
+// Exercise 1.3: Complete, record, reopen and delete tasks. Read curriculum/part-1/c-immutable-updates.md first.
+// Every function returns a NEW array and leaves its input untouched. Unknown ids: return the same array.
+import type { Complexity, Day, Outcome, Task } from "@app/shared/types";
 
-/** Links two tasks both ways. Ignores self-links, unknown ids and links that already exist. */
-export function linkTasks(tasks: Task[], a: string, b: string): Task[] {
+/** New title, trimmed. Ignore empty titles (return the same array). */
+export function renameTask(tasks: Task[], id: string, title: string): Task[] {
   // TODO 1.3
   throw new Error("TODO 1.3");
 }
 
-/** Removes the link between two tasks, both ways. */
-export function unlinkTasks(tasks: Task[], a: string, b: string): Task[] {
+/** Change simple <-> complex. Only while the task is still "todo"; done tasks don't change. */
+export function setComplexity(tasks: Task[], id: string, complexity: Complexity): Task[] {
+  // TODO 1.3
+  throw new Error("TODO 1.3");
+}
+
+/** Mark a SIMPLE "todo" task done today (doneAt = today). Complex tasks need recordOutcome instead: unchanged. */
+export function completeSimple(tasks: Task[], id: string, today: Day): Task[] {
   // TODO 1.3
   throw new Error("TODO 1.3");
 }
 
 /**
- * Moves a task to a status. Moving to "done" sets doneAt to `today`;
- * moving out of "done" sets doneAt back to null. Unknown ids return the list unchanged.
+ * Finish a COMPLEX task with its outcome: status "done", outcome set. doneAt = today, but if the task was
+ * already done (you are editing the outcome later) keep its original doneAt. Simple tasks: unchanged.
  */
-export function moveTask(tasks: Task[], id: string, status: Status, today: Day): Task[] {
+export function recordOutcome(tasks: Task[], id: string, outcome: Outcome, today: Day): Task[] {
   // TODO 1.3
   throw new Error("TODO 1.3");
 }
 
-/** Removes a task and every link pointing to it. */
+/** Back to "todo" with doneAt null. Keep the outcome, so it can be edited and saved again. */
+export function reopenTask(tasks: Task[], id: string): Task[] {
+  // TODO 1.3
+  throw new Error("TODO 1.3");
+}
+
 export function deleteTask(tasks: Task[], id: string): Task[] {
-  // TODO 1.3
-  throw new Error("TODO 1.3");
-}
-
-/** Marks an attached resource as used or not used. Attaches it first if needed. */
-export function setResourceUsed(task: Task, resourceId: string, used: boolean): Task {
   // TODO 1.3
   throw new Error("TODO 1.3");
 }

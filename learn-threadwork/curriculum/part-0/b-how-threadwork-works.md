@@ -6,27 +6,15 @@ Before writing code, it helps to know what the pieces of a web app are and how t
 
 ## The browser runs the app
 
-When you open Threadwork, the browser downloads three kinds of files:
-
-- **HTML**: the structure. Threadwork's HTML is almost empty: one `<div id="root">` and a script tag.
-- **JavaScript**: the program. React runs in it and builds every button and list inside that `<div>`.
-- **CSS**: how everything looks.
-
-This kind of app is a **single-page application (SPA)**. The page loads once. After that, moving from *Tasks* to *Garden* doesn't download a new page. JavaScript swaps what's on the screen. The address changes only after the `#` (`#tasks`, `#garden`), which you will handle yourself in Part 4.
+When you open Threadwork, the browser downloads HTML (an almost empty page), **JavaScript** (the program: React builds every button and list), and CSS (how it looks). This is a **single-page application**. The page loads once; moving from *Tasks* to *Decisions* only changes the part after the `#` in the address, and JavaScript swaps what's on the screen.
 
 ## We write TypeScript, the browser runs JavaScript
 
-You write `.ts` and `.tsx` files. TypeScript is JavaScript with **types**: you say that a task's `importance` is one of `"low" | "medium" | "high" | "critical"`, and the editor warns you the moment you write `"urgent"`. Browsers don't understand TypeScript, so a tool called **Vite** translates it to JavaScript while you work, and reloads the page when you save.
+You write `.ts` and `.tsx` files. TypeScript is JavaScript with **types**: you say a task's `complexity` is `"simple" | "complex"`, and the editor warns you the moment you write `"hard"`. A tool called **Vite** translates TypeScript to JavaScript while you work and reloads the page when you save.
 
 ## The server keeps your data safe
 
-The app in the browser keeps your tasks in memory and on the device. But your iPad and your computer each have their own browser storage. To share data between them, there is a **server**: a Node.js program (Part 8) that:
-
-- creates accounts and checks passwords
-- saves each person's data in a file
-- fetches the weather for the garden's sky
-
-The browser talks to the server with **HTTP requests**, the same kind of request the browser makes to load a page:
+Your iPad and your computer each have their own browser storage. To share data between them, there is a **server**: a Node.js program (Part 6) that creates accounts, checks passwords and saves each person's data in a file. The browser talks to it with **HTTP requests**:
 
 ```
 browser                                   server (Node.js + Express)
@@ -34,55 +22,46 @@ browser                                   server (Node.js + Express)
    | ---------------------------------------> |  checks the password hash
    |  200 {token}                              |
    | <--------------------------------------- |
-   |  GET /api/state   Authorization: Bearer … |
-   | ---------------------------------------> |  reads data/state/<user>.json
-   |  200 {state, savedAt}                     |
-   | <--------------------------------------- |
+   |  PUT /api/state {state, savedAt}          |
+   | ---------------------------------------> |  writes data/state/<user>.json
 ```
 
-Data travels as **JSON**: text that looks like a JavaScript object, `{"title":"Call the bank","importance":"high"}`.
+Data travels as **JSON**: `{"title":"Choose a router","complexity":"complex"}`.
 
 ## Shared code
 
-Some code is needed on both sides. The rule "a High task grows the plant by 25%" matters in the browser, and the server checks the shape of a task before saving it. That code lives in `app/shared/`. Write it once, use it in both places.
+Some rules matter on both sides. "An outcome needs a result, a decision and a real category" is checked in the browser's form *and* by the server before saving. That code lives in `app/shared/` and is written once.
 
-## The repository
+## The data
 
-```
-app/shared/    TypeScript used by both sides (Parts 1, 2, 5–7)
-app/client/    the React app (Parts 3–7, 9)
-app/server/    the Node.js server (Part 8)
-tests/         one test file per exercise
-curriculum/    what you're reading
-solutions/     reference answers
-```
-
-## Where the data lives while the app runs
-
-Inside the browser, all of Threadwork's data is one object, the **app state**:
+Everything Threadwork knows fits in one object:
 
 ```ts
-interface AppState {
-  tasks: Task[];
-  garden: GardenState;
-  streak: StreakState;
-  focusSessions: number;
-  notes: Note[];
-  resources: Resource[];
-  sketches: Sketch[];
-  pins: Pin[];
-  treats: Treat[];
-  claimed: Claimed[];
+interface Task {
+  id: string;
+  title: string;
+  complexity: "simple" | "complex";
+  status: "todo" | "done";
+  due: string | null;          // "2026-11-20"
+  createdAt: string;
+  doneAt: string | null;
+  outcome: Outcome | null;     // complex tasks, once done
 }
+
+interface Outcome { result: string; decision: string; category: string }
+
+interface AppState { tasks: Task[] }
 ```
 
-Every change, such as adding a task, ticking a resource or saving a sketch, is described as an **action**: `{ type: "addTask", title: "Call the bank", … }`. A function called a **reducer** takes the current state and the action and returns the new state. You'll write these reducers in Parts 2, 4, 5, 6 and 7. React shows the new state, the state is saved on the device, and a moment later it is sent to the server.
+The decision log isn't stored separately. It is *computed* from the tasks: every done task that has an outcome is a decision. You'll write that query in Part 2.
 
-Read `app/shared/types.ts` now. Don't try to understand every line. Just notice that the whole app is described there.
+Every change (add a task, tick it, record an outcome) is described as an **action**, like `{ type: "complete", id: "t1", today: "2026-11-14" }`. A function called a **reducer** takes the state and the action and returns the new state. React shows it, it's saved on the device, and a moment later it's sent to the server.
+
+Read `app/shared/types.ts` and `app/shared/categories.ts` now. You'll know every field by the end of Part 1.
 
 ## Read more
 - How the web works (MDN): <https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works>
-- What is JSON (MDN): <https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/JSON>
+- JSON (MDN): <https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/JSON>
 - HTTP overview (MDN): <https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview>
 
 ---
@@ -91,14 +70,14 @@ Read `app/shared/types.ts` now. Don't try to understand every line. Just notice 
 
 Run the tests for an exercise with `npm run ex <number>`; they re-run every time you save. When they are all green, commit, and move on. `npm run progress` shows your checklist.
 
-### 0.3: Draw how Threadwork's parts talk to each other
+### 0.3: Draw the journey of a decision
 
 
-On paper, or with Apple Pencil in any drawing app, draw Threadwork's architecture: the browser (React, the app state, device storage), the server (Express, the data files), and the weather service. Draw an arrow for each kind of request and write what travels on it (for example "token", "state JSON", "lat/lon"). Keep the drawing; you'll come back to it in Part 9 and see how much of it you built.
+On paper, or with Apple Pencil in any drawing app, draw the journey of one decision. Start at you typing the result into a form. Follow it through the reducer, React, the device's storage, the server and its data file, and end with your other device showing it in the decision log. Label each arrow with what travels on it. Keep the drawing; at the end of Part 7, compare it with what you built.
 
 This exercise has no automatic tests. Tick it when you've done it (change `[ ]` to `[x]`), and `npm run progress` counts it:
 
-- [ ] **0.3** Draw how Threadwork's parts talk to each other
+- [ ] **0.3** Draw the journey of a decision
 
 ---
 

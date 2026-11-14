@@ -1,13 +1,13 @@
-# Part 5: Linked work: notes, resources and the link map
+# Part 5: The decision log
 
-Threadwork's central idea, everything linked to tasks: notes, drafts, data tables, resources you used, and a map that draws it all.
+The decision log: filter by group, category and text, decision cards, the page that combines them, and an export to Markdown.
 
 ## Sections
 
-- **[5a Feature reducers: notes](a-feature-reducers.md)** · exercise 5.1
-- **[5b Editors for notes, drafts and tables](b-editors.md)** · exercise 5.2
-- **[5c Resources and attachments](c-resources.md)** · exercises 5.3, 5.4, 5.5
-- **[5d Graphs and the link map](d-link-map.md)** · exercises 5.6, 5.7
+- **[5a Filtering by category](a-filters.md)** · exercise 5.1
+- **[5b Decision cards](b-decision-cards.md)** · exercise 5.2
+- **[5c Putting the log together](c-the-decision-log.md)** · exercise 5.3
+- **[5d Exporting to Markdown](d-export.md)** · exercise 5.4
 
 Read the sections in order. Each ends with its exercises; do them before moving on. `npm run progress` shows where you are.
 
@@ -15,9 +15,9 @@ Read the sections in order. Each ends with its exercises; do them before moving 
 
 Tick each box (change `[ ]` to `[x]`) when you can explain it in your own words. `npm run progress` counts them.
 
-- [ ] I can split app logic into feature reducers and explain how rootReducer combines them
-- [ ] I can explain why two reducers may both react to one action
-- [ ] I can explain normalised data (references instead of copies) and its trade-off
-- [ ] I can build an editor that has no local state
-- [ ] I can explain how a force-directed layout places nodes
-- [ ] I can make an SVG drawing usable with a keyboard and a screen reader
+- [ ] I can build a controlled component that holds no state of its own
+- [ ] I use semantic HTML (article, time, dl) and useId for labels
+- [ ] I can compose a page from tested pieces and decide where state lives
+- [ ] I know when useMemo helps
+- [ ] I write different empty states for different situations
+- [ ] I can turn data into well-formed Markdown with a pure function

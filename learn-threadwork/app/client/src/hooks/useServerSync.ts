@@ -1,7 +1,7 @@
 // Given: keeps the app state in step with the server, using your Phase 7 code.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Api } from "@app/client/src/api/client";
-import type { AppState } from "@app/client/src/state/appReducer";
+import type { AppState } from "@app/shared/types";
 import { debounce, decideSync } from "@app/shared/sync";
 
 const META = "threadwork.sync";

@@ -1,4 +1,4 @@
-// Given: starts the server. It wires together everything you build in Phase 6.
+// Given: starts the server. It wires together everything you build in Part 6.
 // Run with `npm run dev` (together with the client) or `npm run dev:server`.
 import express from "express";
 import { existsSync } from "node:fs";
@@ -10,7 +10,6 @@ import { createApp } from "@app/server/src/app";
 import { authRouter, requireAuth } from "@app/server/src/auth";
 import { tasksRouter } from "@app/server/src/routes/tasks";
 import { createFileStore, stateRouter } from "@app/server/src/storage/fileStore";
-import { createWeatherService, weatherRouter } from "@app/server/src/weather";
 import { memoryTaskRepo } from "@app/server/src/repos";
 import { fileUserRepo } from "@app/server/src/storage/userFile";
 
@@ -37,7 +36,6 @@ const app = createApp(a => {
   a.use("/api/auth", authRouter(fileUserRepo(dataDir), secret));
   a.use("/api/state", requireAuth(secret), stateRouter(createFileStore(path.join(dataDir, "state"))));
   a.use("/api/tasks", requireAuth(secret), tasksRouter(memoryTaskRepo()));   // practice API from exercise 6.2
-  a.use("/api/weather", weatherRouter(createWeatherService(url => fetch(url))));
   if (existsSync(dist)) {                       // after `npm run build`, the server also serves the app
     a.use(express.static(dist));
     a.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(path.join(dist, "index.html")));

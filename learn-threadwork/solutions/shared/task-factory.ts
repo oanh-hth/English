@@ -1,26 +1,23 @@
-import { IMPORTANCE, type Importance, type Day, type Task } from "@app/shared/types";
+import { COMPLEXITIES, type Complexity, type Day, type Task } from "@app/shared/types";
 
 export interface NewTaskOptions {
-  importance?: Importance;
+  complexity?: Complexity;
   due?: Day | null;
-  details?: string;
 }
 
 export function createTask(title: string, makeId: () => string, today: Day, options: NewTaskOptions = {}): Task {
   return {
     id: makeId(),
     title: title.trim() || "Untitled task",
-    status: "inbox",
-    importance: options.importance ?? "medium",
+    complexity: options.complexity ?? "simple",
+    status: "todo",
     due: options.due ?? null,
-    details: options.details ?? "",
-    links: [],
-    resources: [],
     createdAt: today,
     doneAt: null,
+    outcome: null,
   };
 }
 
-export function isImportance(value: unknown): value is Importance {
-  return typeof value === "string" && (IMPORTANCE as readonly string[]).includes(value);
+export function isComplexity(value: unknown): value is Complexity {
+  return typeof value === "string" && (COMPLEXITIES as readonly string[]).includes(value);
 }

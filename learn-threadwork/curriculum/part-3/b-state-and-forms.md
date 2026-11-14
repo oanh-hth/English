@@ -2,7 +2,7 @@
 
 *[Part 3: React components](README.md) · section b*
 
-Components so far only *show* data. To react to typing and clicks, a component needs **state**: values it remembers between renders. In this section you build the quick-capture bar at the top of Threadwork, where you type a task before you forget it.
+The quick-capture bar is where tasks start: type, decide whether it will need a decision, maybe add a due day, press Enter. In this section you learn **state** and **forms**.
 
 ## `useState`
 
@@ -10,68 +10,57 @@ Components so far only *show* data. To react to typing and clicks, a component n
 const [text, setText] = useState("");
 ```
 
-`text` is the current value. `setText` changes it, and React then **re-renders** the component: it calls your function again and updates the screen. Never change state directly (`text = "x"` does nothing useful); always call the setter.
+`text` is the current value. Calling `setText` stores a new value and React **re-renders**: it calls your component again and updates the screen. Never assign to state directly; always use the setter.
 
 ## Controlled inputs
 
-Let React own the input's value:
+Let React own each input's value:
 
 ```tsx
 <input value={text} onChange={e => setText(e.target.value)} />
+<input type="checkbox" checked={complex} onChange={e => setComplex(e.target.checked)} />
+<input type="date" value={due} onChange={e => setDue(e.target.value)} />
 ```
 
-Every keystroke calls `setText`, React re-renders, and the input shows the new `text`. Because the value lives in state, you can check it, trim it or clear it at any time.
+Text and date inputs use `value`; checkboxes use `checked`. An empty date input's value is `""`, so convert it: `due || null`.
 
 ## Forms
 
-Put the input and the button in a `<form>` and handle **`onSubmit`**. Then both pressing Enter and clicking *Add* submit:
+Handle **`onSubmit`** on the `<form>`, so both Enter and the *Add* button work:
 
 ```tsx
 function submit(e: FormEvent) {
-  e.preventDefault();             // stop the browser from reloading the page
+  e.preventDefault();                // stop the page from reloading
   const title = text.trim();
   if (!title) { setError("Type a task first"); return; }
-  onAdd(title);
-  setText("");
+  onAdd(title, complex ? "complex" : "simple", due || null);
+  setText(""); setComplex(false); setDue("");
 }
-
-return <form onSubmit={submit}>…<button type="submit">Add</button></form>;
 ```
 
-## Labels
+Reset all the options after adding, so the next task doesn't silently become complex too.
 
-Every input needs a label: for screen readers, for the iPad's Full Keyboard Access, and for tests (`getByLabelText("Capture a task")`). Connect them with `htmlFor` and `id`:
+## Labels and errors
 
-```tsx
-<label htmlFor="capture" className="visually-hidden">Capture a task</label>
-<input id="capture" … />
-```
+Every input needs a label, for screen readers, for the iPad's keyboard navigation, and for tests (`getByLabelText("Needs a decision")`). Wrapping works for checkboxes: `<label><input type="checkbox" /> Needs a decision</label>`.
 
-The `visually-hidden` class (already in `styles.css`) hides the label on screen but keeps it for assistive technology.
+Show errors in an element with `role="alert"`, and clear them as soon as the person types again.
 
-## Showing errors
+## Refs
 
-Put error messages in an element with `role="alert"`, so screen readers announce them. Show it only when there is an error, and clear it as soon as the user types again, so they aren't scolded while fixing it.
-
-## Refs: reaching a DOM element
-
-After adding a task, the cursor should stay in the input so you can type the next one. For that you need the actual `<input>` element. `useRef` gives you a box React fills with it:
+After adding, the cursor should stay in the title so you can capture the next thing. `useRef` gives you the DOM element:
 
 ```tsx
 const input = useRef<HTMLInputElement>(null);
-// …
 <input ref={input} … />
-// later:
 input.current?.focus();
 ```
-
-Refs are also how you'll reach the drawing surface in Part 6.
 
 ## Read more
 - State, a component's memory: <https://react.dev/learn/state-a-components-memory>
 - Reacting to input with state: <https://react.dev/learn/reacting-to-input-with-state>
-- Responding to events: <https://react.dev/learn/responding-to-events>
-- Manipulating the DOM with refs: <https://react.dev/learn/manipulating-the-dom-with-refs>
+- `<input>` in React: <https://react.dev/reference/react-dom/components/input>
+- Refs: <https://react.dev/learn/manipulating-the-dom-with-refs>
 
 ---
 
@@ -83,7 +72,7 @@ Run the tests for an exercise with `npm run ex <number>`; they re-run every time
 
 **Edit:** `app/client/src/components/QuickCapture.tsx` · **Tests:** `tests/part-3/3.2-quick-capture.test.tsx` · **Run:** `npm run ex 3.2`
 
-Build `QuickCapture`: a form with an input labelled "Capture a task" and an *Add* button. It adds trimmed text with Enter or the button, clears the input, and keeps focus there. Empty text shows "Type a task first" in a `role="alert"` element, which disappears when the user types again.
+Build `QuickCapture`: a title input, a *Needs a decision* checkbox, a *Due* date, and *Add*. It sends `(title, complexity, due or null)`, resets everything, keeps focus, and shows "Type a task first" for an empty title.
 
 ---
 

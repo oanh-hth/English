@@ -1,4 +1,4 @@
-// Exercise 9.4: How the service worker caches. Read curriculum/part-9/d-offline-and-ipad.md first.
+// Exercise 7.4: How the service worker caches. Read curriculum/part-7/d-offline-and-ipad.md first.
 export type Strategy = "network-first" | "cache-first" | "skip";
 
 /**
@@ -9,6 +9,6 @@ export type Strategy = "network-first" | "cache-first" | "skip";
  * - Any other site: "skip".
  */
 export function strategyFor(method: string, url: string, appOrigin: string): Strategy {
-  // TODO 9.4
-  throw new Error("TODO 9.4");
+  // TODO 7.4
+  throw new Error("TODO 7.4");
 }

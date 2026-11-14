@@ -1,13 +1,14 @@
-# Part 7: The garden and motivation
+# Part 7: Full stack and shipping
 
-Motivation: the plant drawn in SVG, harvests and seeds, the treat shop, the inspiration wall, a sky that follows the weather, animation and badge celebrations.
+Full stack and shipping: the API client, sync between devices, sign-in, offline support, installing on the iPad and deploying.
 
 ## Sections
 
-- **[7a Drawing the plant with SVG](a-svg-plant.md)** · exercise 7.1
-- **[7b Garden controls and the treat shop](b-garden-and-treats.md)** · exercises 7.2, 7.3, 7.4
-- **[7c The inspiration wall](c-inspiration.md)** · exercises 7.5, 7.6
-- **[7d Weather, motion and celebrations](d-weather-and-motion.md)** · exercises 7.7, 7.8, 7.9
+- **[7a Talking to the server](a-api-client.md)** · exercise 7.1
+- **[7b Syncing two devices](b-sync.md)** · exercise 7.2
+- **[7c Signing in](c-sign-in.md)** · exercise 7.3
+- **[7d Offline and on the iPad](d-offline-and-ipad.md)** · exercises 7.4, 7.5
+- **[7e Putting it online](e-deploy.md)** · exercise 7.6
 
 Read the sections in order. Each ends with its exercises; do them before moving on. `npm run progress` shows where you are.
 
@@ -15,9 +16,9 @@ Read the sections in order. Each ends with its exercises; do them before moving 
 
 Tick each box (change `[ ]` to `[x]`) when you can explain it in your own words. `npm run progress` counts them.
 
-- [ ] I separate "what to draw" (pure function) from "how to draw it" (component)
-- [ ] I can draw with SVG coordinates and viewBox
-- [ ] I show why a button is disabled instead of hiding it
-- [ ] I can write CSS animations and respect prefers-reduced-motion
-- [ ] I can explain why a CSS transform conflicts with an SVG transform attribute
-- [ ] I clean up every timer a hook starts
+- [ ] I can wrap fetch in a typed client with readable errors
+- [ ] I can explain why fetch resolves on HTTP errors
+- [ ] I can explain push, pull and conflict using three timestamps
+- [ ] I can show waiting and error states in an async form
+- [ ] I can explain the parts of a PWA and the three caching strategies
+- [ ] I deployed Threadwork with HTTPS and a persistent data folder

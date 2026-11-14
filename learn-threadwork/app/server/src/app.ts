@@ -1,4 +1,4 @@
-// Exercise 8.1: An Express app with health check and errors. Read curriculum/part-8/a-express.md first.
+// Exercise 6.1: An Express app with health check and errors. Read curriculum/part-6/a-express.md first.
 import express, { type Express } from "express";
 
 /**
@@ -12,7 +12,7 @@ import express, { type Express } from "express";
  *    - anything else -> 500 { error: "Something went wrong" } (log the error with console.error)
  */
 export function createApp(mount: (app: Express) => void = () => {}): Express {
-  // TODO 8.1
+  // TODO 6.1
   const app = express();
   return app;
 }

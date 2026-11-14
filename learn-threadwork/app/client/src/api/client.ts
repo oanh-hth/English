@@ -1,12 +1,9 @@
-// Exercise 9.1: A typed API client. Read curriculum/part-9/a-api-client.md first.
-import type { WeatherKind } from "@app/server/src/weather";
-
+// Exercise 7.1: A typed API client. Read curriculum/part-7/a-api-client.md first.
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = "ApiError"; }
 }
 
 export interface Saved<T> { state: T | null; savedAt: number }
-export interface WeatherReply { kind: WeatherKind; isDay: boolean; temp: number; wind: number; code: number }
 
 export interface ApiOptions {
   baseUrl?: string;                         // default ""
@@ -25,18 +22,16 @@ export interface ApiOptions {
  *   login(email, password)           POST /api/auth/login            -> token string
  *   getState<T>()                    GET  /api/state                 -> Saved<T>
  *   putState<T>(state, savedAt, baseSavedAt)  PUT /api/state        -> void
- *   weather(lat, lon)                GET  /api/weather?lat=..&lon=.. -> WeatherReply
  */
 export function createApi(options: ApiOptions = {}) {
-  // TODO 9.1
-  const todo = (): never => { throw new Error("TODO 9.1"); };
+  // TODO 7.1
+  const todo = (): never => { throw new Error("TODO 7.1"); };
   return {
     health: async (): Promise<{ ok: boolean }> => todo(),
     register: async (email: string, password: string): Promise<string> => todo(),
     login: async (email: string, password: string): Promise<string> => todo(),
     getState: async <T,>(): Promise<Saved<T>> => todo(),
     putState: async <T,>(state: T, savedAt: number, baseSavedAt: number): Promise<void> => todo(),
-    weather: async (lat: number, lon: number): Promise<WeatherReply> => todo(),
   };
 }
 

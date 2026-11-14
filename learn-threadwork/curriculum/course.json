@@ -32,7 +32,7 @@
         {
           "id": "b",
           "file": "curriculum/part-1/b-unions-and-records.md",
-          "title": "Unions, as const and Record"
+          "title": "Unions, as const and the category list"
         },
         {
           "id": "c",
@@ -49,8 +49,8 @@
     {
       "id": "2",
       "folder": "part-2",
-      "slug": "domain-logic",
-      "title": "Domain logic: streaks, garden and rewards",
+      "slug": "logic",
+      "title": "The app's logic: dates, a reducer and queries",
       "sections": [
         {
           "id": "a",
@@ -60,12 +60,12 @@
         {
           "id": "b",
           "file": "curriculum/part-2/b-reducers.md",
-          "title": "Reducers"
+          "title": "A reducer for the whole app"
         },
         {
           "id": "c",
-          "file": "curriculum/part-2/c-rewards.md",
-          "title": "Results, treats and badges"
+          "file": "curriculum/part-2/c-queries.md",
+          "title": "Queries: the decision log and the weekly summary"
         }
       ]
     },
@@ -92,16 +92,16 @@
         },
         {
           "id": "d",
-          "file": "curriculum/part-3/d-effects-and-editing.md",
-          "title": "Effects and an editing panel"
+          "file": "curriculum/part-3/d-the-outcome-form.md",
+          "title": "The outcome form"
         }
       ]
     },
     {
       "id": "4",
       "folder": "part-4",
-      "slug": "state-management",
-      "title": "State management and hooks",
+      "slug": "state",
+      "title": "State, hooks and navigation",
       "sections": [
         {
           "id": "a",
@@ -115,152 +115,96 @@
         },
         {
           "id": "c",
-          "file": "curriculum/part-4/c-navigation-and-selectors.md",
-          "title": "Navigation and selectors"
+          "file": "curriculum/part-4/c-navigation-and-search.md",
+          "title": "Navigation and search"
         }
       ]
     },
     {
       "id": "5",
       "folder": "part-5",
-      "slug": "linked-work",
-      "title": "Linked work: notes, resources and the link map",
+      "slug": "decision-log",
+      "title": "The decision log",
       "sections": [
         {
           "id": "a",
-          "file": "curriculum/part-5/a-feature-reducers.md",
-          "title": "Feature reducers: notes"
+          "file": "curriculum/part-5/a-filters.md",
+          "title": "Filtering by category"
         },
         {
           "id": "b",
-          "file": "curriculum/part-5/b-editors.md",
-          "title": "Editors for notes, drafts and tables"
+          "file": "curriculum/part-5/b-decision-cards.md",
+          "title": "Decision cards"
         },
         {
           "id": "c",
-          "file": "curriculum/part-5/c-resources.md",
-          "title": "Resources and attachments"
+          "file": "curriculum/part-5/c-the-decision-log.md",
+          "title": "Putting the log together"
         },
         {
           "id": "d",
-          "file": "curriculum/part-5/d-link-map.md",
-          "title": "Graphs and the link map"
+          "file": "curriculum/part-5/d-export.md",
+          "title": "Exporting to Markdown"
         }
       ]
     },
     {
       "id": "6",
       "folder": "part-6",
-      "slug": "sketching",
-      "title": "Sketching with Apple Pencil",
+      "slug": "server",
+      "title": "A Node.js server",
       "sections": [
         {
           "id": "a",
-          "file": "curriculum/part-6/a-stroke-geometry.md",
-          "title": "Stroke geometry"
+          "file": "curriculum/part-6/a-express.md",
+          "title": "Node.js and Express"
         },
         {
           "id": "b",
-          "file": "curriculum/part-6/b-pointer-input.md",
-          "title": "Pointer input and palm rejection"
+          "file": "curriculum/part-6/b-rest-api.md",
+          "title": "A REST API"
         },
         {
           "id": "c",
-          "file": "curriculum/part-6/c-saving-sketches.md",
-          "title": "Saving sketches"
+          "file": "curriculum/part-6/c-accounts.md",
+          "title": "Accounts and protected routes"
+        },
+        {
+          "id": "d",
+          "file": "curriculum/part-6/d-storage.md",
+          "title": "Saving data on the server"
         }
       ]
     },
     {
       "id": "7",
       "folder": "part-7",
-      "slug": "garden",
-      "title": "The garden and motivation",
-      "sections": [
-        {
-          "id": "a",
-          "file": "curriculum/part-7/a-svg-plant.md",
-          "title": "Drawing the plant with SVG"
-        },
-        {
-          "id": "b",
-          "file": "curriculum/part-7/b-garden-and-treats.md",
-          "title": "Garden controls and the treat shop"
-        },
-        {
-          "id": "c",
-          "file": "curriculum/part-7/c-inspiration.md",
-          "title": "The inspiration wall"
-        },
-        {
-          "id": "d",
-          "file": "curriculum/part-7/d-weather-and-motion.md",
-          "title": "Weather, motion and celebrations"
-        }
-      ]
-    },
-    {
-      "id": "8",
-      "folder": "part-8",
-      "slug": "server",
-      "title": "A Node.js server",
-      "sections": [
-        {
-          "id": "a",
-          "file": "curriculum/part-8/a-express.md",
-          "title": "Node.js and Express"
-        },
-        {
-          "id": "b",
-          "file": "curriculum/part-8/b-rest-api.md",
-          "title": "A REST API"
-        },
-        {
-          "id": "c",
-          "file": "curriculum/part-8/c-accounts.md",
-          "title": "Accounts and protected routes"
-        },
-        {
-          "id": "d",
-          "file": "curriculum/part-8/d-storage.md",
-          "title": "Saving data on the server"
-        },
-        {
-          "id": "e",
-          "file": "curriculum/part-8/e-external-apis.md",
-          "title": "Calling other services"
-        }
-      ]
-    },
-    {
-      "id": "9",
-      "folder": "part-9",
       "slug": "full-stack",
       "title": "Full stack and shipping",
       "sections": [
         {
           "id": "a",
-          "file": "curriculum/part-9/a-api-client.md",
+          "file": "curriculum/part-7/a-api-client.md",
           "title": "Talking to the server"
         },
         {
           "id": "b",
-          "file": "curriculum/part-9/b-sync.md",
+          "file": "curriculum/part-7/b-sync.md",
           "title": "Syncing two devices"
         },
         {
           "id": "c",
-          "file": "curriculum/part-9/c-sign-in.md",
+          "file": "curriculum/part-7/c-sign-in.md",
           "title": "Signing in"
         },
         {
           "id": "d",
-          "file": "curriculum/part-9/d-offline-and-ipad.md",
+          "file": "curriculum/part-7/d-offline-and-ipad.md",
           "title": "Offline and on the iPad"
         },
         {
           "id": "e",
-          "file": "curriculum/part-9/e-deploy.md",
+          "file": "curriculum/part-7/e-deploy.md",
           "title": "Putting it online"
         }
       ]
@@ -294,7 +238,7 @@
       "part": "0",
       "section": "b",
       "slug": "architecture",
-      "title": "Draw how Threadwork's parts talk to each other",
+      "title": "Draw the journey of a decision",
       "files": [],
       "lesson": "curriculum/part-0/b-how-threadwork-works.md",
       "manual": true
@@ -304,7 +248,7 @@
       "part": "1",
       "section": "a",
       "slug": "task-model",
-      "title": "Create tasks and check importance",
+      "title": "Create tasks",
       "files": [
         "app/shared/task-factory.ts"
       ],
@@ -315,20 +259,20 @@
       "id": "1.2",
       "part": "1",
       "section": "b",
-      "slug": "growth",
-      "title": "Growth per importance and plant stages",
+      "slug": "categories",
+      "title": "Look up and group categories",
       "files": [
-        "app/shared/growth.ts"
+        "app/shared/categories.ts"
       ],
       "lesson": "curriculum/part-1/b-unions-and-records.md",
-      "test": "tests/part-1/1.2-growth.test.ts"
+      "test": "tests/part-1/1.2-categories.test.ts"
     },
     {
       "id": "1.3",
       "part": "1",
       "section": "c",
       "slug": "immutable-updates",
-      "title": "Link, move and delete tasks without mutation",
+      "title": "Complete, record, reopen and delete tasks",
       "files": [
         "app/shared/task-ops.ts"
       ],
@@ -340,7 +284,7 @@
       "part": "1",
       "section": "d",
       "slug": "generics-and-validation",
-      "title": "groupBy, sorting and parsing unknown data",
+      "title": "groupBy, sorting and validating outcomes",
       "files": [
         "app/shared/collections.ts"
       ],
@@ -351,61 +295,61 @@
       "id": "2.1",
       "part": "2",
       "section": "a",
-      "slug": "dates-and-streaks",
-      "title": "Days, streaks and a thirsty plant",
+      "slug": "dates",
+      "title": "Days, weeks and due labels",
       "files": [
         "app/shared/dates.ts"
       ],
       "lesson": "curriculum/part-2/a-pure-functions-and-dates.md",
-      "test": "tests/part-2/2.1-dates-and-streaks.test.ts"
+      "test": "tests/part-2/2.1-dates.test.ts"
     },
     {
       "id": "2.2",
       "part": "2",
       "section": "b",
-      "slug": "garden-reducer",
-      "title": "The garden reducer: grow, harvest, unlock",
+      "slug": "tasks-reducer",
+      "title": "The tasks reducer",
       "files": [
-        "app/shared/garden.ts"
+        "app/shared/tasks-reducer.ts"
       ],
       "lesson": "curriculum/part-2/b-reducers.md",
-      "test": "tests/part-2/2.2-garden-reducer.test.ts"
+      "test": "tests/part-2/2.2-tasks-reducer.test.ts"
     },
     {
       "id": "2.3",
       "part": "2",
       "section": "c",
-      "slug": "treats",
-      "title": "Trade fruit for treats",
+      "slug": "decisions",
+      "title": "Decisions: list, filter and count",
       "files": [
-        "app/shared/treats.ts"
+        "app/shared/decisions.ts"
       ],
-      "lesson": "curriculum/part-2/c-rewards.md",
-      "test": "tests/part-2/2.3-treats.test.ts"
+      "lesson": "curriculum/part-2/c-queries.md",
+      "test": "tests/part-2/2.3-decisions.test.ts"
     },
     {
       "id": "2.4",
       "part": "2",
       "section": "c",
-      "slug": "badges",
-      "title": "Badges from your history",
+      "slug": "summary",
+      "title": "The weekly summary",
       "files": [
-        "app/shared/badges.ts"
+        "app/shared/summary.ts"
       ],
-      "lesson": "curriculum/part-2/c-rewards.md",
-      "test": "tests/part-2/2.4-badges.test.ts"
+      "lesson": "curriculum/part-2/c-queries.md",
+      "test": "tests/part-2/2.4-summary.test.ts"
     },
     {
       "id": "3.1",
       "part": "3",
       "section": "a",
-      "slug": "task-card",
-      "title": "TaskCard",
+      "slug": "task-item",
+      "title": "TaskItem",
       "files": [
-        "app/client/src/components/TaskCard.tsx"
+        "app/client/src/components/TaskItem.tsx"
       ],
       "lesson": "curriculum/part-3/a-components-and-props.md",
-      "test": "tests/part-3/3.1-task-card.test.tsx"
+      "test": "tests/part-3/3.1-task-item.test.tsx"
     },
     {
       "id": "3.2",
@@ -423,25 +367,25 @@
       "id": "3.3",
       "part": "3",
       "section": "c",
-      "slug": "board",
-      "title": "Board with columns and move buttons",
+      "slug": "task-list",
+      "title": "TaskList",
       "files": [
-        "app/client/src/components/Board.tsx"
+        "app/client/src/components/TaskList.tsx"
       ],
       "lesson": "curriculum/part-3/c-lists-and-composition.md",
-      "test": "tests/part-3/3.3-board.test.tsx"
+      "test": "tests/part-3/3.3-task-list.test.tsx"
     },
     {
       "id": "3.4",
       "part": "3",
       "section": "d",
-      "slug": "task-drawer",
-      "title": "TaskDrawer: edit, link and complete",
+      "slug": "outcome-form",
+      "title": "OutcomeForm: result, decision, category",
       "files": [
-        "app/client/src/components/TaskDrawer.tsx"
+        "app/client/src/components/OutcomeForm.tsx"
       ],
-      "lesson": "curriculum/part-3/d-effects-and-editing.md",
-      "test": "tests/part-3/3.4-task-drawer.test.tsx"
+      "lesson": "curriculum/part-3/d-the-outcome-form.md",
+      "test": "tests/part-3/3.4-outcome-form.test.tsx"
     },
     {
       "id": "4.1",
@@ -458,30 +402,6 @@
     {
       "id": "4.2",
       "part": "4",
-      "section": "a",
-      "slug": "use-countdown",
-      "title": "useCountdown, the focus timer",
-      "files": [
-        "app/client/src/hooks/useCountdown.ts"
-      ],
-      "lesson": "curriculum/part-4/a-custom-hooks.md",
-      "test": "tests/part-4/4.2-use-countdown.test.ts"
-    },
-    {
-      "id": "4.3",
-      "part": "4",
-      "section": "b",
-      "slug": "app-reducer",
-      "title": "The app reducer",
-      "files": [
-        "app/client/src/state/appReducer.ts"
-      ],
-      "lesson": "curriculum/part-4/b-reducer-and-context.md",
-      "test": "tests/part-4/4.3-app-reducer.test.ts"
-    },
-    {
-      "id": "4.4",
-      "part": "4",
       "section": "b",
       "slug": "app-context",
       "title": "AppProvider and useApp",
@@ -489,399 +409,194 @@
         "app/client/src/state/AppContext.tsx"
       ],
       "lesson": "curriculum/part-4/b-reducer-and-context.md",
-      "test": "tests/part-4/4.4-app-context.test.tsx"
+      "test": "tests/part-4/4.2-app-context.test.tsx"
     },
     {
-      "id": "4.5",
+      "id": "4.3",
       "part": "4",
       "section": "c",
       "slug": "use-hash-route",
-      "title": "useHashRoute: moving between pages",
+      "title": "useHashRoute",
       "files": [
         "app/client/src/hooks/useHashRoute.ts"
       ],
-      "lesson": "curriculum/part-4/c-navigation-and-selectors.md",
-      "test": "tests/part-4/4.5-use-hash-route.test.ts"
+      "lesson": "curriculum/part-4/c-navigation-and-search.md",
+      "test": "tests/part-4/4.3-use-hash-route.test.ts"
     },
     {
-      "id": "4.6",
+      "id": "4.4",
       "part": "4",
       "section": "c",
-      "slug": "today-model",
-      "title": "todayModel: what the Today page shows",
+      "slug": "use-debounced-value",
+      "title": "useDebouncedValue",
       "files": [
-        "app/client/src/state/today.ts"
+        "app/client/src/hooks/useDebouncedValue.ts"
       ],
-      "lesson": "curriculum/part-4/c-navigation-and-selectors.md",
-      "test": "tests/part-4/4.6-today-model.test.ts"
+      "lesson": "curriculum/part-4/c-navigation-and-search.md",
+      "test": "tests/part-4/4.4-use-debounced-value.test.ts"
     },
     {
       "id": "5.1",
       "part": "5",
       "section": "a",
-      "slug": "notes-reducer",
-      "title": "Notes, drafts and tables reducer",
+      "slug": "decision-filters",
+      "title": "DecisionFilters",
       "files": [
-        "app/shared/notes.ts"
+        "app/client/src/components/DecisionFilters.tsx"
       ],
-      "lesson": "curriculum/part-5/a-feature-reducers.md",
-      "test": "tests/part-5/5.1-notes-reducer.test.ts"
+      "lesson": "curriculum/part-5/a-filters.md",
+      "test": "tests/part-5/5.1-decision-filters.test.tsx"
     },
     {
       "id": "5.2",
       "part": "5",
       "section": "b",
-      "slug": "note-editor",
-      "title": "NoteEditor",
+      "slug": "decision-card",
+      "title": "DecisionCard",
       "files": [
-        "app/client/src/components/NoteEditor.tsx"
+        "app/client/src/components/DecisionCard.tsx"
       ],
-      "lesson": "curriculum/part-5/b-editors.md",
-      "test": "tests/part-5/5.2-note-editor.test.tsx"
+      "lesson": "curriculum/part-5/b-decision-cards.md",
+      "test": "tests/part-5/5.2-decision-card.test.tsx"
     },
     {
       "id": "5.3",
       "part": "5",
       "section": "c",
-      "slug": "resources-reducer",
-      "title": "Resources reducer and usage",
+      "slug": "decision-log",
+      "title": "DecisionLog",
       "files": [
-        "app/shared/resources.ts"
+        "app/client/src/components/DecisionLog.tsx"
       ],
-      "lesson": "curriculum/part-5/c-resources.md",
-      "test": "tests/part-5/5.3-resources-reducer.test.ts"
+      "lesson": "curriculum/part-5/c-the-decision-log.md",
+      "test": "tests/part-5/5.3-decision-log.test.tsx"
     },
     {
       "id": "5.4",
       "part": "5",
-      "section": "c",
-      "slug": "task-attachments",
-      "title": "TaskAttachments in the drawer",
-      "files": [
-        "app/client/src/components/TaskAttachments.tsx"
-      ],
-      "lesson": "curriculum/part-5/c-resources.md",
-      "test": "tests/part-5/5.4-task-attachments.test.tsx"
-    },
-    {
-      "id": "5.5",
-      "part": "5",
-      "section": "c",
-      "slug": "resource-library",
-      "title": "ResourceLibrary page",
-      "files": [
-        "app/client/src/components/ResourceLibrary.tsx"
-      ],
-      "lesson": "curriculum/part-5/c-resources.md",
-      "test": "tests/part-5/5.5-resource-library.test.tsx"
-    },
-    {
-      "id": "5.6",
-      "part": "5",
       "section": "d",
-      "slug": "graph",
-      "title": "Build and lay out the graph",
+      "slug": "export",
+      "title": "Export decisions as Markdown",
       "files": [
-        "app/client/src/map/graph.ts"
+        "app/shared/export.ts"
       ],
-      "lesson": "curriculum/part-5/d-link-map.md",
-      "test": "tests/part-5/5.6-graph.test.ts"
-    },
-    {
-      "id": "5.7",
-      "part": "5",
-      "section": "d",
-      "slug": "link-map",
-      "title": "LinkMap",
-      "files": [
-        "app/client/src/components/LinkMap.tsx"
-      ],
-      "lesson": "curriculum/part-5/d-link-map.md",
-      "test": "tests/part-5/5.7-link-map.test.tsx"
+      "lesson": "curriculum/part-5/d-export.md",
+      "test": "tests/part-5/5.4-export.test.ts"
     },
     {
       "id": "6.1",
       "part": "6",
-      "section": "a",
-      "slug": "stroke-geometry",
-      "title": "Stroke width, simplifying and smooth paths",
-      "files": [
-        "app/client/src/sketch/geometry.ts"
-      ],
-      "lesson": "curriculum/part-6/a-stroke-geometry.md",
-      "test": "tests/part-6/6.1-stroke-geometry.test.ts"
-    },
-    {
-      "id": "6.2",
-      "part": "6",
-      "section": "b",
-      "slug": "sketch-reducer",
-      "title": "Pencil input with palm rejection",
-      "files": [
-        "app/client/src/sketch/sketchReducer.ts"
-      ],
-      "lesson": "curriculum/part-6/b-pointer-input.md",
-      "test": "tests/part-6/6.2-sketch-reducer.test.ts"
-    },
-    {
-      "id": "6.3",
-      "part": "6",
-      "section": "c",
-      "slug": "sketches-reducer",
-      "title": "Saving sketches and attaching them",
-      "files": [
-        "app/shared/sketches.ts"
-      ],
-      "lesson": "curriculum/part-6/c-saving-sketches.md",
-      "test": "tests/part-6/6.3-sketches-reducer.test.ts"
-    },
-    {
-      "id": "6.4",
-      "part": "6",
-      "section": "c",
-      "slug": "sketch-gallery",
-      "title": "Saved strokes and the sketch gallery",
-      "files": [
-        "app/client/src/sketch/save.ts",
-        "app/client/src/components/SketchGallery.tsx"
-      ],
-      "lesson": "curriculum/part-6/c-saving-sketches.md",
-      "test": "tests/part-6/6.4-sketch-gallery.test.tsx"
-    },
-    {
-      "id": "7.1",
-      "part": "7",
-      "section": "a",
-      "slug": "plant",
-      "title": "Draw the plant with SVG",
-      "files": [
-        "app/client/src/components/Plant.tsx"
-      ],
-      "lesson": "curriculum/part-7/a-svg-plant.md",
-      "test": "tests/part-7/7.1-plant.test.tsx"
-    },
-    {
-      "id": "7.2",
-      "part": "7",
-      "section": "b",
-      "slug": "garden-panel",
-      "title": "GardenPanel: harvest and seeds",
-      "files": [
-        "app/client/src/components/GardenPanel.tsx"
-      ],
-      "lesson": "curriculum/part-7/b-garden-and-treats.md",
-      "test": "tests/part-7/7.2-garden-panel.test.tsx"
-    },
-    {
-      "id": "7.3",
-      "part": "7",
-      "section": "b",
-      "slug": "wallet",
-      "title": "The treat wallet reducer",
-      "files": [
-        "app/shared/wallet.ts"
-      ],
-      "lesson": "curriculum/part-7/b-garden-and-treats.md",
-      "test": "tests/part-7/7.3-wallet.test.ts"
-    },
-    {
-      "id": "7.4",
-      "part": "7",
-      "section": "b",
-      "slug": "treat-shop",
-      "title": "TreatShop",
-      "files": [
-        "app/client/src/components/TreatShop.tsx"
-      ],
-      "lesson": "curriculum/part-7/b-garden-and-treats.md",
-      "test": "tests/part-7/7.4-treat-shop.test.tsx"
-    },
-    {
-      "id": "7.5",
-      "part": "7",
-      "section": "c",
-      "slug": "pins",
-      "title": "Pins reducer and the quote of the day",
-      "files": [
-        "app/shared/pins.ts"
-      ],
-      "lesson": "curriculum/part-7/c-inspiration.md",
-      "test": "tests/part-7/7.5-pins.test.ts"
-    },
-    {
-      "id": "7.6",
-      "part": "7",
-      "section": "c",
-      "slug": "inspiration-wall",
-      "title": "InspirationWall",
-      "files": [
-        "app/client/src/components/InspirationWall.tsx"
-      ],
-      "lesson": "curriculum/part-7/c-inspiration.md",
-      "test": "tests/part-7/7.6-inspiration-wall.test.tsx"
-    },
-    {
-      "id": "7.7",
-      "part": "7",
-      "section": "d",
-      "slug": "scene",
-      "title": "The sky around the plant",
-      "files": [
-        "app/client/src/garden/scene.ts"
-      ],
-      "lesson": "curriculum/part-7/d-weather-and-motion.md",
-      "test": "tests/part-7/7.7-scene.test.ts"
-    },
-    {
-      "id": "7.8",
-      "part": "7",
-      "section": "d",
-      "slug": "animate-plant",
-      "title": "Animate the plant with CSS",
-      "files": [
-        "app/client/src/styles.css"
-      ],
-      "lesson": "curriculum/part-7/d-weather-and-motion.md",
-      "manual": true
-    },
-    {
-      "id": "7.9",
-      "part": "7",
-      "section": "d",
-      "slug": "badge-toasts",
-      "title": "Badge toasts",
-      "files": [
-        "app/client/src/hooks/useBadgeToasts.ts"
-      ],
-      "lesson": "curriculum/part-7/d-weather-and-motion.md",
-      "test": "tests/part-7/7.9-badge-toasts.test.ts"
-    },
-    {
-      "id": "8.1",
-      "part": "8",
       "section": "a",
       "slug": "express-app",
       "title": "An Express app with health check and errors",
       "files": [
         "app/server/src/app.ts"
       ],
-      "lesson": "curriculum/part-8/a-express.md",
-      "test": "tests/part-8/8.1-express-app.test.ts"
+      "lesson": "curriculum/part-6/a-express.md",
+      "test": "tests/part-6/6.1-express-app.test.ts"
     },
     {
-      "id": "8.2",
-      "part": "8",
+      "id": "6.2",
+      "part": "6",
       "section": "b",
       "slug": "tasks-api",
       "title": "A REST API for tasks",
       "files": [
         "app/server/src/routes/tasks.ts"
       ],
-      "lesson": "curriculum/part-8/b-rest-api.md",
-      "test": "tests/part-8/8.2-tasks-api.test.ts"
+      "lesson": "curriculum/part-6/b-rest-api.md",
+      "test": "tests/part-6/6.2-tasks-api.test.ts"
     },
     {
-      "id": "8.3",
-      "part": "8",
+      "id": "6.3",
+      "part": "6",
       "section": "c",
       "slug": "auth",
       "title": "Password hashing, tokens and protected routes",
       "files": [
         "app/server/src/auth.ts"
       ],
-      "lesson": "curriculum/part-8/c-accounts.md",
-      "test": "tests/part-8/8.3-auth.test.ts"
+      "lesson": "curriculum/part-6/c-accounts.md",
+      "test": "tests/part-6/6.3-auth.test.ts"
     },
     {
-      "id": "8.4",
-      "part": "8",
+      "id": "6.4",
+      "part": "6",
       "section": "d",
       "slug": "file-store",
       "title": "Atomic file storage and the state API",
       "files": [
         "app/server/src/storage/fileStore.ts"
       ],
-      "lesson": "curriculum/part-8/d-storage.md",
-      "test": "tests/part-8/8.4-file-store.test.ts"
+      "lesson": "curriculum/part-6/d-storage.md",
+      "test": "tests/part-6/6.4-file-store.test.ts"
     },
     {
-      "id": "8.5",
-      "part": "8",
-      "section": "e",
-      "slug": "weather",
-      "title": "Weather from Open-Meteo with a cache",
-      "files": [
-        "app/server/src/weather.ts"
-      ],
-      "lesson": "curriculum/part-8/e-external-apis.md",
-      "test": "tests/part-8/8.5-weather.test.ts"
-    },
-    {
-      "id": "9.1",
-      "part": "9",
+      "id": "7.1",
+      "part": "7",
       "section": "a",
       "slug": "api-client",
       "title": "A typed API client",
       "files": [
         "app/client/src/api/client.ts"
       ],
-      "lesson": "curriculum/part-9/a-api-client.md",
-      "test": "tests/part-9/9.1-api-client.test.ts"
+      "lesson": "curriculum/part-7/a-api-client.md",
+      "test": "tests/part-7/7.1-api-client.test.ts"
     },
     {
-      "id": "9.2",
-      "part": "9",
+      "id": "7.2",
+      "part": "7",
       "section": "b",
       "slug": "sync",
       "title": "Sync decisions and debounce",
       "files": [
         "app/shared/sync.ts"
       ],
-      "lesson": "curriculum/part-9/b-sync.md",
-      "test": "tests/part-9/9.2-sync.test.ts"
+      "lesson": "curriculum/part-7/b-sync.md",
+      "test": "tests/part-7/7.2-sync.test.ts"
     },
     {
-      "id": "9.3",
-      "part": "9",
+      "id": "7.3",
+      "part": "7",
       "section": "c",
       "slug": "login-form",
       "title": "LoginForm",
       "files": [
         "app/client/src/components/LoginForm.tsx"
       ],
-      "lesson": "curriculum/part-9/c-sign-in.md",
-      "test": "tests/part-9/9.3-login-form.test.tsx"
+      "lesson": "curriculum/part-7/c-sign-in.md",
+      "test": "tests/part-7/7.3-login-form.test.tsx"
     },
     {
-      "id": "9.4",
-      "part": "9",
+      "id": "7.4",
+      "part": "7",
       "section": "d",
       "slug": "offline",
       "title": "How the service worker caches",
       "files": [
         "app/client/src/pwa/strategy.ts"
       ],
-      "lesson": "curriculum/part-9/d-offline-and-ipad.md",
-      "test": "tests/part-9/9.4-offline.test.ts"
+      "lesson": "curriculum/part-7/d-offline-and-ipad.md",
+      "test": "tests/part-7/7.4-offline.test.ts"
     },
     {
-      "id": "9.5",
-      "part": "9",
+      "id": "7.5",
+      "part": "7",
       "section": "d",
       "slug": "install-ipad",
       "title": "Install Threadwork on your iPad",
       "files": [],
-      "lesson": "curriculum/part-9/d-offline-and-ipad.md",
+      "lesson": "curriculum/part-7/d-offline-and-ipad.md",
       "manual": true
     },
     {
-      "id": "9.6",
-      "part": "9",
+      "id": "7.6",
+      "part": "7",
       "section": "e",
       "slug": "deploy",
       "title": "Deploy it so it works anywhere",
       "files": [],
-      "lesson": "curriculum/part-9/e-deploy.md",
+      "lesson": "curriculum/part-7/e-deploy.md",
       "manual": true
     }
   ]

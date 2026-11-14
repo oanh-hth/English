@@ -2,55 +2,45 @@
 
 *[Part 3: React components](README.md) · section c*
 
-The board shows your tasks in three columns: *Inbox*, *Doing* and *Done*. In this section you learn to render **lists** and to **compose** components: the board is made of the task cards you built in 3a.
+The task list puts your rows together: what's to do on top, what's done below. In this section you learn **lists**, **keys** and **composition**.
 
 ## Rendering lists
 
-Turn an array into elements with `map`:
-
 ```tsx
-<ul>
-  {tasks.map(t => <li key={t.id}>{t.title}</li>)}
-</ul>
+<ul>{todo.map(t => <TaskItem key={t.id} task={t} … />)}</ul>
 ```
 
-Every item needs a **`key`**: a value that identifies it among its siblings. React uses keys to know which item is which when the list changes. Use a stable id, never the array index: if you used the index and you then moved a task, React would mix up which card is which.
+Every item needs a **`key`** that identifies it among its siblings. Use the task id, never the array index. When a task moves from *To do* to *Done*, React uses keys to know which row is which.
 
-## Composition
+## Composition and passing props through
 
-The board doesn't know how a task card looks. It just uses the component:
-
-```tsx
-{list.map(t => <TaskCard key={t.id} task={t} today={today} onOpen={onOpen} />)}
-```
-
-The board passes `onOpen` straight through. This is **lifting state up**: the board doesn't decide what happens when a task moves. It calls `onMove(id, status)`, and whoever renders the board decides. In the app, that's the reducer in Part 4; in the playground, a little local state. One component, two very different uses.
-
-## Landmarks
-
-Each column is a `<section aria-label="Inbox">`. That makes it a **region** with a name. Screen reader users can jump between columns, and tests can look inside one column:
+The list doesn't know how a row looks; it uses `TaskItem`. It doesn't know what "complete" does either; it passes the handlers through:
 
 ```tsx
-const inbox = screen.getByRole("region", { name: "Inbox" });
-within(inbox).getByRole("heading", { name: "Alpha" });
+export function TaskList({ tasks, today, ...handlers }: TaskListProps) {
+  // …
+  <TaskItem key={t.id} task={t} today={today} {...handlers} />
+}
 ```
 
-## Buttons instead of dragging
+`...handlers` collects the remaining props into one object, and `{...handlers}` spreads them onto the child. The type says exactly which ones: `Pick<TaskItemProps, "onComplete" | "onRecord" | "onReopen" | "onDelete">`. TypeScript then makes sure the list and the row agree.
 
-On a computer you might drag cards between columns. On an iPad, dragging with a finger conflicts with scrolling, and with the pencil it's fiddly. Small, clear buttons ("→ Doing") work for everyone, including keyboard and VoiceOver users. Give each one a full name for assistive technology:
+## Sorting in one place
 
-```tsx
-<button aria-label={`Move ${t.title} to Doing`} onClick={() => onMove(t.id, "doing")}>→ Doing</button>
-```
+Use `sortTasks` from 1.4 and split the result. The order rule (due first, then age; newest done first) lives in one tested function, not in the component.
 
-## Empty states
+## Long lists
 
-An empty column should say so ("Nothing here") instead of showing nothing. Empty states tell people the app works, and that the column is ready for tasks.
+After a few weeks, *Done* gets long. Show the 10 most recent and a button "Show all 34". That's a little piece of local state, `showAll`, that only this component cares about. Not everything belongs in the app's state.
+
+## Regions and empty states
+
+Each half is a `<section aria-label="To do">`, a **region** with a name. Screen reader users can jump between them, and tests can look inside one with `within(...)`. An empty half says so ("Nothing to do. Capture a task above."): empty states tell people the app works and what to do next.
 
 ## Read more
 - Rendering lists: <https://react.dev/learn/rendering-lists>
 - Sharing state between components: <https://react.dev/learn/sharing-state-between-components>
-- ARIA landmarks (MDN): <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/region_role>
+- Region role (MDN): <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/region_role>
 
 ---
 
@@ -58,12 +48,12 @@ An empty column should say so ("Nothing here") instead of showing nothing. Empty
 
 Run the tests for an exercise with `npm run ex <number>`; they re-run every time you save. When they are all green, commit, and move on. `npm run progress` shows your checklist.
 
-### 3.3: Board with columns and move buttons
+### 3.3: TaskList
 
-**Edit:** `app/client/src/components/Board.tsx` · **Tests:** `tests/part-3/3.3-board.test.tsx` · **Run:** `npm run ex 3.3`
+**Edit:** `app/client/src/components/TaskList.tsx` · **Tests:** `tests/part-3/3.3-task-list.test.tsx` · **Run:** `npm run ex 3.3`
 
-Build `Board`: three `<section aria-label="…">` columns in `COLUMNS` order, each with an `<h2>` like "Inbox (2)", a `TaskCard` per task, move buttons to the two other columns under each card, and "Nothing here" when empty.
+Build `TaskList`: *To do (N)* and *Done (N)* sections in `sortTasks` order, `TaskItem` rows with the handlers passed through, empty states, and *Show all N* for more than 10 done tasks.
 
 ---
 
-[← 3b State and forms](b-state-and-forms.md) · [3d Effects and an editing panel →](d-effects-and-editing.md)
+[← 3b State and forms](b-state-and-forms.md) · [3d The outcome form →](d-the-outcome-form.md)

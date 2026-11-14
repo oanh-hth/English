@@ -1,4 +1,4 @@
-// Exercise 8.4: Atomic file storage and the state API. Read curriculum/part-8/d-storage.md first.
+// Exercise 6.4: Atomic file storage and the state API. Read curriculum/part-6/d-storage.md first.
 import { Router } from "express";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -25,8 +25,8 @@ export interface StateStore {
  * - A missing file reads as null.
  */
 export function createFileStore(dir: string): StateStore {
-  // TODO 8.4
-  throw new Error("TODO 8.4");
+  // TODO 6.4
+  throw new Error("TODO 6.4");
 }
 
 /**
@@ -37,6 +37,6 @@ export function createFileStore(dir: string): StateStore {
  *          else 200 { ok: true }. baseSavedAt defaults to 0.
  */
 export function stateRouter(store: StateStore): Router {
-  // TODO 8.4
+  // TODO 6.4
   return Router();
 }

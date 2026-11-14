@@ -1,78 +1,78 @@
-# Part 1b: Unions, as const and Record
+# Part 1b: Unions, as const and the category list
 
 *[Part 1: TypeScript and the task model](README.md) · section b*
 
-Threadwork's reward rule is simple: finishing a task grows your plant, and the more important the task, the more it grows. In this section you write that rule with TypeScript's most useful tools: **union types**, **`as const`** and **`Record`**.
+Every decision you record goes into a **category**: a web development topic. In this section you meet TypeScript's tools for fixed sets of values (**union types**, **`as const`**, **`Record`**) by working with Threadwork's category list.
 
 ## Union types
 
 A union lists the values something may have:
 
 ```ts
-type Status = "inbox" | "doing" | "done";
+type Status = "todo" | "done";
 ```
 
-Assign `"later"` to a `Status` and TypeScript stops you. Unions of string literals are how Threadwork describes importance, statuses, kinds of notes and plant varieties.
+Assign `"later"` to a `Status` and TypeScript stops you.
 
 ## One list, a value and a type: `as const`
 
-You often need the list at runtime too (to fill a menu, for example). Write it once:
+You often need the list at runtime too, for example to fill a menu. Write it once:
 
 ```ts
-export const IMPORTANCE = ["low", "medium", "high", "critical"] as const;
-export type Importance = (typeof IMPORTANCE)[number];
+export const COMPLEXITIES = ["simple", "complex"] as const;
+export type Complexity = (typeof COMPLEXITIES)[number];      // "simple" | "complex"
 ```
 
-`as const` tells TypeScript "this array never changes, and its items are these exact strings". `(typeof IMPORTANCE)[number]` then means "the type of any item": `"low" | "medium" | "high" | "critical"`. Add a fifth level to the array and the type updates by itself.
+`as const` says "this array never changes, and its items are these exact strings". `(typeof X)[number]` is "the type of any item".
+
+## The category list
+
+`app/shared/categories.ts` lists every topic, frontend first:
+
+```ts
+export const CATEGORIES = [
+  { id: "html", name: "HTML & semantics", group: "Frontend" },
+  { id: "css", name: "CSS", group: "Frontend" },
+  { id: "layout", name: "Layout (Flexbox, Grid)", group: "Frontend" },
+  // … accessibility, react, state, performance, testing, PWA …
+  { id: "node", name: "Node.js", group: "Backend" },
+  // …
+  { id: "learning", name: "Learning & career", group: "Workflow" },
+] as const satisfies readonly Category[];
+
+export type CategoryId = (typeof CATEGORIES)[number]["id"];   // "html" | "css" | "layout" | …
+```
+
+`satisfies` checks that every item has the right shape, without losing the exact values that `as const` keeps. So `CategoryId` is the union of every id. Add a category to the list and the type follows.
+
+The ids are short and stable; the names are for people. Tasks store the **id**, so renaming "CSS" to "CSS & styling" later doesn't break any saved decision.
 
 ## `Record`: a value for every key
 
 ```ts
-const GROWTH: Record<Importance, number> = { low: 8, medium: 15, high: 25, critical: 40 };
+const byGroup: Record<Group, Category[]> = { Frontend: [], Backend: [], Workflow: [] };
 ```
 
-`Record<K, V>` is an object with a `V` for **every** `K`. Forget `critical` and TypeScript reports it. This is why the starter file casts the empty object (`as Record<…>`): delete that cast once you have filled in the four values, and let TypeScript check you.
-
-## Arrays of pairs, and searching them
-
-The plant's stages start at fixed growth values:
+`Record<K, V>` is an object with a `V` for **every** `K`. Forget `Workflow` and TypeScript reports it. To build one from a list:
 
 ```ts
-const STAGES = [[0, "Seed"], [5, "Sprout"], [15, "Seedling"], /* … */ [100, "Ready to harvest"]] as const;
+Object.fromEntries(GROUPS.map(g => [g, []]))
 ```
 
-To find the stage for a growth value, walk the list and keep the last stage whose start is not above the value:
+## Finding things
 
 ```ts
-let name = "Seed";
-for (const [at, stage] of STAGES) if (growth >= at) name = stage;
+CATEGORIES.find(c => c.id === id)     // the item, or undefined
+CATEGORIES.some(c => c.id === id)     // true or false
 ```
 
-`for (const [at, stage] of …)` uses **destructuring**: it unpacks each pair into two variables.
-
-To find the *next* stage, `find` returns the first item that matches, or `undefined`:
-
-```ts
-const next = STAGES.find(([at]) => at > growth);
-```
-
-## Clamping
-
-Growth should stay between 0 and 100, even if something passes 140:
-
-```ts
-const clamp = (g: number) => Math.min(100, Math.max(0, g));
-```
-
-## Testing many cases at once
-
-Open `tests/part-1/1.2-growth.test.ts`. It uses `it.each` to run one test with a table of inputs. That's how you test a rule with many edge cases (exactly 5, just below 5, 100, above 100) without repeating yourself.
+`find` returns `undefined` when nothing matches. TypeScript makes you handle that case, which is exactly what you want for a category id that came from an old save.
 
 ## Read more
 - Union types: <https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types>
 - `as const`: <https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-4.html#const-assertions>
-- Utility types (`Record`): <https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type>
-- Destructuring (MDN): <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment>
+- `satisfies`: <https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator>
+- `Record`: <https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type>
 
 ---
 
@@ -80,17 +80,13 @@ Open `tests/part-1/1.2-growth.test.ts`. It uses `it.each` to run one test with a
 
 Run the tests for an exercise with `npm run ex <number>`; they re-run every time you save. When they are all green, commit, and move on. `npm run progress` shows your checklist.
 
-### 1.2: Growth per importance and plant stages
+### 1.2: Look up and group categories
 
-**Edit:** `app/shared/growth.ts` · **Tests:** `tests/part-1/1.2-growth.test.ts` · **Run:** `npm run ex 1.2`
+**Edit:** `app/shared/categories.ts` · **Tests:** `tests/part-1/1.2-categories.test.ts` · **Run:** `npm run ex 1.2`
 
-Fill in `GROWTH` (low 8, medium 15, high 25, critical 40) and remove the cast. Then write:
+Write `isCategoryId`, `categoryById` and `categoriesByGroup` in `categories.ts`. `categoriesByGroup` returns every group (even an empty one) in `GROUPS` order, with fresh arrays each time. The outcome form in 3.4 uses it to build a grouped menu.
 
-- `growthFor(importance)`: read the table.
-- `stageOf(growth)`: the stage name, after clamping growth to 0..100.
-- `nextStage(growth)`: `{ name, missing }` for the next stage (`nextStage(58)` is `{ name: "Fruiting", missing: 7 }`), or `null` at 100.
-
-You'll see these values in the app: the drawer's importance menu shows "High · +25%" and the garden says "7% to fruiting".
+Read the list while you're there. Is a topic you care about missing? Add it.
 
 ---
 

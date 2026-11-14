@@ -1,4 +1,4 @@
-// Exercise 8.2: A REST API for tasks. Read curriculum/part-8/b-rest-api.md first.
+// Exercise 6.2: A REST API for tasks. Read curriculum/part-6/b-rest-api.md first.
 // Uses parseTask from exercise 1.4.
 import { Router } from "express";
 import type { TaskRepo } from "@app/server/src/repos";
@@ -15,6 +15,6 @@ import type { TaskRepo } from "@app/server/src/repos";
  * Express 4 does not catch errors from async handlers: wrap them (or use try/catch + next(err)).
  */
 export function tasksRouter(repo: TaskRepo): Router {
-  // TODO 8.2
+  // TODO 6.2
   return Router();
 }

@@ -1,68 +1,55 @@
-import { linkTasks, unlinkTasks, moveTask, deleteTask, setResourceUsed } from "@app/shared/task-ops";
-import { task, frozen } from "../helpers";
+import { renameTask, setComplexity, completeSimple, recordOutcome, reopenTask, deleteTask } from "@app/shared/task-ops";
+import { task, outcome, frozen } from "../helpers";
 
-const list = () => frozen([task("a"), task("b"), task("c")]);
+const list = () => frozen([task("a"), task("b", { complexity: "complex" }), task("c")]);
 const byId = <T extends { id: string }>(ts: T[], id: string): T => ts.find(t => t.id === id)!;
 
-describe("1.3 linkTasks / unlinkTasks", () => {
-  it("links both ways without mutating", () => {
-    const out = linkTasks(list(), "a", "b");
-    expect(byId(out, "a").links).toEqual(["b"]);
-    expect(byId(out, "b").links).toEqual(["a"]);
-    expect(byId(out, "c").links).toEqual([]);
-  });
-  it("does not duplicate links", () => {
-    const once = linkTasks(list(), "a", "b");
-    const twice = linkTasks(frozen(once), "b", "a");
-    expect(byId(twice, "a").links).toEqual(["b"]);
-  });
-  it("ignores self links and unknown ids", () => {
+describe("1.3 renameTask / setComplexity", () => {
+  it("renames with a trimmed title, ignores empty", () => {
+    expect(byId(renameTask(list(), "a", "  Fix nav "), "a").title).toBe("Fix nav");
     const l = list();
-    expect(linkTasks(l, "a", "a")).toEqual(l);
-    expect(linkTasks(l, "a", "zzz")).toEqual(l);
+    expect(renameTask(l, "a", "  ")).toBe(l);
   });
-  it("unlinks both ways", () => {
-    const linked = frozen(linkTasks(list(), "a", "b"));
-    const out = unlinkTasks(linked, "b", "a");
-    expect(byId(out, "a").links).toEqual([]);
-    expect(byId(out, "b").links).toEqual([]);
+  it("switches complexity only while todo", () => {
+    expect(byId(setComplexity(list(), "a", "complex"), "a").complexity).toBe("complex");
+    const done = frozen([task("a", { status: "done", doneAt: "2026-11-10" })]);
+    expect(setComplexity(done, "a", "complex")).toBe(done);
   });
 });
 
-describe("1.3 moveTask", () => {
-  it("sets doneAt when done", () => {
-    const out = moveTask(list(), "b", "done", "2026-11-08");
-    expect(byId(out, "b")).toMatchObject({ status: "done", doneAt: "2026-11-08" });
+describe("1.3 completing tasks", () => {
+  it("completes simple tasks", () => {
+    expect(byId(completeSimple(list(), "a", "2026-11-14"), "a")).toMatchObject({ status: "done", doneAt: "2026-11-14" });
   });
-  it("clears doneAt when moved back", () => {
-    const done = frozen(moveTask(list(), "b", "done", "2026-11-08"));
-    expect(byId(moveTask(done, "b", "doing", "2026-11-09"), "b")).toMatchObject({ status: "doing", doneAt: null });
+  it("won't tick a complex task without an outcome", () => {
+    const l = list();
+    expect(completeSimple(l, "b", "2026-11-14")).toBe(l);
   });
-  it("keeps the original done day if already done", () => {
-    const done = frozen(moveTask(list(), "b", "done", "2026-11-08"));
-    expect(byId(moveTask(done, "b", "done", "2026-11-09"), "b").doneAt).toBe("2026-11-08");
+  it("records the outcome of complex tasks", () => {
+    const out = recordOutcome(list(), "b", outcome(), "2026-11-14");
+    expect(byId(out, "b")).toMatchObject({ status: "done", doneAt: "2026-11-14", outcome: outcome() });
   });
-  it("leaves the list alone for unknown ids", () => {
-    expect(moveTask(list(), "nope", "done", "2026-11-08")).toEqual(list());
+  it("keeps the first done day when the outcome is edited later", () => {
+    const once = frozen(recordOutcome(list(), "b", outcome(), "2026-11-14"));
+    const edited = recordOutcome(once, "b", outcome({ decision: "Use Flexbox" }), "2026-11-20");
+    expect(byId(edited, "b")).toMatchObject({ doneAt: "2026-11-14", outcome: { decision: "Use Flexbox" } });
   });
-});
-
-describe("1.3 deleteTask", () => {
-  it("removes the task and links to it", () => {
-    const linked = frozen(linkTasks(linkTasks(list(), "a", "b"), "c", "b"));
-    const out = deleteTask(linked, "b");
-    expect(out.map(t => t.id)).toEqual(["a", "c"]);
-    expect(out.every(t => t.links.length === 0)).toBe(true);
+  it("won't attach an outcome to a simple task", () => {
+    const l = list();
+    expect(recordOutcome(l, "a", outcome(), "2026-11-14")).toBe(l);
   });
 });
 
-describe("1.3 setResourceUsed", () => {
-  it("attaches a resource when missing", () => {
-    const out = setResourceUsed(frozen(task("a")), "r1", true);
-    expect(out.resources).toEqual([{ resourceId: "r1", used: true }]);
+describe("1.3 reopen / delete", () => {
+  it("reopens and keeps the outcome for editing", () => {
+    const done = frozen(recordOutcome(list(), "b", outcome(), "2026-11-14"));
+    expect(byId(reopenTask(done, "b"), "b")).toMatchObject({ status: "todo", doneAt: null, outcome: outcome() });
   });
-  it("updates an attached resource", () => {
-    const t = frozen(task("a", { resources: [{ resourceId: "r1", used: false }, { resourceId: "r2", used: false }] }));
-    expect(setResourceUsed(t, "r2", true).resources).toEqual([{ resourceId: "r1", used: false }, { resourceId: "r2", used: true }]);
+  it("deletes", () => {
+    expect(deleteTask(list(), "b").map(t => t.id)).toEqual(["a", "c"]);
+  });
+  it("returns the same array for unknown ids", () => {
+    const l = list();
+    for (const out of [renameTask(l, "x", "y"), completeSimple(l, "x", "2026-11-14"), reopenTask(l, "x"), deleteTask(l, "x")]) expect(out).toBe(l);
   });
 });

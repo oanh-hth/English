@@ -2,26 +2,26 @@
 
 *[Part 0: Fundamentals](README.md) · section a*
 
-Welcome. In this course you build **Threadwork**, a personal workspace for your iPad and computer. You write tasks and link the ones that belong together. You attach the resources you used, keep notes, drafts and small data tables, and sketch with the Apple Pencil. A garden rewards you: every finished task waters a plant, and more important tasks make it grow faster.
+Welcome. In this course you build **Threadwork**, a todo list that remembers what you learned.
 
-The course teaches **TypeScript, React and Node.js** by building that app, one feature at a time. When you finish the last part, the app is finished too, and it is yours.
+Every task is either **simple** or **complex**. A simple task, like "reply to Minh", you just tick off. A complex task, like "choose how to lay out the board", ends with two things you write down: the **result** (what happened, what you found out) and your **decision** (what you chose, and why). Each decision goes into a **category**: a web development topic such as CSS, Layout, Accessibility, React, State management or Node.js. Later, the **decision log** lets you filter everything you've decided by topic. It's a personal record of how you work, and a study notebook that writes itself.
+
+The course teaches **TypeScript, React and Node.js** by building that app, one piece at a time. When you finish the last part, the app is finished too, deployed, and on your iPad's home screen.
 
 ## How the course is organised
 
-The course has ten parts. Each part is split into sections, like this one (0a). A section explains the ideas you need, with examples taken from Threadwork, and ends with **exercises**. The exercises are where you build the app.
+The course has eight parts. Each part is split into sections, like this one (0a). A section explains the ideas you need, with examples from Threadwork, and ends with **exercises**. The exercises are where you build the app.
 
 | Part | You learn | You build |
 |---|---|---|
 | 0 | Tools, how web apps work | Your first passing test |
-| 1 | TypeScript | The task model |
-| 2 | Pure functions, reducers | Streaks, garden growth, treats, badges |
-| 3 | React components | Task cards, quick capture, the board, the task drawer |
-| 4 | Hooks, Context, routing | Saving data, the app's state, the Today page |
-| 5 | Feature reducers, editors, graphs | Notes, drafts, tables, resources, the link map |
-| 6 | Pointer events, geometry | Sketching with Apple Pencil |
-| 7 | SVG, CSS animation | The garden, treats, inspiration wall, weather sky |
-| 8 | Node.js, Express | Accounts, saving on a server, weather |
-| 9 | Full stack | Sign-in, sync between devices, offline, iPad install, deploy |
+| 1 | TypeScript | Tasks, outcomes and the category list |
+| 2 | Pure functions, reducers, queries | The app's logic, the decision log's filters, the weekly summary |
+| 3 | React components | Task rows, quick capture, the task list, the outcome form |
+| 4 | Hooks, Context, routing | Saving data, the app's state, pages, search |
+| 5 | Composing components | The decision log: filters, cards, export |
+| 6 | Node.js, Express | Accounts and saving on a server |
+| 7 | Full stack | Sign-in, sync between devices, offline, iPad install, deploy |
 
 ## How an exercise works
 
@@ -33,7 +33,7 @@ npm run ex 1.2
 
 This prints the exercise, then runs its tests every time you save a file. Red means "not yet". Each failing test shows what it **expected** and what your code **received**. That is your guide.
 
-A few exercises have no tests (installing the app on the iPad, for example). You tick those yourself in the section where they are described.
+A few exercises have no tests, such as installing the app on the iPad. You tick those yourself in the section where they are described.
 
 ## Your checklist
 
@@ -45,13 +45,11 @@ This runs every test, reads the boxes you ticked, prints your progress and write
 
 ## The app is always running
 
-You don't have to wait until the end to see Threadwork. The finished app's pages are already in the repository. Every page that depends on an exercise you haven't done yet says which exercise it's waiting for:
+You don't have to wait until the end to see Threadwork. The finished app's pages are already in the repository. Every part that depends on an exercise you haven't done yet says which exercise it's waiting for:
 
-> **The board** needs exercise 3.3. Run `npm run ex 3.3`.
+> **The task list** needs exercise 3.3. Run `npm run ex 3.3`.
 
-As you finish exercises, the app fills in.
-
-There is also a **playground** at `http://localhost:5173/#playground`. It shows your components with sample data, before they are wired into the app.
+As you finish exercises, the app fills in. There is also a **playground** at `http://localhost:5173/#playground` that shows your components with sample data.
 
 ## Tools you need
 
@@ -66,15 +64,13 @@ Then, in this folder:
 npm install
 ```
 
-This downloads React, Vite (the dev server), Express (the server), Vitest (the test runner) and the rest. It takes a minute the first time.
-
 ## Rules that help
 
 - **Don't change the tests.** If you think a test is wrong, re-read the comment in the starter file.
-- **Go in order.** Later exercises use your earlier code: the app reducer in Part 4 calls the functions you write in Parts 1 and 2.
+- **Go in order.** Later exercises use your earlier code: the reducer in Part 2 calls the functions from Part 1.
 - **Commit after every green exercise:** `git add -A && git commit -m "Finish 2.2"`.
 - **Use the solutions last.** `solutions/` has a reference answer for every exercise. Read it only after a real try, close it, and write your own version.
-- **Read the official docs.** Each section links to the parts of the docs that matter.
+- **Use the app while you build it.** Every decision you make during this course (why `useReducer`, why a REST API…) is a good first entry in your own decision log.
 
 ---
 
@@ -96,15 +92,7 @@ Make the first test pass, to try the loop you will use in every exercise.
 ### 0.2: Run the app and open the playground
 
 
-Start the whole app:
-
-```
-npm run dev
-```
-
-This starts two programs: the Node server on port 3001 and the React app on <http://localhost:5173>. Open the app. You'll see the sign-in screen waiting for exercise 9.3. Click **Use without the server**: the app now says it is waiting for exercise 4.4. Then open <http://localhost:5173/#playground> and look at the list of components you're going to build.
-
-Press `Ctrl+C` in the terminal to stop both programs.
+Start the whole app with `npm run dev`. This starts the Node server on port 3001 and the React app on <http://localhost:5173>. Open the app: the sign-in screen is waiting for exercise 7.3. Click **Use without the server**: the app now says it is waiting for exercise 4.2. Then open <http://localhost:5173/#playground> and look at the components you're going to build. Press `Ctrl+C` to stop.
 
 This exercise has no automatic tests. Tick it when you've done it (change `[ ]` to `[x]`), and `npm run progress` counts it:
 

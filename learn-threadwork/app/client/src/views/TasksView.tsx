@@ -1,49 +1,57 @@
-// Given: the Tasks page. Uses Board (3.3), TaskDrawer (3.4) and TaskAttachments (5.4).
+// Given: the Tasks page. Uses weekSummary (2.4), QuickCapture (3.2), TaskList (3.3) and OutcomeForm (3.4).
 import { useEffect, useState } from "react";
 import { useApp } from "@app/client/src/state/AppContext";
-import { Board } from "@app/client/src/components/Board";
-import { TaskDrawer } from "@app/client/src/components/TaskDrawer";
-import { TaskAttachments } from "@app/client/src/components/TaskAttachments";
+import { QuickCapture } from "@app/client/src/components/QuickCapture";
+import { TaskList } from "@app/client/src/components/TaskList";
+import { OutcomeForm } from "@app/client/src/components/OutcomeForm";
 import { ErrorBoundary } from "@app/client/src/components/ErrorBoundary";
-import { sketchesFor } from "@app/shared/sketches";
-import { todayKey } from "@app/client/src/format";
-import { newId, useShell } from "@app/client/src/views/shared";
+import { weekSummary } from "@app/shared/summary";
+import { categoryById } from "@app/shared/categories";
+import { todayKey, newId } from "@app/client/src/views/shared";
 
-export function TasksView() {
-  const { state, dispatch } = useApp();
-  const { go, selected } = useShell();
-  const [openId, setOpenId] = useState<string | null>(selected.taskId ?? null);
-  useEffect(() => { if (selected.taskId) setOpenId(selected.taskId); }, [selected.taskId]);
-  const today = todayKey();
-  const open = state.tasks.find(t => t.id === openId) ?? null;
-
+function SummaryBar() {
+  const { state } = useApp();
+  const s = weekSummary(state.tasks, todayKey());
   return (
-    <>
-      <ErrorBoundary area="The board">
-        <Board tasks={state.tasks} today={today} onOpen={setOpenId} onMove={(id, s) => dispatch({ type: "move", id, status: s, today })} />
+    <section className="summary" aria-label="This week">
+      <div><b>{s.open}</b><span>to do</span></div>
+      <div className={s.overdue ? "warn" : ""}><b>{s.overdue}</b><span>overdue</span></div>
+      <div><b>{s.doneToday}</b><span>done today</span></div>
+      <div><b>{s.doneThisWeek}</b><span>done this week</span></div>
+      <div><b>{s.decisionsThisWeek}</b><span>decisions this week</span></div>
+      {s.topCategory && <div className="wide"><b>{categoryById(s.topCategory.id)?.name ?? s.topCategory.id}</b><span>most decided this week</span></div>}
+    </section>
+  );
+}
+
+export function TasksView({ editId, onEdited }: { editId: string | null; onEdited: () => void }) {
+  const { state, dispatch } = useApp();
+  const [recording, setRecording] = useState<string | null>(editId);
+  useEffect(() => { if (editId) setRecording(editId); }, [editId]);
+  const today = todayKey();
+  const task = state.tasks.find(t => t.id === recording) ?? null;
+  const close = () => { setRecording(null); onEdited(); };
+  return (
+    <div className="stack">
+      <ErrorBoundary area="This week"><SummaryBar /></ErrorBoundary>
+      <ErrorBoundary area="Quick capture">
+        <QuickCapture onAdd={(title, complexity, due) => dispatch({ type: "add", id: newId(), title, complexity, due, today })} />
       </ErrorBoundary>
-      {open && (
-        <ErrorBoundary area="Task details">
-          <TaskDrawer task={open} allTasks={state.tasks} onClose={() => setOpenId(null)}
-            onRename={(id, title) => dispatch({ type: "rename", id, title })}
-            onSetImportance={(id, importance) => dispatch({ type: "setImportance", id, importance })}
-            onLink={(id, other) => dispatch({ type: "link", a: id, b: other })}
-            onUnlink={(id, other) => dispatch({ type: "unlink", a: id, b: other })}
-            onComplete={id => dispatch({ type: "move", id, status: "done", today })}>
-            <ErrorBoundary area="Attachments">
-              <TaskAttachments task={open} resources={state.resources}
-                notes={state.notes.filter(n => n.taskId === open.id)} sketches={sketchesFor(state, open.id)}
-                onAttach={rid => dispatch({ type: "attachResource", taskId: open.id, resourceId: rid })}
-                onDetach={rid => dispatch({ type: "detachResource", taskId: open.id, resourceId: rid })}
-                onMarkUsed={(rid, used) => dispatch({ type: "markResourceUsed", taskId: open.id, resourceId: rid, used })}
-                onOpenNote={id => go("notes", { noteId: id })}
-                onOpenSketch={id => go("sketch", { sketchId: id })}
-                onNewNote={kind => { const id = newId(); dispatch({ type: "addNote", id, kind, taskId: open.id, now: Date.now() }); go("notes", { noteId: id }); }} />
-            </ErrorBoundary>
-            <button className="link danger" onClick={() => { dispatch({ type: "delete", id: open.id }); setOpenId(null); }}>Delete task</button>
-          </TaskDrawer>
-        </ErrorBoundary>
+      <ErrorBoundary area="The task list">
+        <TaskList tasks={state.tasks} today={today}
+          onComplete={id => dispatch({ type: "complete", id, today })}
+          onRecord={setRecording}
+          onReopen={id => dispatch({ type: "reopen", id })}
+          onDelete={id => dispatch({ type: "delete", id })} />
+      </ErrorBoundary>
+      {task && (
+        <div className="overlay">
+          <ErrorBoundary area="The outcome form">
+            <OutcomeForm key={task.id} task={task} onCancel={close}
+              onSave={outcome => { dispatch({ type: "recordOutcome", id: task.id, outcome, today }); close(); }} />
+          </ErrorBoundary>
+        </div>
       )}
-    </>
+    </div>
   );
 }

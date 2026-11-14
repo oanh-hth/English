@@ -2,63 +2,59 @@
 
 *[Part 1: TypeScript and the task model](README.md) · section c*
 
-Linking two tasks, moving a task to *Done*, deleting one: these are the everyday changes in Threadwork. In this section you write them **without mutating** anything, the single most important habit for React.
+Ticking a task, recording a decision, reopening, deleting: these are Threadwork's everyday changes. In this section you write them **without mutating** anything, the single most important habit for React.
 
 ## What mutation is
 
 ```ts
-task.title = "New title";          // mutation: changes the object in place
-tasks.push(newTask);               // mutation: changes the array in place
+task.status = "done";          // mutation: changes the object in place
+tasks.push(newTask);           // mutation: changes the array in place
 ```
 
-Mutation looks harmless, but React decides whether to redraw by asking "is this the same object as before?". If you change an object in place, it is still the same object, so React may not redraw, and your screen shows old data. Undo, sync and "has anything changed?" checks all break the same way.
+React decides whether to redraw by asking "is this the same object as before?". If you change an object in place, it is still the same object, so React may not redraw and your screen shows old data. Sync and "has anything changed?" checks break the same way.
 
 ## Making new objects instead
 
-The **spread** syntax `...` copies the fields of an object or the items of an array into a new one:
-
 ```ts
-const renamed = { ...task, title: "New title" };        // new object, one field changed
-const withLink = { ...task, links: [...task.links, "b"] };  // new object AND new array
+const done = { ...task, status: "done", doneAt: today };          // new object
+const withOutcome = { ...task, outcome: { ...outcome } };          // new nested object too
+const tasks2 = tasks.map(t => (t.id === id ? { ...t, status: "done" } : t));   // new list, one item replaced
+const remaining = tasks.filter(t => t.id !== id);                  // new list, one item removed
 ```
 
-Changing one item in a list: `map` returns a new array, and you return a new object only for the item that changes:
+Tasks that don't change are returned as they are. Only the changed task and the array are new.
+
+## Rules belong in these functions
+
+Each function protects a rule of the app, so no screen can break it:
+
+- `completeSimple` only ticks **simple** tasks. A complex task can't be "just done"; it needs its outcome.
+- `recordOutcome` only accepts **complex** tasks. If you edit a decision a week later, the task keeps the day it was **first** done.
+- `reopenTask` keeps the outcome, so reopening and finishing again doesn't lose what you wrote.
+- `setComplexity` only works while the task is to do.
+
+## Return the same array when nothing changes
+
+If the id is unknown, or the change isn't allowed, return **the array you received**. Not a copy, the same one. Then callers (and React) can tell "nothing happened" with a cheap `===` check. The tests check it with `toBe`.
+
+A helper makes that easy:
 
 ```ts
-const tasks2 = tasks.map(t => (t.id === id ? { ...t, status: "done" } : t));
+const update = (tasks: Task[], id: string, fn: (t: Task) => Task) => {
+  let changed = false;
+  const out = tasks.map(t => { if (t.id !== id) return t; const n = fn(t); if (n !== t) changed = true; return n; });
+  return changed ? out : tasks;
+};
 ```
-
-Tasks that don't change are returned as they are. Reusing them is fine and fast. Only the changed task and the array are new.
-
-Removing: `filter` returns a new array without the matching items.
-
-```ts
-const remaining = tasks.filter(t => t.id !== id);
-```
-
-## Links go both ways
-
-In Threadwork, if *Proposal* links to *Survey*, then *Survey* links to *Proposal*. So `linkTasks(tasks, "a", "b")` must change two tasks in one pass:
-
-```ts
-tasks.map(t => {
-  if (t.id === a && !t.links.includes(b)) return { ...t, links: [...t.links, b] };
-  if (t.id === b && !t.links.includes(a)) return { ...t, links: [...t.links, a] };
-  return t;
-});
-```
-
-Think about the edge cases before you write code: linking a task to itself, to an id that doesn't exist, or twice. The comments in the starter file say what should happen.
 
 ## How the tests catch mutation
 
-The tests **freeze** their input with `Object.freeze`. A frozen object throws an error if you try to change it, in strict mode, which test files use. So if your function mutates, you'll see "Cannot assign to read only property". That message means: make a copy instead.
+The tests **freeze** their input. A frozen object throws when changed, so a mutation shows up as "Cannot assign to read only property": make a copy instead.
 
 ## Read more
-- Updating objects in state (React docs): <https://react.dev/learn/updating-objects-in-state>
+- Updating objects in state: <https://react.dev/learn/updating-objects-in-state>
 - Updating arrays in state: <https://react.dev/learn/updating-arrays-in-state>
 - Spread syntax (MDN): <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax>
-- `Object.freeze` (MDN): <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze>
 
 ---
 
@@ -66,16 +62,12 @@ The tests **freeze** their input with `Object.freeze`. A frozen object throws an
 
 Run the tests for an exercise with `npm run ex <number>`; they re-run every time you save. When they are all green, commit, and move on. `npm run progress` shows your checklist.
 
-### 1.3: Link, move and delete tasks without mutation
+### 1.3: Complete, record, reopen and delete tasks
 
 **Edit:** `app/shared/task-ops.ts` · **Tests:** `tests/part-1/1.3-immutable-updates.test.ts` · **Run:** `npm run ex 1.3`
 
-Write `linkTasks`, `unlinkTasks`, `moveTask`, `deleteTask` and `setResourceUsed` in `task-ops.ts`. None of them may change their inputs.
-
-- `moveTask` sets `doneAt` to `today` when a task becomes done, and back to `null` when it leaves *Done*. Moving a task to the status it already has changes nothing, so it keeps its original done day.
-- `deleteTask` also removes the deleted id from every other task's links.
-- `setResourceUsed` attaches the resource first if the task doesn't have it yet.
+Write `renameTask`, `setComplexity`, `completeSimple`, `recordOutcome`, `reopenTask` and `deleteTask`. None may change their inputs, and each returns the same array when nothing changes.
 
 ---
 
-[← 1b Unions, as const and Record](b-unions-and-records.md) · [1d Generics and data from outside →](d-generics-and-unknown.md)
+[← 1b Unions, as const and the category list](b-unions-and-records.md) · [1d Generics and data from outside →](d-generics-and-unknown.md)
