@@ -5,6 +5,8 @@ A todo list that remembers what you learned. Built for iPad (installable from Sa
 - **Simple tasks** you just tick off.
 - **Complex tasks** end with a short write-up: the **result** (what happened, what you found out) and your **decision** (what you chose, and why), filed under a **web development category**.
 - **Decisions** shows everything you've decided. Filter by group (Frontend, Backend, Workflow), by category (HTML, CSS, Layout, Accessibility, React, State management, Performance, Testing, PWA, Node.js, APIs, Deployment…) or by text, and export it all as Markdown.
+- **Animated backgrounds**: Coffee shop, Cozy room, Library, Rainy window, Night city, or Plain. Pick one in the header or in Settings; animations stop when Reduce Motion is on.
+- **Folders and stickers**: the Decisions page is a shelf of illustrated folders, one per category. Open one to see its decisions as paper notes, each with the sticker you picked (insight, proud, shipped, gotcha, loved it, tricky, confirmed, revisit later).
 - A weekly summary on the task list: to do, overdue, done today and this week, decisions this week, and the topic you decided about most.
 
 No build step and no server of its own: a static web app with optional sync through your own Firebase project.
@@ -66,6 +68,7 @@ If this device used the earlier Threadwork (with notes, sketches and the garden)
 | `js/app.js` | Pages (Tasks, Decisions, Settings), the outcome form, sign-in screens, sync wiring |
 | `js/logic.js` | The rules: tasks, outcomes, decisions, filters, weekly summary, Markdown export |
 | `js/categories.js` | The decision categories |
+| `js/art.js` | The illustrations: background scenes, stickers and the folder drawing (plain SVG) |
 | `js/store.js`, `js/db.js` | Saving on the device (IndexedDB) |
 | `js/auth.js` | Local account (PBKDF2 password hash, 30-day session) |
 | `js/cloud.js` | Optional Firebase sync (loaded only when configured) |

@@ -4,6 +4,7 @@ import * as auth from "./auth.js";
 import * as cloud from "./cloud.js";
 import * as L from "./logic.js";
 import { CATEGORIES, GROUPS, categoryById, categoriesByGroup } from "./categories.js";
+import { THEMES, themeById, STICKERS, stickerById, folderSvg, GROUP_COLORS } from "./art.js";
 
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -11,7 +12,7 @@ const uid=()=>crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).s
 const today=()=>L.todayKey();
 
 /* ---------------- Data ---------------- */
-function fresh(){ return { v:4, savedAt:0, profile:{name:"",email:""}, theme:null, tasks:[] }; }
+function fresh(){ return { v:4, savedAt:0, profile:{name:"",email:""}, theme:null, backdrop:"coffee", tasks:[] }; }
 function normalize(st){
   const f=fresh(); for(const k in f) if(st[k]===undefined) st[k]=f[k];
   st.tasks=L.migrateTasks(st.tasks||[]);
@@ -20,7 +21,16 @@ function normalize(st){
 }
 let S=fresh();
 let signedIn=false;
-function applyPrefs(){ applyTheme(); }
+function applyPrefs(){ applyTheme(); applyBackdrop(); }
+/* ---------------- Background scene ---------------- */
+let shownBackdrop=null;
+function applyBackdrop(){
+  const t=themeById(S.backdrop), el=$("#backdrop"); if(!el) return;
+  document.documentElement.dataset.backdrop=t.id;
+  if(shownBackdrop!==t.id){ el.innerHTML=t.svg; shownBackdrop=t.id; }
+  const q=$("#backdrop-pick"); if(q) q.value=t.id;
+}
+const stickerImg=(id,cls="sticker")=>{ const st=stickerById(id); return st?`<span class="${cls}" role="img" aria-label="Sticker: ${esc(st.name)}">${st.svg}</span>`:""; };
 
 function exampleTasks(){
   const d=n=>L.addDays(today(),n), t=(title,extra={})=>({...L.createTask(title,uid(),d(-6)),sample:true,...extra});
@@ -28,9 +38,9 @@ function exampleTasks(){
     t("Reply to Minh about the workshop",{due:d(0)}),
     t("Update dependencies",{due:d(2)}),
     t("Decide how to handle form validation",{complexity:"complex",due:d(1)}),
-    t("Choose how to lay out the board",{complexity:"complex",status:"done",doneAt:d(-2),outcome:{result:"Flexbox needed extra wrapper elements for the columns. Grid places columns and rows directly and keeps the HTML flat.",decision:"Use CSS Grid for the board, Flexbox inside each card.",category:"layout"}}),
-    t("Pick a way to manage state",{complexity:"complex",status:"done",doneAt:d(-1),outcome:{result:"Context + useReducer covers everything the app needs today.",decision:"No state library for now. Revisit if the state grows past one reducer.",category:"state"}}),
-    t("Check colour contrast on buttons",{complexity:"complex",status:"done",doneAt:d(-1),outcome:{result:"Muted grey text on white was 3.9:1, below WCAG AA (4.5:1).",decision:"Darken the muted colour to #646B72 (5.3:1).",category:"accessibility"}}),
+    t("Choose how to lay out the board",{complexity:"complex",status:"done",doneAt:d(-2),outcome:{result:"Flexbox needed extra wrapper elements for the columns. Grid places columns and rows directly and keeps the HTML flat.",decision:"Use CSS Grid for the board, Flexbox inside each card.",category:"layout",sticker:"idea"}}),
+    t("Pick a way to manage state",{complexity:"complex",status:"done",doneAt:d(-1),outcome:{result:"Context + useReducer covers everything the app needs today.",decision:"No state library for now. Revisit if the state grows past one reducer.",category:"state",sticker:"check"}}),
+    t("Check colour contrast on buttons",{complexity:"complex",status:"done",doneAt:d(-1),outcome:{result:"Muted grey text on white was 3.9:1, below WCAG AA (4.5:1).",decision:"Darken the muted colour to #646B72 (5.3:1).",category:"accessibility",sticker:"gotcha"}}),
     t("Clean up the downloads folder",{status:"done",doneAt:d(0)}),
   ];
 }
@@ -234,6 +244,7 @@ function taskItem(t){
       </span>
       ${done&&t.outcome?`<p class="decision">${esc(t.outcome.decision)}</p>`:""}
     </div>
+    ${done&&t.outcome?.sticker?stickerImg(t.outcome.sticker,"sticker small"):""}
     <div class="actions">
       ${!done&&t.complexity==="complex"?`<button class="primary" data-act="record" data-id="${t.id}" aria-label="Record result for ${esc(t.title)}">Record result</button>`:""}
       ${!done?`<button class="ghost" data-act="toggle-kind" data-id="${t.id}" title="Change between simple and complex">${t.complexity==="simple"?"Make complex":"Make simple"}</button>`:""}
@@ -287,7 +298,7 @@ function decisionList(){
     ${shown.length?shown.map(d=>{ const name=categoryById(d.category)?.name??d.category; return `
       <article class="decision-card" aria-labelledby="d-${d.taskId}">
         <header><h3 id="d-${d.taskId}">${esc(d.title)}</h3><time datetime="${d.doneAt}">${d.doneAt}</time></header>
-        <button class="pill category" data-act="filter-cat" data-id="${esc(d.category)}" aria-label="Show all ${esc(name)} decisions">${esc(name)}</button>
+        <div class="row">${d.sticker?stickerImg(d.sticker,"sticker small"):""}<button class="pill category" data-act="filter-cat" data-id="${esc(d.category)}" aria-label="Show all ${esc(name)} decisions">${esc(name)}</button></div>
         <dl><dt>Result</dt><dd>${esc(d.result)}</dd><dt>Decision</dt><dd>${esc(d.decision)}</dd></dl>
         <button data-act="record" data-id="${d.taskId}" aria-label="Edit ${esc(d.title)}">Edit</button>
       </article>`;}).join(""):`<p class="empty">No decisions match these filters. <button data-act="clear-filters">Clear filters</button></p>`}`;
@@ -303,11 +314,40 @@ function filterControls(){
     <input id="f-text" type="search" value="${esc(filter.text)}">
     ${active?`<button data-act="clear-filters">Clear filters</button>`:""}`;
 }
-R.decisions=()=>`<section class="card">
-  <div class="row between"><h1>Decisions</h1><button data-act="export-md">Export as Markdown</button></div>
+let decisionsMode="folders", openFolder=null;
+R.decisions=()=>{
+  const all=L.decisionsOf(S.tasks);
+  const head=`<div class="row between"><h1>Decisions</h1><button data-act="export-md">Export as Markdown</button></div>
   <p class="muted">What you learned and decided while finishing complex tasks, filed by web development topic.</p>
-  ${L.decisionsOf(S.tasks).length?`<div role="search" aria-label="Filter decisions" class="filters" id="filters">${filterControls()}</div>`:""}
-  <div id="decision-list" class="decision-log">${decisionList()}</div></section>`;
+  ${all.length?`<div class="seg" role="group" aria-label="View">${[["folders","Folders"],["list","List"]].map(([m,l])=>`<button data-act="decisions-mode" data-m="${m}" aria-pressed="${decisionsMode===m}">${l}</button>`).join("")}</div>`:""}`;
+  if(!all.length) return `<section class="card">${head}<p class="empty">No decisions yet. When you finish a complex task, its result and decision appear here, filed in a folder for its topic.</p></section>`;
+  if(decisionsMode==="list") return `<section class="card">${head}
+    <div role="search" aria-label="Filter decisions" class="filters" id="filters">${filterControls()}</div>
+    <div id="decision-list" class="decision-log">${decisionList()}</div></section>`;
+  const folders=L.foldersOf(all), f=openFolder&&folders.find(x=>x.category===openFolder);
+  if(f) return `<section class="card">${head}${folderView(f)}</section>`;
+  return `<section class="card">${head}${shelf(folders)}</section>`;
+};
+function shelf(folders){
+  return [...GROUPS,"Other"].map(g=>{ const list=folders.filter(f=>f.group===g); if(!list.length) return "";
+    return `<section class="shelf" aria-label="${g}"><h2>${g}</h2><div class="folders">${list.map(f=>`
+      <button class="folder" data-act="open-folder" data-id="${esc(f.category)}" aria-label="${esc(f.name)}, ${plural(f.count,"decision","decisions")}">
+        ${folderSvg(GROUP_COLORS[f.group]??"#8A93A6",f.stickers)}
+        <span class="folder-name">${esc(f.name)}</span><span class="folder-count">${plural(f.count,"decision","decisions")} · latest ${f.latest}</span>
+      </button>`).join("")}</div></section>`; }).join("");
+}
+function folderView(f){
+  return `<div class="folder-open" style="--folder:${GROUP_COLORS[f.group]??"#8A93A6"}">
+    <div class="row"><button data-act="close-folder">← All folders</button><h2>${esc(f.name)}</h2><span class="muted">${plural(f.count,"decision","decisions")}</span></div>
+    <div class="notes">${f.decisions.map((d,i)=>`
+      <article class="note" style="--tilt:${[-1.2,0.8,-0.4,1.1][i%4]}deg" aria-labelledby="n-${d.taskId}">
+        <span class="clip" aria-hidden="true"></span>
+        ${d.sticker?stickerImg(d.sticker):""}
+        <header><h3 id="n-${d.taskId}">${esc(d.title)}</h3><time datetime="${d.doneAt}">${d.doneAt}</time></header>
+        <dl><dt>Result</dt><dd>${esc(d.result)}</dd><dt>Decision</dt><dd>${esc(d.decision)}</dd></dl>
+        <button data-act="record" data-id="${d.taskId}" aria-label="Edit ${esc(d.title)}">Edit</button>
+      </article>`).join("")}</div></div>`;
+}
 function refreshDecisions(){ const f=$("#filters"); if(f){ f.innerHTML=filterControls(); } const l=$("#decision-list"); if(l) l.innerHTML=decisionList(); }
 
 /* ---------------- Outcome dialog ---------------- */
@@ -320,6 +360,10 @@ function openOutcome(id){
     <label for="o-decision">Decision</label><textarea id="o-decision" rows="3" placeholder="What did you decide, and why?">${esc(o.decision)}</textarea>
     <label for="o-category">Category</label>
     <select id="o-category"><option value="">Choose a category…</option>${GROUPS.map(g=>`<optgroup label="${g}">${groups[g].map(c=>`<option value="${c.id}" ${c.id===o.category?"selected":""}>${esc(c.name)}</option>`).join("")}</optgroup>`).join("")}</select>
+    <fieldset class="sticker-pick"><legend>Sticker <span class="muted">(optional)</span></legend>
+      <label class="none"><input type="radio" name="o-sticker" value="" ${!o.sticker?"checked":""}><span>None</span></label>
+      ${STICKERS.map(st=>`<label title="${esc(st.name)}"><input type="radio" name="o-sticker" value="${st.id}" ${o.sticker===st.id?"checked":""}><span class="sticker" aria-hidden="true">${st.svg}</span><span class="visually-hidden">${esc(st.name)}</span></label>`).join("")}
+    </fieldset>
     <p class="error" id="o-err" role="alert" hidden></p>
     <div class="row"><button type="submit" class="primary">Save decision</button><button type="button" data-act="close-outcome">Cancel</button></div>
   </form>`;
@@ -349,6 +393,11 @@ R.settings=()=>{
       <div class="row"><button class="btn" data-act="backup">Download backup</button><label class="btn" for="restore-file" style="cursor:pointer">Restore from file</label><input id="restore-file" type="file" accept="application/json,.json" hidden><button class="btn" data-act="export-md">Export decisions as Markdown</button></div>
       <div id="restore-confirm"></div>
     </section>
+    <section class="card stack wide"><h2>Background</h2>
+      <p class="muted" style="font-size:.88rem">An animated scene behind your tasks. Animations stop when Reduce Motion is on.</p>
+      <div class="theme-picks" role="radiogroup" aria-label="Background">${THEMES.map(t=>`<button role="radio" aria-checked="${S.backdrop===t.id}" data-act="set-backdrop" data-id="${t.id}" class="theme-pick">
+        <span class="thumb" style="background:${t.tint||"var(--paper)"}">${t.svg}</span><span>${esc(t.name)}</span></button>`).join("")}</div>
+    </section>
     <section class="card stack"><h2>Appearance</h2>
       <div class="seg">${[["","Match device"],["light","Light"],["dark","Dark"]].map(([v,l])=>`<button data-act="set-theme" data-v="${v}" aria-pressed="${(S.theme||"")===v}">${l}</button>`).join("")}</div>
       <h2>Example tasks</h2>
@@ -374,7 +423,11 @@ const A={
   "toggle-kind":d=>{ const t=S.tasks.find(x=>x.id===d.id); change(ts=>L.setComplexity(ts,d.id,t.complexity==="simple"?"complex":"simple")); },
   delete:d=>{ const b=document.querySelector(`[data-act=delete][data-id="${d.id}"]`); if(!b.dataset.armed){ b.dataset.armed="1"; b.textContent="Tap to confirm"; b.classList.add("danger"); return; } change(ts=>L.deleteTask(ts,d.id)); },
   "show-all":()=>{ showAllDone=true; render(); },
-  "filter-cat":d=>{ filter.group=null; filter.category=d.id; filter.text=""; if(cur()==="decisions") render(); else location.hash="decisions"; },
+  "decisions-mode":d=>{ decisionsMode=d.m; openFolder=null; render(); },
+  "open-folder":d=>{ openFolder=d.id; render(); $("#view").scrollIntoView?.({block:"start"}); },
+  "close-folder":()=>{ openFolder=null; render(); },
+  "set-backdrop":d=>{ S.backdrop=d.id; save(); applyBackdrop(); render(); },
+  "filter-cat":d=>{ filter.group=null; filter.category=d.id; filter.text=""; decisionsMode="list"; if(cur()==="decisions") render(); else location.hash="decisions"; },
   group:d=>{ filter.group=d.g||null; filter.category=null; refreshDecisions(); },
   "clear-filters":()=>{ filter.group=null; filter.category=null; filter.text=""; render(); },
   "export-md":()=>{ download(`decisions-${today()}.md`,L.decisionsToMarkdown(L.decisionsOf(S.tasks)),"text/markdown"); toast("Decisions exported"); },
@@ -398,6 +451,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&recording) closeOu
 $("#outcome").addEventListener("click",e=>{ if(e.target.id==="outcome") closeOutcome(); });
 document.addEventListener("change",e=>{
   const el=e.target;
+  if(el.id==="backdrop-pick"){ S.backdrop=el.value; save(); applyBackdrop(); if(cur()==="settings") render(); return; }
   if(el.id==="f-category"){ filter.category=el.value||null; refreshDecisions(); }
   else if(el.id==="restore-file"&&el.files[0]){ el.files[0].text().then(t=>{ try{ const d=JSON.parse(t); if(d.app!=="threadwork"||!d.state) throw 0; restoreData=d.state; $("#restore-confirm").innerHTML=`<p>Replace everything with the backup from <b>${esc((d.exportedAt||"").slice(0,10))}</b> (${d.state.tasks?.length||0} tasks)?</p><div class="row"><button class="btn primary" data-act="restore-yes">Replace</button><button class="btn ghost" data-act="restore-no">Cancel</button></div>`; }catch(x){ toast("That file isn't a Threadwork backup."); } }); }
 });
@@ -415,7 +469,7 @@ document.addEventListener("submit",e=>{
     save(); render(); $("#capture")?.focus();
   }
   if(f.id==="outcome-form"){
-    const r=L.parseOutcome({result:$("#o-result").value,decision:$("#o-decision").value,category:$("#o-category").value});
+    const r=L.parseOutcome({result:$("#o-result").value,decision:$("#o-decision").value,category:$("#o-category").value,sticker:document.querySelector("input[name=o-sticker]:checked")?.value||null});
     if(!r.ok){ const er=$("#o-err"); er.textContent=r.error; er.hidden=false; return; }
     const id=recording, first=S.tasks.find(t=>t.id===id)?.status!=="done";
     closeOutcome(); change(ts=>L.recordOutcome(ts,id,r.value,today()));

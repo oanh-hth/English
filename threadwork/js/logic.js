@@ -1,5 +1,6 @@
 // The rules of the app, as pure functions (the same rules the course builds in TypeScript).
 import { CATEGORIES, GROUPS, categoryById, isCategoryId } from "./categories.js";
+import { STICKERS } from "./art.js";
 
 /* ---------- Days ("YYYY-MM-DD", computed in UTC) ---------- */
 const toUtc = day => { const [y, m, d] = day.split("-").map(Number); return Date.UTC(y, m - 1, d); };
@@ -26,7 +27,8 @@ export function parseOutcome(input) {
   if (!result) return { ok: false, error: "Write down the result" };
   if (!decision) return { ok: false, error: "Write down your decision" };
   if (!isCategoryId(input?.category)) return { ok: false, error: "Choose a category" };
-  return { ok: true, value: { result, decision, category: input.category } };
+  const sticker = STICKERS.some(st => st.id === input?.sticker) ? input.sticker : null;
+  return { ok: true, value: { result, decision, category: input.category, sticker } };
 }
 
 const update = (tasks, id, fn) => tasks.map(t => (t.id === id ? fn(t) : t));
@@ -107,4 +109,18 @@ export function migrateTasks(tasks = []) {
     id: t.id, title: t.title || "Untitled task", complexity: "simple", status: t.status === "done" ? "done" : "todo",
     due: t.due || null, createdAt: t.createdAt || todayKey(), doneAt: t.status === "done" ? (t.doneAt || null) : null, outcome: null,
   }));
+}
+
+/* ---------- Folders: one per category that has decisions ---------- */
+/** Shelf order: groups in GROUPS order, categories in list order, unknown categories last.
+ *  stickers: the distinct stickers of the folder's decisions, newest first, at most 3. */
+export function foldersOf(decisions) {
+  const ids = [...CATEGORIES.map(c => c.id), ...new Set(decisions.map(d => d.category).filter(id => !categoryById(id)))];
+  return ids.map(id => {
+    const list = decisions.filter(d => d.category === id);
+    if (!list.length) return null;
+    const c = categoryById(id);
+    return { category: id, name: c?.name ?? id, group: c?.group ?? "Other", count: list.length, latest: list[0].doneAt,
+      stickers: [...new Set(list.map(d => d.sticker).filter(Boolean))].slice(0, 3), decisions: list };
+  }).filter(Boolean);
 }

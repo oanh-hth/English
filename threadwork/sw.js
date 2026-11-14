@@ -1,7 +1,7 @@
 // Offline support for Threadwork. Network first so updates appear; cache as the fallback.
-const CACHE = 'threadwork-v2';
+const CACHE = 'threadwork-v3';
 const FILES = ['./', 'index.html', 'styles.css', 'manifest.webmanifest',
-  'js/app.js', 'js/logic.js', 'js/categories.js', 'js/store.js', 'js/db.js', 'js/auth.js', 'js/cloud.js',
+  'js/app.js', 'js/logic.js', 'js/art.js', 'js/categories.js', 'js/store.js', 'js/db.js', 'js/auth.js', 'js/cloud.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('threadwork-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
