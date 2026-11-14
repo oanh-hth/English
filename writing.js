@@ -54,7 +54,7 @@ async function request(targets) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': L.apiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model: L.model(), max_tokens: 2000, system: SYSTEM, messages: [{ role: 'user', content: `Practiced words:\n${list}\n\nLearner's text:\n<<<\n${W.text.trim()}\n>>>` }] }),
+    body: JSON.stringify({ model: L.model(), max_tokens: 2000, output_config: { effort: 'low' }, system: SYSTEM, messages: [{ role: 'user', content: `Practiced words:\n${list}\n\nLearner's text:\n<<<\n${W.text.trim()}\n>>>` }] }),
   });
   if (r.status === 401 || r.status === 403) throw new Error('key');
   if (r.status === 429) throw new Error('rate');
@@ -89,7 +89,7 @@ A.keyAsk = () => askKey(false);
 A.keySave = el => { const v = (document.getElementById('keyin') || {}).value.trim(); if (!v) { L.toast('Paste your key first.'); return; } set(KEYK, v); L.closeSheet(); L.toast('Key saved on this device.'); if (el.dataset.retry && W) A.writeSubmit(); else L.render(true); };
 A.keyRemove = () => { set(KEYK, ''); L.toast('Key removed.'); L.render(true); };
 A.setModel = el => { set(MODELK, el.dataset.m); L.render(true); };
-L.keyCard = () => `<div class="card"><h3>Writing feedback (Claude)</h3><p class="small muted">Powers the "Write with your words" exercise. The sentence you write is sent to Anthropic when you ask for feedback, and you pay Anthropic per use, usually a fraction of a cent per check.</p>
+L.keyCard = () => `<div class="card"><h3>Writing feedback (Claude)</h3><p class="small muted">Powers the "Write with your words" exercise. The sentence you write is sent to Anthropic when you ask for feedback, and you pay Anthropic per use, roughly 1 cent per check with Sonnet, about 2 cents with Opus, and under a tenth of a cent with Haiku.</p>
   <p class="small"><b>${L.apiKey() ? 'Key saved on this device' : 'No key yet'}</b></p>
   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="chip" data-a="keyAsk">${L.apiKey() ? 'Replace key' : 'Add key'}</button>${L.apiKey() ? '<button class="chip" data-a="keyRemove">Remove key</button>' : ''}</div>
   <div class="label">Model</div><div class="seg">${MODELS.map(([id, name]) => `<button data-a="setModel" data-m="${id}" class="${L.model() === id ? 'on' : ''}">${name}</button>`).join('')}</div><p class="small muted" style="margin-top:6px">${(MODELS.find(m => m[0] === L.model()) || MODELS[0])[2]}.</p></div>`;
