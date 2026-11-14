@@ -168,3 +168,27 @@ html:not([data-backdrop="plain"]) .task-list h2,html:not([data-backdrop="plain"]
 .theme-pick .thumb svg{width:100%;height:100%;display:block}
 .theme-pick .thumb svg *{animation:none!important}
 .theme-pick[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- The board on the wall ---------- */
+html.room .panel-wrap{display:none}
+.back-to-room{display:none}
+html.can-close .back-to-room{display:inline-flex;align-items:center;margin:16px auto -6px;position:relative;left:50%;transform:translateX(-50%);
+  background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.board{position:fixed;z-index:2;padding:0;border:0;border-radius:6px;cursor:pointer;min-height:0;text-align:left;font-weight:400;
+  transition:transform .2s ease,box-shadow .2s ease;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.board:hover,.board:focus-visible{transform:rotate(-1deg) scale(1.03);box-shadow:0 16px 34px rgba(0,0,0,.4)}
+.board-body{position:absolute;inset:0;display:flex;flex-direction:column;gap:.45em;padding:.9em 1em;overflow:hidden}
+.board[data-look="chalk"]{background:#2F3A33;border:.6em solid #8B6A45;color:#F1E6D2;font-family:"Bricolage Grotesque",Georgia,serif}
+.board[data-look="chalk"] .b-note{border-bottom:1px dashed rgba(241,230,210,.35);padding:.15em 0}
+.board[data-look="cork"]{background:#C69B6D radial-gradient(rgba(90,60,30,.25) 1px,transparent 1.5px) 0 0/7px 7px;border:.5em solid #6D4C3D;color:#1D2227}
+.board[data-look="cork"] .b-note{background:#FFF6A8;padding:.3em .55em;box-shadow:0 2px 3px rgba(0,0,0,.25);transform:rotate(var(--r));position:relative;align-self:flex-start;max-width:100%}
+.board[data-look="cork"] .b-note::before{content:"";position:absolute;top:-.35em;left:50%;width:.6em;height:.6em;border-radius:50%;background:#E4572E;box-shadow:0 1px 1px rgba(0,0,0,.4)}
+.board[data-look="cork"] .b-note:nth-child(2){background:#BDE7FF}.board[data-look="cork"] .b-note:nth-child(3){background:#FFD1DC}
+.b-title{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:1.25em;line-height:1}
+.b-stats{font-size:.9em}
+.board[data-look="cork"] .b-title,.board[data-look="cork"] .b-stats{background:#fff;align-self:flex-start;padding:.1em .45em;border-radius:3px}
+.b-warn{color:#E4572E}
+.b-notes{display:flex;flex-direction:column;gap:.4em;min-height:0}
+.b-note{font-size:.88em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-open{margin-top:auto;font-size:.78em;opacity:.8}
+@media (prefers-reduced-motion:reduce){.board{transition:none}.board:hover,.board:focus-visible{transform:none}}

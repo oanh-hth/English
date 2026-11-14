@@ -29,7 +29,53 @@ function applyBackdrop(){
   document.documentElement.dataset.backdrop=t.id;
   if(shownBackdrop!==t.id){ el.innerHTML=t.svg; shownBackdrop=t.id; }
   const q=$("#backdrop-pick"); if(q) q.value=t.id;
+  applyRoom();
 }
+
+/* ---------------- The board on the wall ---------------- */
+// In a room, the main panel is put away and a board hangs on the wall with a summary. Tap it to open the panel.
+let panelOpen=false;
+const inRoom=()=>!!themeById(S.backdrop).board;
+function applyRoom(){
+  const room=inRoom()&&!panelOpen;
+  document.documentElement.classList.toggle("room",room);
+  document.documentElement.classList.toggle("can-close",inRoom()&&panelOpen);
+  const b=$("#board"); if(!b) return;
+  b.hidden=!room;
+  if(room){ renderBoard(); placeBoard(); }
+}
+/** Scenes fill the screen like object-fit: cover. Map the board's scene coordinates to the screen. */
+function placeBoard(){
+  const spot=themeById(S.backdrop).board, b=$("#board"); if(!spot||!b) return;
+  const W=innerWidth, H=innerHeight, scale=Math.max(W/1200,H/800), ox=(W-1200*scale)/2, oy=(H-800*scale)/2;
+  let x=ox+spot.x*scale, y=oy+spot.y*scale, w=spot.w*scale, h=spot.h*scale;
+  const top=($(".top")?.offsetHeight??56)+8;
+  if(w<230){ const k=230/w; x-= (w*k-w)/2; y-= (h*k-h)/2; w*=k; h*=k; }      // never too small to read
+  x=Math.min(Math.max(8,x),W-w-8); y=Math.min(Math.max(top,y),H-h-8);          // always fully on screen
+  Object.assign(b.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px",fontSize:Math.max(11,Math.min(16,w/20))+"px"});
+  b.dataset.look=spot.look;
+}
+function renderBoard(){
+  const s=weekSummary(S.tasks,today()), next=sortTasks(S.tasks).filter(t=>t.status==="todo").slice(0,3);
+  const done=S.tasks.filter(t=>t.doneAt===today()).length;
+  $("#board-body").innerHTML=`
+    <span class="b-title">Today</span>
+    <span class="b-stats"><b>${s.open}</b> to do${s.overdue?` · <b class="b-warn">${s.overdue}</b> overdue`:""} · <b>${done}</b> done</span>
+    <span class="b-notes">${next.length?next.map((t,i)=>`<span class="b-note" style="--r:${[-3,2,-1][i]}deg">${t.complexity==="complex"?"◆ ":""}${esc(t.title)}</span>`).join(""):`<span class="b-note">All clear ✓</span>`}</span>
+    <span class="b-open">Tap to open</span>`;
+  $("#board").setAttribute("aria-label",`Open Threadwork: ${s.open} to do, ${done} done today`);
+}
+function openPanel(){
+  if(panelOpen) return;
+  const b=$("#board"), v=$("#view"), r=b&&!b.hidden?b.getBoundingClientRect():null;
+  panelOpen=true; applyRoom(); render();
+  if(r&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const vr=v.getBoundingClientRect();
+    v.animate([{transform:`translate(${r.left+r.width/2-(vr.left+vr.width/2)}px,${r.top+r.height/2-(vr.top+Math.min(vr.height,innerHeight)/2)}px) scale(${r.width/vr.width})`,opacity:.4},{transform:"none",opacity:1}],{duration:380,easing:"cubic-bezier(.2,.8,.2,1)"});
+  }
+}
+function closePanel(){ panelOpen=false; closeOutcome(); applyRoom(); scrollTo(0,0); }
+addEventListener("resize",()=>{ if(inRoom()&&!panelOpen) placeBoard(); });
 const stickerImg=(id,cls="sticker")=>{ const st=stickerById(id); return st?`<span class="${cls}" role="img" aria-label="Sticker: ${esc(st.name)}">${st.svg}</span>`:""; };
 
 function exampleTasks(){
@@ -215,12 +261,13 @@ async function boot(){
 /* ---------------- Routing ---------------- */
 const VIEWS=["tasks","decisions","settings"];
 const cur=()=>{const h=location.hash.slice(1);return VIEWS.includes(h)?h:"tasks"};
-window.addEventListener("hashchange",()=>{ if(signedIn){ closeOutcome(); render(); } });
+window.addEventListener("hashchange",()=>{ if(signedIn){ closeOutcome(); if(inRoom()&&!panelOpen) openPanel(); else render(); } });
 const filter={group:null,category:null,text:""};
 let showAllDone=false, recording=null, searchT=null, restoreData=null;
 
 function render(){
   const v=cur();
+  if(inRoom()&&!panelOpen){ renderBoard(); }
   document.querySelectorAll(".tabs a").forEach(a=>{ if(a.getAttribute("href")==="#"+v) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
   $("#view").innerHTML=R[v]();
   paintSync();
@@ -427,6 +474,8 @@ const A={
   "open-folder":d=>{ openFolder=d.id; render(); $("#view").scrollIntoView?.({block:"start"}); },
   "close-folder":()=>{ openFolder=null; render(); },
   "set-backdrop":d=>{ S.backdrop=d.id; save(); applyBackdrop(); render(); },
+  "open-panel":openPanel,
+  "close-panel":closePanel,
   "filter-cat":d=>{ filter.group=null; filter.category=d.id; filter.text=""; decisionsMode="list"; if(cur()==="decisions") render(); else location.hash="decisions"; },
   group:d=>{ filter.group=d.g||null; filter.category=null; refreshDecisions(); },
   "clear-filters":()=>{ filter.group=null; filter.category=null; filter.text=""; render(); },
@@ -447,11 +496,11 @@ document.addEventListener("click",e=>{
   if(el.tagName!=="INPUT") e.preventDefault();
   f(el.dataset);
 });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&recording) closeOutcome(); });
+document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return; if(recording) closeOutcome(); else if(panelOpen&&inRoom()) closePanel(); });
 $("#outcome").addEventListener("click",e=>{ if(e.target.id==="outcome") closeOutcome(); });
 document.addEventListener("change",e=>{
   const el=e.target;
-  if(el.id==="backdrop-pick"){ S.backdrop=el.value; save(); applyBackdrop(); if(cur()==="settings") render(); return; }
+  if(el.id==="backdrop-pick"){ S.backdrop=el.value; save(); applyBackdrop(); if(panelOpen) render(); return; }
   if(el.id==="f-category"){ filter.category=el.value||null; refreshDecisions(); }
   else if(el.id==="restore-file"&&el.files[0]){ el.files[0].text().then(t=>{ try{ const d=JSON.parse(t); if(d.app!=="threadwork"||!d.state) throw 0; restoreData=d.state; $("#restore-confirm").innerHTML=`<p>Replace everything with the backup from <b>${esc((d.exportedAt||"").slice(0,10))}</b> (${d.state.tasks?.length||0} tasks)?</p><div class="row"><button class="btn primary" data-act="restore-yes">Replace</button><button class="btn ghost" data-act="restore-no">Cancel</button></div>`; }catch(x){ toast("That file isn't a Threadwork backup."); } }); }
 });

@@ -42,7 +42,9 @@
         <option value="rainy">🌧️ Rainy window</option><option value="city">🌃 Night city</option><option value="plain">Plain</option>
       </select></label>
   </header>
-  <main class="view" id="view"></main>
+  <button class="board" id="board" type="button" data-act="open-panel" hidden><span class="board-body" id="board-body"></span></button>
+  <div class="panel-wrap"><button class="back-to-room" type="button" data-act="close-panel">← Back to the room</button>
+  <main class="view" id="view"></main></div>
 </div>
 
 <div class="overlay" id="outcome" hidden></div>

@@ -155,13 +155,14 @@ ${motionOff("sc-city")}
 <g transform="translate(240 520)"><rect x="-26" y="40" width="52" height="40" rx="6" fill="#6C5B9E"/><path d="M0 40 C-40 10 -30 -30 0 -36 C30 -30 40 10 0 40Z" fill="#3F7D4E"/></g>
 </svg>`;
 
+// board: where the summary board hangs, in the scene's own 1200 × 800 coordinates, and how it looks.
 export const THEMES = [
-  { id: "coffee", name: "Coffee shop", svg: coffee, tint: "#E8D5BE" },
-  { id: "cozy", name: "Cozy room", svg: cozy, tint: "#3A3150" },
-  { id: "library", name: "Library", svg: library, tint: "#3E2F28" },
-  { id: "rainy", name: "Rainy window", svg: rainy, tint: "#4B5868" },
-  { id: "city", name: "Night city", svg: city, tint: "#1A1A33" },
-  { id: "plain", name: "Plain", svg: "", tint: "" },
+  { id: "coffee", name: "Coffee shop", svg: coffee, tint: "#E8D5BE", board: { x: 612, y: 112, w: 316, h: 246, look: "chalk" } },
+  { id: "cozy", name: "Cozy room", svg: cozy, tint: "#3A3150", board: { x: 500, y: 118, w: 240, h: 170, look: "cork" } },
+  { id: "library", name: "Library", svg: library, tint: "#3E2F28", board: { x: 70, y: 196, w: 290, h: 196, look: "cork" } },
+  { id: "rainy", name: "Rainy window", svg: rainy, tint: "#4B5868", board: { x: 700, y: 378, w: 300, h: 196, look: "cork" } },
+  { id: "city", name: "Night city", svg: city, tint: "#1A1A33", board: { x: 90, y: 330, w: 300, h: 200, look: "cork" } },
+  { id: "plain", name: "Plain", svg: "", tint: "", board: null },
 ];
 export const themeById = id => THEMES.find(t => t.id === id) ?? THEMES[0];
 
