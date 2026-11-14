@@ -11,14 +11,14 @@ L.dayLabel = k => { const d = SRS.diff(k, L.dayKey()); if (d === 0) return 'Toda
 
 /* ---------- state ---------- */
 const KEY = 'word-garden.v1';
-const defaults = () => ({ items: [], log: {}, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } });
+const defaults = () => ({ items: [], log: {}, mission: null, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } });
 const merge = o => { const d = defaults(); return { ...d, ...o, garden: { ...d.garden, ...(o.garden || {}) }, settings: { ...d.settings, ...(o.settings || {}), weather: { ...d.settings.weather, ...((o.settings || {}).weather || {}) } } }; };
 let S = (() => { try { const o = JSON.parse(localStorage.getItem(KEY)); if (o && Array.isArray(o.items)) return merge(o); } catch (e) { /* ignore */ } return defaults(); })();
 Object.defineProperty(L, 'S', { get: () => S, set: v => { S = merge(v); } });
 L.save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { L.toast('Storage is full. Export your notes, then delete some.'); return false; } };
 L.reset = () => { S = defaults(); L.save(); };
 L.cap = () => S.settings.cap || 10;
-L.today = () => (S.log[L.dayKey()] ||= { pts: 0, reviews: 0, added: 0, watered: 0 });
+L.today = () => (S.log[L.dayKey()] ||= { pts: 0, reviews: 0, writes: 0, added: 0, watered: 0 });
 L.due = () => SRS.dueItems(S.items, L.dayKey());
 L.item = id => S.items.find(i => i.id === id);
 
@@ -60,7 +60,7 @@ L.harvest = () => { const g = S.garden; if (!L.ready()) return; g.done.unshift({
 /* ---------- navigation ---------- */
 let V = { name: 'garden' };
 Object.defineProperty(L, 'V', { get: () => V });
-const IMMERSIVE = new Set(['session']);
+const IMMERSIVE = new Set(['session', 'drill']);
 const TABS = [
   ['garden', 'Garden', '<path d="M12 21v-8"/><path d="M12 13c0-4-3-6-7-6 0 4 3 6 7 6z"/><path d="M12 15c0-3.5 2.5-6 7-6 0 4-3 6-7 6z"/>'],
   ['review', 'Review', '<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>'],

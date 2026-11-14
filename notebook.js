@@ -18,7 +18,7 @@ const card = it => {
   const when = SRS.whenLabel(it.due, L.dayKey()), due = SRS.diff(it.due, L.dayKey()) <= 0;
   return `<article class="note t-${it.kind === 'word' ? 'blue' : 'sage'}" data-id="${it.id}">
     <div class="row" style="align-items:flex-start"><div class="grow"><div class="ntext">${esc(it.text)}</div>${it.meaning ? `<p class="nmean">${esc(it.meaning)}</p>` : '<p class="nmean muted">No meaning yet. Tap Edit to add one.</p>'}</div>${L.speakBtn(LX.plain(it.text) || it.text, 'sm')}</div>
-    ${it.example ? `<p class="nex">“${esc(it.example)}”</p>` : ''}${it.note ? `<p class="nnote">${esc(it.note)}</p>` : ''}
+    ${it.example ? `<p class="nex">“${esc(it.example)}”</p>` : ''}${it.note ? `<p class="nnote">${esc(it.note)}</p>` : ''}${it.mine && it.mine[0] ? `<p class="nnote">My sentence: “${esc(it.mine[0].t)}”</p>` : ''}${it.uses && it.uses[0] ? `<p class="nnote">Used for real: ${esc(it.uses[0].where)}</p>` : ''}
     <div class="nmeta"><span class="pill">${it.kind === 'word' ? 'Word' : 'Phrase'}</span>${L.dots(it.stage)}<span class="pill ${due ? 'warn' : ''}">${due ? 'Review ' : 'Next: '}${esc(when.toLowerCase() === 'today' ? 'today' : when)}</span></div>
     <div class="nact">${L.ygLink(it.text, 'chip')}<button class="chip" data-a="noteEdit" data-id="${it.id}">Edit</button><button class="chip" data-a="noteDel" data-id="${it.id}">Delete</button></div></article>`;
 };
