@@ -1,17 +1,15 @@
 # Threadwork
 
-A personal workspace for iPad (with Apple Pencil) and computer. Tasks, notes, drafts, small data tables, sketches and resources all link to each other. A garden rewards you: every finished task waters your plant, and more important tasks make it grow faster.
+A todo list that remembers what you learned. Built for iPad (installable from Safari) and computer.
 
-- **Today**: what's due, your inbox of captured tasks, your plant and a quote.
-- **Tasks**: Inbox / Doing / Done board. Open a task to set importance, link related tasks, attach resources (tick the ones you used), notes, drafts, data tables and sketches.
-- **Link map**: every task with its notes, sketches and resources, drawn as a map.
-- **Sketch**: made for Apple Pencil. Pressure changes the line, and your palm is ignored once a pencil is detected.
-- **Notes & drafts**: quick notes (turn one into a task), long drafts, and data tables.
-- **Resources**: files, links, tools, books and people, and which tasks use them.
-- **Inspiration**: pinned quotes, goals and pictures, a wins wall, a 25-minute focus timer and your weekly growth.
-- **Garden**: your plant grows by importance (Low +8%, Medium +15%, High +25%, Critical +40%, focus session +3%). Harvest at 100%, unlock new plants, and trade fruit for treats. The sky shows the live weather where you are.
+- **Simple tasks** you just tick off.
+- **Complex tasks** end with a short write-up: the **result** (what happened, what you found out) and your **decision** (what you chose, and why), filed under a **web development category**.
+- **Decisions** shows everything you've decided. Filter by group (Frontend, Backend, Workflow), by category (HTML, CSS, Layout, Accessibility, React, State management, Performance, Testing, PWA, Node.js, APIs, Deployment…) or by text, and export it all as Markdown.
+- A weekly summary on the task list: to do, overdue, done today and this week, decisions this week, and the topic you decided about most.
 
-No build step and no server of its own. It is a static web app that installs on iPad as an app.
+No build step and no server of its own: a static web app with optional sync through your own Firebase project.
+
+The same app is built step by step, in TypeScript, React and Node.js, in the course in [`../learn-threadwork`](../learn-threadwork/README.md).
 
 ## Run it locally
 From the repository root:
@@ -22,8 +20,8 @@ Open http://localhost:8000/threadwork/
 
 ## Put it on your iPad
 1. Host the repository on GitHub Pages (see the main README). The app is then at `https://<user>.github.io/<repo>/threadwork/`.
-2. Open that address in Safari on the iPad, tap **Share → Add to Home Screen**.
-3. Open Threadwork from the home screen and create your account.
+2. Open that address in Safari on the iPad and tap **Share → Add to Home Screen**.
+3. Open Threadwork from the home screen and create your account. **Settings → Add example tasks** shows what a filled-in decision log looks like.
 
 ## Sign-in and where your data lives
 - **Without sync (default)**: everything is saved on the device in IndexedDB. Your password locks the app on that device. It is stored only as a salted PBKDF2 hash and it cannot be recovered. It does not encrypt the data. Use **Settings → Backup** to download a copy regularly.
@@ -53,22 +51,24 @@ The Firebase web config identifies your project; it is not a password. Access is
 
 When you connect a device that already has data and the account also has data, Threadwork asks which copy to keep. After that, the newest save wins. If you edit on both devices while one is offline, the device that saves last wins for the whole state, so let a device sync before switching.
 
-Limits: one sync document holds all text data (up to about 1 MB, which is thousands of tasks and notes). Each sketch or picture is its own document.
+Limits: one sync document holds all text data (up to about 1 MB, which is thousands of tasks and notes).
 
-## Weather
-**Settings → Weather** uses your location or a city you search for. Weather comes from [Open-Meteo](https://open-meteo.com) (free, no key) and refreshes every 30 minutes while the app is open. Only the coordinates are sent. Without a location, the garden is sunny and uses your clock for day and night. You can always pick a weather by hand in **Garden → Scene**.
+## Categories
+The list is in `js/categories.js`: 21 frontend topics, 6 backend and 7 workflow. Tasks store the category **id**, so you can rename a category without breaking saved decisions. Add your own topics whenever something is missing.
+
+## Data from the earlier version
+If this device used the earlier Threadwork (with notes, sketches and the garden), its tasks are kept and become simple tasks. The other data is no longer shown. Download a backup first if you want to keep it.
 
 ## Files
 | File | What it does |
 |---|---|
 | `index.html`, `styles.css` | Page shell and styles |
-| `js/app.js` | Views, actions, sign-in screens, settings, sync wiring |
-| `js/plant.js` | Plant drawing, sky scenes, watering animation |
-| `js/sound.js` | Synthesised sounds (pouring, chimes, rain) |
-| `js/store.js`, `js/db.js` | Saving on the device (IndexedDB), pictures stored separately |
+| `js/app.js` | Pages (Tasks, Decisions, Settings), the outcome form, sign-in screens, sync wiring |
+| `js/logic.js` | The rules: tasks, outcomes, decisions, filters, weekly summary, Markdown export |
+| `js/categories.js` | The decision categories |
+| `js/store.js`, `js/db.js` | Saving on the device (IndexedDB) |
 | `js/auth.js` | Local account (PBKDF2 password hash, 30-day session) |
 | `js/cloud.js` | Optional Firebase sync (loaded only when configured) |
-| `js/weather.js` | Open-Meteo weather and city search |
 | `sw.js`, `manifest.webmanifest`, `icons/` | Offline support and home-screen install |
 
 When you change a file, bump `CACHE` in `sw.js` so installed copies pick up the update.

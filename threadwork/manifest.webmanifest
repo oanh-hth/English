@@ -1,7 +1,7 @@
 {
   "name": "Threadwork",
   "short_name": "Threadwork",
-  "description": "Tasks, notes, sketches and resources linked together, with a garden that grows as you finish work.",
+  "description": "A todo list that remembers what you learned: results and decisions, filed by web development topic.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

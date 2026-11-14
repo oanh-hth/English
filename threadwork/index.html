@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Threadwork</title>
-<meta name="description" content="Tasks, notes, sketches and resources linked together, with a garden that grows as you finish work.">
+<meta name="description" content="A todo list that remembers what you learned: results and decisions, filed by web development topic.">
 <meta name="theme-color" content="#2F45C2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -19,37 +19,6 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
-    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></symbol>
-    <symbol id="i-map" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="7" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.3 6.3l9.2.5M6.3 8.2l4.6 7.7M17.8 9.2l-4.6 6.7"/></symbol>
-    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z"/><path d="M14.5 6.5l3 3"/></symbol>
-    <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h5"/></symbol>
-    <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/></symbol>
-    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/></symbol>
-    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v9h14v-9M12 8v13M12 8S10.5 3 8 3.5 7 8 12 8zM12 8s1.5-5 4-4.5S17 8 12 8z"/></symbol>
-    <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" stroke="none"/><path d="M12 7l1.5 3.2 3.5.4-2.6 2.4.7 3.5L12 14.8 8.9 16.5l.7-3.5L7 10.6l3.5-.4z" fill="#fff" stroke="none" opacity=".9"/></symbol>
-    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 22c4 0 7-2.7 7-6.8 0-3.9-3-6.4-4.2-9.7-.3 2.6-1.6 4-3 4.7.1-3-1.3-5.8-3.8-7.2.4 3.4-3 6.3-3 11.4C5 18.6 8 22 12 22z" fill="currentColor" stroke="none"/></symbol>
-    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></symbol>
-    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
-    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
-    <symbol id="i-marker" viewBox="0 0 24 24"><path d="M9 15l-4 5h6l2-2M9 15l7-11 4 3-7 11z"/></symbol>
-    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M8 20h12M4.5 15.5l9-9a2 2 0 012.8 0l2.2 2.2a2 2 0 010 2.8L12 18H7z"/></symbol>
-    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
-    <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></symbol>
-    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></symbol>
-    <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
-    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
-    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 4v16M16 4v16"/></symbol>
-    <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 12C12 7 8.5 5 4 5c0 4.5 3 7 8 7zM12 10c0-4 3-6.5 8-6.5 0 4.5-3 6.5-8 6.5z"/><path d="M7 21h10"/></symbol>
-    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></symbol>
-    <symbol id="i-medal" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6"/><path d="M8.5 9L6 3h4l2 4 2-4h4l-2.5 6"/></symbol>
-  </defs>
-</svg>
-
 <section id="login" hidden>
   <div class="login-card">
     <div class="brand"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="8" cy="9" r="4" fill="var(--accent)"/><circle cx="24" cy="10" r="4" fill="var(--gold)"/><circle cx="15" cy="24" r="4" fill="var(--good)"/><path d="M8 9C16 6 18 16 24 10M8 9c0 8 3 13 7 15M24 10c0 7-4 12-9 14" stroke="var(--ink)" stroke-width="1.6" fill="none"/></svg><span>Threadwork</span></div>
@@ -58,41 +27,22 @@
 </section>
 
 <div id="app" hidden>
-  <nav class="rail" aria-label="Main">
+  <header class="top">
     <div class="brand"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="8" cy="9" r="4" fill="var(--accent)"/><circle cx="24" cy="10" r="4" fill="var(--gold)"/><circle cx="15" cy="24" r="4" fill="var(--good)"/><path d="M8 9C16 6 18 16 24 10M8 9c0 8 3 13 7 15M24 10c0 7-4 12-9 14" stroke="var(--ink)" stroke-width="1.6" fill="none"/></svg><span>Threadwork</span></div>
-    <a class="nav" href="#today" data-short="Today"><svg class="i"><use href="#i-today"/></svg><span>Today</span></a>
-    <a class="nav" href="#tasks" data-short="Tasks"><svg class="i"><use href="#i-tasks"/></svg><span>Tasks</span></a>
-    <a class="nav" href="#map" data-short="Links"><svg class="i"><use href="#i-map"/></svg><span>Link map</span></a>
-    <a class="nav" href="#sketch" data-short="Sketch"><svg class="i"><use href="#i-pencil"/></svg><span>Sketch</span></a>
-    <a class="nav" href="#notes" data-short="Notes"><svg class="i"><use href="#i-note"/></svg><span>Notes &amp; drafts</span></a>
-    <a class="nav" href="#resources" data-short="Library"><svg class="i"><use href="#i-box"/></svg><span>Resources</span></a>
-    <a class="nav" href="#inspire" data-short="Inspire"><svg class="i"><use href="#i-spark"/></svg><span>Inspiration</span></a>
-    <a class="nav" href="#garden" data-short="Garden"><svg class="i"><use href="#i-sprout"/></svg><span>Garden</span></a>
-    <div class="spacer"></div>
-    <div class="rail-foot">
-      <button class="nav" data-act="theme" data-short="Theme"><svg class="i"><use href="#i-moon"/></svg><span>Theme</span></button>
-      <a class="nav" href="#settings" data-short="Settings"><svg class="i"><use href="#i-gear"/></svg><span>Settings</span></a>
-    </div>
-  </nav>
-  <div class="main">
-    <header class="topbar">
-      <form class="capture" id="capture-form">
-        <label for="capture-input" class="label" style="position:absolute;left:-9999px">Quick capture</label>
-        <input class="input" id="capture-input" placeholder="Capture a task before you forget it…" autocomplete="off">
-        <button class="btn primary" type="submit"><svg class="i"><use href="#i-plus"/></svg>Add</button>
-      </form>
-      <div class="stats" id="stats"></div>
-    </header>
-    <main class="view" id="view"></main>
-  </div>
+    <nav class="tabs" aria-label="Main">
+      <a href="#tasks">Tasks</a>
+      <a href="#decisions">Decisions</a>
+      <a href="#settings">Settings</a>
+    </nav>
+    <span class="sync" id="sync-top"></span>
+  </header>
+  <main class="view" id="view"></main>
 </div>
 
+<div class="overlay" id="outcome" hidden></div>
 <div class="scrim" id="scrim" hidden></div>
-<aside class="drawer" id="drawer" hidden aria-label="Task details"></aside>
-<div id="toast" hidden role="status"></div>
-<canvas id="confetti" hidden></canvas>
-
 <div class="dialog card" id="dialog" hidden role="dialog" aria-modal="true"></div>
+<div id="toast" hidden role="status"></div>
 
 <script type="module" src="js/app.js"></script>
 </body>
