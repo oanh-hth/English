@@ -61,6 +61,7 @@ L.views.home = () => {
 };
 A.openVideo = el => L.go('video', { id: el.dataset.id });
 A.openAdd = () => L.go('add');
+A.goSources = (el, e) => { if (e) e.preventDefault(); L.go('sources'); };
 A.useSample = () => { const v = create({ link: '', title: 'Sample: ordering coffee', text: SAMPLE }); if (v) L.go('video', { id: v.id }); };
 
 /* ---------- Add video ---------- */
@@ -92,7 +93,7 @@ L.views.add = () => `<div class="topbar"><button class="back" data-a="tab" data-
     <div id="a-prev" class="small" style="margin-top:12px">${previewHtml('', '')}</div></div>
   <details class="card help"><summary><b>How do I get a transcript from YouTube?</b></summary>
     <ol class="small"><li>Open the video on YouTube (computer works best).</li><li>Tap <b>…more</b> under the video, then <b>Show transcript</b>.</li><li>Select the text in the transcript panel, copy it, and paste it above. Timestamps are kept automatically.</li><li>On the phone app: open the description, tap <b>Show transcript</b>, then copy.</li><li>You can also upload an <b>.srt</b> or <b>.vtt</b> caption file.</li></ol>
-    <p class="muted small">We can't download transcripts for you: YouTube doesn't allow web pages to fetch them.</p></details>
+    <p class="muted small">We can't download transcripts for you: YouTube doesn't allow web pages to fetch them. <a href="#" data-a="goSources">Find lessons that publish their text</a>.</p></details>
   <div class="stack"><button class="btn" data-a="createVideo">Create practice</button><button class="btn plain" data-a="useSample">Try the sample instead</button></div>`;
 const upd = () => { const t = document.getElementById('a-text'), l = document.getElementById('a-link'), p = document.getElementById('a-prev'); if (t && p) p.innerHTML = previewHtml(t.value, l ? l.value : ''); };
 document.addEventListener('input', e => { if (e.target.id === 'a-text' || e.target.id === 'a-link') upd(); });

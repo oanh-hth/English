@@ -278,5 +278,11 @@ textarea.type { resize: vertical; min-height: 96px; font-family: inherit; line-h
 .topic-card[disabled] { opacity: .45; pointer-events: none; }
 .topic-card .sub { max-width: 62%; }
 
-.cta h2 { font-size: 20px !important; max-width: 62.cta h2 { font-size: 20px !important; max-width: 62% !important; }
+.cta h2 { font-size: 20px !important; max-width: 62% !important; }
 .cta p { font-size: 15px; }
+
+.src { background: var(--tint); color: var(--tint-ink); border-radius: 26px; padding: 16px; margin-bottom: 12px; }
+.src .sname { font-family: var(--display); font-weight: 800; font-size: 19px; line-height: 1.15; }
+.src .btn { background: var(--ink); color: var(--on-ink); } .t-olive.src .btn { background: #f5ede4; color: #1e1b15; }
+pre.cmd { margin: 0; padding: 12px; border-radius: 16px; background: var(--card-2); font-size: 12.5px; line-height: 1.45; white-space: pre-wrap; word-break: break-all; }
+.help a, .card a:not(.btn) { color: inherit; text-decoration: underline; }

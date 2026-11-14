@@ -46,7 +46,7 @@ L.render = keepScroll => {
   view.innerHTML = (L.views[V.name] || L.views.home)();
   const t = $('#tabs'); t.className = IMMERSIVE.has(V.name) ? 'hidden' : '';
   const cur = V.name === 'video' || V.name === 'add' ? 'home' : V.name;
-  const TABS = [['home', 'Listen', '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h3v6H4zM17 14h3v6h-3z"/>'], ['notebook', 'Notebook', '<path d="M6 3h12v18l-6-4-6 4z"/>'], ['me', 'Me', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>']];
+  const TABS = [['home', 'Listen', '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h3v6H4zM17 14h3v6h-3z"/>'], ['sources', 'Sources', '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'], ['notebook', 'Notebook', '<path d="M6 3h12v18l-6-4-6 4z"/>'], ['me', 'Me', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>']];
   t.innerHTML = TABS.map(([k, label, svg]) => `<button data-a="tab" data-v="${k}" class="${cur === k ? 'on' : ''}" aria-label="${label}"><svg viewBox="0 0 24 24">${svg}</svg>${label}${k === 'notebook' && S.notes.length ? `<span class="badge">${S.notes.length > 99 ? '99+' : S.notes.length}</span>` : ''}</button>`).join('');
   if (keepScroll) window.scrollTo(0, y); else if (L.after[V.name]) L.after[V.name]();
 };

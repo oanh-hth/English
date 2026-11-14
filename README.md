@@ -15,7 +15,8 @@ A mobile-first web app with no build step and no backend. It installs on your iP
    - **Shadowing:** listen, say it out loud, rate yourself.
    - **Comprehension** (optional, with Claude): questions about the video.
 3. **Recommended for you.** Natural phrases found in the video (matched against a library of about 1,000 American phrases and 950 everyday words), chunks the speaker repeats, and frequent words you may not know yet. One tap saves them.
-4. **Notebook.** Tap a word in any line, tap another to select a phrase, and save it with a meaning and a note. Every item links to YouGlish.
+4. **Sources.** A tab of sites that publish copyable transcripts (VOA, BBC, TED, ELLLO, NPR, LibriVox) and a yt-dlp tip. Edit `sources.js` to add your own.
+5. **Notebook.** Tap a word in any line, tap another to select a phrase, and save it with a meaning and a note. Every item links to YouGlish.
 
 ## Run it
 

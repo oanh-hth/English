@@ -80,8 +80,12 @@ const AI = { phrases: [{ text: 'keep the change', meaning: 'let the cashier keep
     }
     out['t_' + t] = (await p.textContent('.bigpct')).trim();
   }
+  // --- sources tab
+  await p.click('[data-a=exitEx]'); await p.click('[data-a=tab][data-v=sources]'); out.sources = await p.locator('.src').count();
+  out.srcLinks = await p.evaluate(() => [...document.querySelectorAll('.src a')].every(a => a.target === '_blank' && /noopener/.test(a.rel) && /^https:/.test(a.href)));
+  await shot('sources');
   // --- notebook
-  await p.click('[data-a=exitEx]'); await p.click('[data-a=tab][data-v=home]'); await p.click('[data-a=tab][data-v=notebook]');
+  await p.click('[data-a=tab][data-v=notebook]');
   out.noteCount = await p.locator('.note').count(); out.yg = await p.getAttribute('.note a[href*="youglish"]', 'href'); await shot('notebook');
   await p.fill('#nsearch', 'zzzz'); out.search = await p.locator('.note').count(); await p.fill('#nsearch', '');
   // --- Claude picks (mocked)
