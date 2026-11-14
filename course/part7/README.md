@@ -4,7 +4,7 @@
 
 **You will learn:** client-side routing, auth state and protected routes, a fetch wrapper that attaches tokens, reducers for multi-step flows, and accessible, responsive UI.
 
-Work in `word-garden/frontend`.
+Work in `lexigrow/frontend`.
 
 ## a. Routing and layout
 

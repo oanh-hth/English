@@ -1,6 +1,6 @@
 # Part 4: Relational databases, SQL and PostgreSQL
 
-**Goal.** Run PostgreSQL, learn enough SQL to ask real questions of real data, and understand why the Word Garden schema is designed the way it is. You write SQL by hand in this part. The ORM comes in Part 5, once you know what it generates.
+**Goal.** Run PostgreSQL, learn enough SQL to ask real questions of real data, and understand why the Lexigrow schema is designed the way it is. You write SQL by hand in this part. The ORM comes in Part 5, once you know what it generates.
 
 **You will learn:** tables, rows, keys and constraints; `SELECT`, `WHERE`, `GROUP BY`, `JOIN`; transactions; indexes; how to design a schema.
 
@@ -12,10 +12,10 @@ Start one for development (from `course/`):
 
 ```bash
 docker compose up -d db
-psql postgres://garden:garden@localhost:5432/wordgarden
+psql postgres://garden:garden@localhost:5432/lexigrow
 ```
 
-If you do not have `psql`, use `docker compose exec db psql -U garden wordgarden`. Handy commands: `\dt` list tables, `\d notes` describe one, `\i path` run a file, `\q` quit.
+If you do not have `psql`, use `docker compose exec db psql -U garden lexigrow`. Handy commands: `\dt` list tables, `\d notes` describe one, `\i path` run a file, `\q` quit.
 
 Concepts to learn from [`sample-data/schema.sql`](../sample-data/schema.sql):
 
@@ -194,4 +194,4 @@ Run `EXPLAIN ANALYZE SELECT * FROM notes WHERE user_id = 1 AND due <= DATE '2026
 - [ ] You can explain primary and foreign keys, `LEFT JOIN`, `GROUP BY`, a transaction and an index in plain words.
 - [ ] You know why the schema uses a points ledger and partial unique indexes.
 
-Tag it: `git tag part4`. Save your queries in `word-garden/backend/sql/exercises.sql`.
+Tag it: `git tag part4`. Save your queries in `lexigrow/backend/sql/exercises.sql`.

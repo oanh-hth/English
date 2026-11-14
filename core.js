@@ -10,10 +10,10 @@ L.dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).pa
 L.dayLabel = k => { const d = SRS.diff(k, L.dayKey()); if (d === 0) return 'Today'; if (d === 1) return 'Tomorrow'; const [y, m, dd] = k.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
 
 /* ---------- state ---------- */
-const KEY = 'word-garden.v1';
+const KEY = 'lexigrow.v1', OLD_KEY = 'word-garden.v1';   // OLD_KEY: data saved under the app's earlier name is carried over
 const defaults = () => ({ items: [], log: {}, mission: null, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } });
 const merge = o => { const d = defaults(); return { ...d, ...o, garden: { ...d.garden, ...(o.garden || {}) }, settings: { ...d.settings, ...(o.settings || {}), weather: { ...d.settings.weather, ...((o.settings || {}).weather || {}) } } }; };
-let S = (() => { try { const o = JSON.parse(localStorage.getItem(KEY)); if (o && Array.isArray(o.items)) return merge(o); } catch (e) { /* ignore */ } return defaults(); })();
+let S = (() => { try { const o = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem(OLD_KEY)); if (o && Array.isArray(o.items)) return merge(o); } catch (e) { /* ignore */ } return defaults(); })();
 Object.defineProperty(L, 'S', { get: () => S, set: v => { S = merge(v); } });
 L.save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { L.toast('Storage is full. Export your notes, then delete some.'); return false; } };
 L.reset = () => { S = defaults(); L.save(); };

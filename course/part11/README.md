@@ -42,15 +42,15 @@ Details that matter: copy `package*.json` and install **before** copying the sou
 
 ### Exercises
 
-**11.1.** Write the `Dockerfile` and `.dockerignore`. Build with `docker build -t word-garden .`.
+**11.1.** Write the `Dockerfile` and `.dockerignore`. Build with `docker build -t lexigrow .`.
 
 **11.2.** Make the server serve `./public` in production (your Part 3 static handler, with the path configurable).
 
 **11.3.** Extend `docker-compose.yml` with an `app` service that depends on `db` (with a database health check), passes `DATABASE_URL` and `JWT_SECRET` from your **`.env` file** (not written in the compose file), and runs migrations before starting. Open `http://localhost:3001` and sign up.
 
-**11.4.** Run `docker history word-garden` and `docker image ls`. How big is the image? Remove one thing that does not need to be there and compare.
+**11.4.** Run `docker history lexigrow` and `docker image ls`. How big is the image? Remove one thing that does not need to be there and compare.
 
-**11.5.** Prove no secret is in the image: `docker run --rm word-garden env` and `docker run --rm word-garden ls -la`. Explain what you looked for.
+**11.5.** Prove no secret is in the image: `docker run --rm lexigrow env` and `docker run --rm lexigrow ls -la`. Explain what you looked for.
 
 ## b. GitHub Actions
 
@@ -68,13 +68,13 @@ jobs:
     services:
       postgres:
         image: postgres:16
-        env: { POSTGRES_USER: garden, POSTGRES_PASSWORD: garden, POSTGRES_DB: wordgarden_test }
+        env: { POSTGRES_USER: garden, POSTGRES_PASSWORD: garden, POSTGRES_DB: lexigrow_test }
         ports: ['5433:5432']
         options: >-
           --health-cmd "pg_isready -U garden" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       NODE_ENV: test
-      DATABASE_URL: postgres://garden:garden@localhost:5433/wordgarden_test
+      DATABASE_URL: postgres://garden:garden@localhost:5433/lexigrow_test
       JWT_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
     steps:
       - uses: actions/checkout@v4

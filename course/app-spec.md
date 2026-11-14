@@ -1,4 +1,4 @@
-# The course app: Word Garden
+# The course app: Lexigrow
 
 A mobile-first web app for taking notes on the English you pick up, reviewing them on a spaced schedule, practising actively, and growing a plant.
 

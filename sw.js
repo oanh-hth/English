@@ -1,4 +1,4 @@
-const CACHE = 'word-garden-v6';
+const CACHE = 'lexigrow-v1';
 const FILES = ['./', 'index.html', 'styles.css', 'srs.js', 'plants.js', 'exercises.js', 'core.js', 'weather.js', 'notebook.js', 'views.js', 'session.js', 'practice.js', 'boot.js', 'manifest.webmanifest', 'fonts/lilita-one-latin-400-normal.woff2', 'fonts/fredoka-latin-600-normal.woff2', 'fonts/fredoka-latin-700-normal.woff2', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

@@ -35,7 +35,7 @@ L.currentWx = () => {
   return L.defaultWx();
 };
 
-const CK = 'word-garden.wx';
+const CK = 'lexigrow.wx';
 L.refreshWeather = async (force = false) => {
   const w = L.S.settings.weather || {};
   if (w.mode !== 'live' || w.lat == null) return;

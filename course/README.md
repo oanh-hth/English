@@ -1,8 +1,8 @@
-# Build Word Garden: a full stack course
+# Build Lexigrow: a full stack course
 
 This course teaches you to build a complete, deployed, full stack web app from an empty folder: **React and TypeScript** on the front, **Node.js and Express** on the back, and a **PostgreSQL relational database** underneath. It follows the format of [Full Stack Open](https://fullstackopen.com): numbered **parts**, each split into **lessons** (a, b, c) with **exercises** at the end of every lesson. All exercises add to the **same project**, so when you finish you own the finished app, with users, a database, tests, CI and a live URL.
 
-The app you build is **Word Garden**: a notebook for the English you pick up, with spaced review, active practice and a plant that grows as you study. Read [`app-spec.md`](app-spec.md) first.
+The app you build is **Lexigrow**: a notebook for the English you pick up, with spaced review, active practice and a plant that grows as you study. Read [`app-spec.md`](app-spec.md) first.
 
 ## The stack
 
@@ -66,10 +66,10 @@ If an exercise is stuck for more than 30 minutes: re-read the lesson, then read 
 
 ## The reference app
 
-The repository root holds a finished **vanilla JavaScript** version of Word Garden that keeps everything in the browser (`index.html`, `core.js`, `srs.js`, `plants.js`, `weather.js`, `notebook.js`, `views.js`, `session.js`, `practice.js`). Run it with `python3 -m http.server 8123` and open `http://localhost:8123`. It is your **behaviour reference**, not your starting point. You build a new version with a real server and database in your own folder, so what you learn is how the pieces fit together.
+The repository root holds a finished **vanilla JavaScript** version of Lexigrow that keeps everything in the browser (`index.html`, `core.js`, `srs.js`, `plants.js`, `weather.js`, `notebook.js`, `views.js`, `session.js`, `practice.js`). Run it with `python3 -m http.server 8123` and open `http://localhost:8123`. It is your **behaviour reference**, not your starting point. You build a new version with a real server and database in your own folder, so what you learn is how the pieces fit together.
 
 ## Ground rules
 
-- Use your **own project folder** (`word-garden`), separate from this repository.
+- Use your **own project folder** (`lexigrow`), separate from this repository.
 - **Never put a secret in git.** Passwords, JWT secrets and database URLs go in a `.env` file that `.gitignore` blocks. The passwords in `docker-compose.yml` are for your laptop only. Part 6 and Part 11 explain why in detail.
 - Commit small and often. A project history of 150 small commits is a better portfolio than one big one.

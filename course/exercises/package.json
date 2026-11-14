@@ -1,5 +1,5 @@
 {
-  "name": "word-garden-exercises",
+  "name": "lexigrow-exercises",
   "private": true,
   "type": "module",
   "scripts": { "test": "vitest run", "test:watch": "vitest" },

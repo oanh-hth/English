@@ -4,7 +4,7 @@
 
 **You will learn:** Node.js modules and scripts, Express 5, REST design, middleware, validation with zod, environment variables, calling another API from a server.
 
-Work in `word-garden/backend`.
+Work in `lexigrow/backend`.
 
 ## a. Node and TypeScript on the server
 

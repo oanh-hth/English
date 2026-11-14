@@ -103,6 +103,10 @@ async function run(name, device) {
   await p.evaluate(() => { L.plant('chilli'); const old = SRS.addDays(L.dayKey(), -5); L.S.log = { [old]: { watered: 1, pts: 0, reviews: 0, practice: 0, added: 0 } }; L.render(); }); ok(await p.locator('.plant.thirsty').count() === 1, `${name}: plant looks thirsty after 5 idle days`); await shot('garden-thirsty');
   // reload persistence
   await p.reload(); ok(await p.evaluate(() => L.S.items.length) === NOTES.length + 2, `${name}: data survives reload`);
+  // data saved under the app's earlier name is carried over
+  { const c2 = await b.newContext({ ...device }); const p2 = await c2.newPage(); await p2.addInitScript(() => { if (!localStorage.getItem('lexigrow.v1') && !localStorage.getItem('word-garden.v1')) localStorage.setItem('word-garden.v1', JSON.stringify({ items: [{ id: 'a', kind: 'word', text: 'legacy', meaning: '', example: '', note: '', stage: 0, due: '2026-11-15', added: '2026-11-14' }], log: {}, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } })); });
+    await p2.goto(URL); ok(await p2.evaluate(() => L.S.items.length === 1 && L.S.items[0].text === 'legacy'), `${name}: notes saved under the old name are loaded`);
+    await p2.evaluate(() => { L.today(); L.save(); }); ok(await p2.evaluate(() => !!localStorage.getItem('lexigrow.v1')), `${name}: data is saved under the new name`); await c2.close(); }
   ok(errs.length === 0, `${name}: no console errors ${errs.join(' | ')}`);
   await b.close();
 }

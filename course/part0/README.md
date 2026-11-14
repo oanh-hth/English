@@ -37,11 +37,11 @@ dist/
 
 **0.1.** Install the four tools. Paste the output of `node -v`, `git --version` and `docker --version` into a file `NOTES.md`.
 
-**0.2.** Create a folder `word-garden`, run `git init`, and add the `.gitignore` above plus a `README.md` with one sentence about the app. Commit with the message `Start the project`.
+**0.2.** Create a folder `lexigrow`, run `git init`, and add the `.gitignore` above plus a `README.md` with one sentence about the app. Commit with the message `Start the project`.
 
 **0.3.** Create an empty repository on GitHub (no README, no license), connect it with `git remote add origin ...`, and push. Check that your `.gitignore` is visible on GitHub.
 
-**0.4.** Create a file `.env.example` containing `DATABASE_URL=postgres://garden:garden@localhost:5432/wordgarden`. Explain in `NOTES.md` why `.env.example` is committed but `.env` is not.
+**0.4.** Create a file `.env.example` containing `DATABASE_URL=postgres://garden:garden@localhost:5432/lexigrow`. Explain in `NOTES.md` why `.env.example` is committed but `.env` is not.
 
 ## b. The web in ten minutes
 
@@ -94,7 +94,7 @@ The reference app keeps everything in the browser. Your version will keep everyt
 **0.12.** Create the project skeleton:
 
 ```
-word-garden/
+lexigrow/
   backend/    (npm init -y)
   frontend/   (empty for now)
   NOTES.md

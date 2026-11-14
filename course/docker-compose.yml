@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: garden
       POSTGRES_PASSWORD: garden
-      POSTGRES_DB: wordgarden
+      POSTGRES_DB: lexigrow
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
   db_test:
@@ -14,7 +14,7 @@ services:
     environment:
       POSTGRES_USER: garden
       POSTGRES_PASSWORD: garden
-      POSTGRES_DB: wordgarden_test
+      POSTGRES_DB: lexigrow_test
     ports: ["5433:5432"]
 volumes:
   pgdata:

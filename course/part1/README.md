@@ -4,7 +4,7 @@
 
 **You will learn:** TypeScript's type system, React components, props, state, events, controlled forms, unit tests for pure logic, CSS for phones and tablets.
 
-Work in `word-garden/frontend`.
+Work in `lexigrow/frontend`.
 
 ## a. TypeScript essentials
 

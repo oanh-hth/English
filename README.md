@@ -1,4 +1,4 @@
-# Word Garden
+# Lexigrow
 
 A notebook for the English you pick up, with spaced review, exercises built from your own notes, and a plant that grows as you study. Works on iPhone and iPad, installs to the home screen, runs offline, and keeps everything on your device.
 

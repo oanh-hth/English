@@ -4,7 +4,7 @@
 
 **You will learn:** an ORM and its models, schema migrations, pure-function design with tests, transactions and row locks, SQL aggregation from code.
 
-Work in `word-garden/backend`.
+Work in `lexigrow/backend`.
 
 ## a. Connecting and modelling
 

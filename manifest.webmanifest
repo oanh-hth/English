@@ -1,6 +1,6 @@
 {
-  "name": "Word Garden: grow your English",
-  "short_name": "Word Garden",
+  "name": "Lexigrow: grow your English",
+  "short_name": "Lexigrow",
   "description": "Take notes on English phrases and words, review them on a spaced schedule, practice, and grow a plant.",
   "start_url": "./index.html",
   "scope": "./",

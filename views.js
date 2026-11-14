@@ -17,7 +17,7 @@ const weekStrip = () => {
 L.views.garden = () => {
   const g = S().garden, cur = g.cur, wx = L.currentWx(), t = L.today(), due = L.due().length, hr = new Date().getHours();
   const hello = hr < 5 ? 'Still up?' : hr < 12 ? 'Good morning!' : hr < 18 ? 'Good afternoon!' : 'Good evening!';
-  const head = `<div class="row" style="justify-content:space-between"><p class="brand">Word Garden</p><span class="chipstat">${plural(L.activeDays(), 'day')} watered</span></div><h1>${hello}</h1>`;
+  const head = `<div class="row" style="justify-content:space-between"><p class="brand">Lexigrow</p><span class="chipstat">${plural(L.activeDays(), 'day')} watered</span></div><h1>${hello}</h1>`;
   if (!cur) return head + `<p class="muted">Your garden is empty.</p>` + seedPicker() + shelf();
   const st = L.plantStage(), P = PLANTS[cur.type], thirsty = L.thirsty(), ready = L.ready();
   const mot = ready ? `Your ${P.name.toLowerCase()} is ripe. Time to harvest!` : t.watered ? `Watered today. ${t.pts ? `${t.pts} points earned.` : 'Review your notes to grow it faster.'}` : due ? `${plural(due, 'note')} waiting. Review them to water your plant.` : 'Add a note or practice to water your plant today.';
@@ -73,12 +73,12 @@ A.setCap = el => { S().settings.cap = +el.dataset.n; L.save(); L.render(true); }
 A.wxRefresh = () => { L.toast('Updating...'); L.refreshWeather(true); };
 A.exportData = () => {
   const blob = new Blob([JSON.stringify(S(), null, 2)], { type: 'application/json' }), a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = `word-garden-backup-${L.dayKey()}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  a.href = URL.createObjectURL(blob); a.download = `lexigrow-backup-${L.dayKey()}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 };
 document.addEventListener('change', e => {
   if (e.target.id !== 'importfile' || !e.target.files[0]) return;
   const r = new FileReader();
-  r.onload = () => { try { const o = JSON.parse(r.result); if (!o || !Array.isArray(o.items)) throw 0; L._import = o; L.openSheet(`<h2 style="margin-top:0">Replace your data?</h2><p>This backup has <b>${plural(o.items.length, 'note')}</b>. It replaces what is on this device now.</p><div class="stack"><button class="btn" data-a="importYes">Replace</button><button class="btn ghost" data-a="closeSheet">Cancel</button></div>`); } catch (x) { L.toast('That file is not a Word Garden backup.'); } e.target.value = ''; };
+  r.onload = () => { try { const o = JSON.parse(r.result); if (!o || !Array.isArray(o.items)) throw 0; L._import = o; L.openSheet(`<h2 style="margin-top:0">Replace your data?</h2><p>This backup has <b>${plural(o.items.length, 'note')}</b>. It replaces what is on this device now.</p><div class="stack"><button class="btn" data-a="importYes">Replace</button><button class="btn ghost" data-a="closeSheet">Cancel</button></div>`); } catch (x) { L.toast('That file is not a Lexigrow backup.'); } e.target.value = ''; };
   r.readAsText(e.target.files[0]);
 });
 A.importYes = () => { L.S = L._import; L.save(); L.closeSheet(); L.go('garden'); L.toast('Backup restored.'); L.refreshWeather(); };

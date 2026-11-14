@@ -1,4 +1,4 @@
--- Word Garden: PostgreSQL schema (the reference design for Parts 4 and 5).
+-- Lexigrow: PostgreSQL schema (the reference design for Parts 4 and 5).
 -- In the course you will create this with migrations, not by running this file by hand.
 
 CREATE TABLE users (
