@@ -111,7 +111,9 @@ label,.label{font-size:.85rem;color:var(--muted);font-weight:700}
 #app{position:relative;z-index:1;min-height:100vh}
 html:not([data-backdrop="plain"]) body{background:#2a2a2a}
 html:not([data-backdrop="plain"]) .top{background:color-mix(in srgb,var(--surface) 82%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
-html:not([data-backdrop="plain"]) .view{background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:18px;margin:20px auto;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+html:not([data-backdrop="plain"]) .view{background:color-mix(in srgb,var(--paper) 45%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);border-radius:18px;margin:20px auto;box-shadow:0 10px 40px rgba(0,0,0,.18);border:1px solid color-mix(in srgb,#fff 35%,transparent)}
+html:not([data-backdrop="plain"]) .view > .card,html:not([data-backdrop="plain"]) .view > .stack > .card,html:not([data-backdrop="plain"]) .settings-grid > .card,html:not([data-backdrop="plain"]) .capture{background:color-mix(in srgb,var(--surface) 62%,transparent)}
+html:not([data-backdrop="plain"]) .task-list h2,html:not([data-backdrop="plain"]) .view > .muted{text-shadow:0 1px 2px color-mix(in srgb,var(--paper) 80%,transparent)}
 .backdrop-pick select{min-height:34px;width:auto;padding:4px 8px;border-radius:999px;font-size:.85rem}
 @media (max-width:560px){.backdrop-pick{order:3}}
 
