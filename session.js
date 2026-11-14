@@ -47,7 +47,7 @@ const reviewDone = () => {
     <div class="grid3"><div class="card stat"><b>${g + e}</b><span>got it</span></div><div class="card stat"><b>${h}</b><span>hard</span></div><div class="card stat"><b>${a}</b><span>again</span></div></div>
     <div class="center"><span class="xp-pill">+${R.gp} growth</span></div>${plantBlock(R.gp)}
     <p class="small muted">${next ? 'Next review ' + esc(L.dayLabel(next).toLowerCase()) + '.' : ''}</p>
-    <div class="stack"><button class="btn" data-a="doneBack">Back to garden</button>${S().items.length >= 1 ? '<button class="btn ghost" data-a="startWrite">Write with your words</button>' : ''}</div>`;
+    <div class="stack"><button class="btn" data-a="doneBack">Back to garden</button></div>`;
 };
 A.doneBack = () => { R = null; L.go('garden'); };
 

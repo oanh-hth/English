@@ -20,7 +20,7 @@ L.views.garden = () => {
   const head = `<div class="row" style="justify-content:space-between"><p class="brand">Word Garden</p><span class="chipstat">${plural(L.activeDays(), 'day')} watered</span></div><h1>${hello}</h1>`;
   if (!cur) return head + `<p class="muted">Your garden is empty.</p>` + seedPicker() + shelf();
   const st = L.plantStage(), P = PLANTS[cur.type], thirsty = L.thirsty(), ready = L.ready();
-  const mot = ready ? `Your ${P.name.toLowerCase()} is ripe. Time to harvest!` : t.watered ? `Watered today. ${t.pts ? `${t.pts} points earned.` : 'Do a review or exercise to grow it faster.'}` : due ? `${plural(due, 'note')} waiting. Review them to water your plant.` : 'Add a note or practice to water your plant today.';
+  const mot = ready ? `Your ${P.name.toLowerCase()} is ripe. Time to harvest!` : t.watered ? `Watered today. ${t.pts ? `${t.pts} points earned.` : 'Review your notes to grow it faster.'}` : due ? `${plural(due, 'note')} waiting. Review them to water your plant.` : 'Add a note or practice to water your plant today.';
   const plantHtml = plantSvg(cur.type, st.t, { thirsty });
   const wxBtn = S().settings.weather.mode === 'off' ? '' : `<span class="wxchip">${esc(L.wxLine(wx))}</span>`;
   const scene = `<div class="card scenecard"><div class="scenewrap">${L.scene(wx, plantHtml)}${wxBtn}</div>
@@ -28,7 +28,7 @@ L.views.garden = () => {
     <div class="bar xp"><i style="width:${pct(cur.gp, P.need)}%"></i></div><p class="small muted" style="margin:6px 0 0">${cur.gp} / ${P.need} growth · ${thirsty ? 'Your plant is thirsty. Any study brings it back.' : esc(L.wxNote(wx))}</p>
     ${ready ? `<button class="btn coral" style="margin-top:12px" data-a="harvest">Harvest your ${P.name.toLowerCase()}</button>` : ''}</div></div>`;
   const right = `<div class="card review-card ${due ? 't-coral tinted' : ''}"><div class="row"><div class="grow"><h3>${due ? plural(due, 'note') + ' to review' : 'All caught up'}</h3><span class="small" style="opacity:.8">${due ? 'Quick review, a few minutes' : (SRS.nextAfter(S().items, L.dayKey()) ? 'Next review ' + L.dayLabel(SRS.nextAfter(S().items, L.dayKey())).toLowerCase() : 'Notes you add will show up here')}</span></div>${L.doodle('drop', 'cardart')}</div>${due ? '<button class="btn" style="margin-top:12px" data-a="startReview">Start review</button>' : ''}</div>
-    <div class="grid2"><button class="card act" data-a="noteAdd">${L.doodle('pencil')}<b>Add a note</b><span class="small muted">+5 growth</span></button><button class="card act" data-a="startWrite">${L.doodle('target')}<b>Write</b><span class="small muted">Use your words, get feedback</span></button></div>
+    <div class="grid2"><button class="card act" data-a="noteAdd">${L.doodle('pencil')}<b>Add a note</b><span class="small muted">+5 growth</span></button><button class="card act" data-a="bulkOpen">${L.doodle('book')}<b>Add many</b><span class="small muted">Paste a list</span></button></div>
     <div class="card"><div class="row" style="justify-content:space-between"><h3>This week</h3><span class="small muted">Today: ${t.pts + (t.watered ? 20 : 0)} growth</span></div>${weekStrip()}</div>
     ${S().settings.weather.mode === 'off' ? `<div class="card cheer-card"><b>Match your garden to the sky</b><p style="margin:6px 0 12px">Show the real weather outside, from rain to snow. Only your rough location is used.</p><div class="row" style="gap:8px"><button class="btn coral sm" data-a="wxLocate">Use my location</button><button class="btn ghost sm" data-a="wxCity">Pick a city</button></div></div>` : ''}`;
   return head + `<p class="muted">${mot}</p><div class="home-grid"><div>${scene}</div><div>${right}</div></div>${shelf()}`;
@@ -39,7 +39,6 @@ A.harvest = () => { const n = PLANTS[S().garden.cur.type].name; L.harvest(); L.r
 A.startReview = () => L.startReview(L.due().slice(0, 30).map(i => i.id));
 
 /* ---------- Review overview ---------- */
-const writeCard = () => { const w = S().writings || [], last = w[0]; return `<button class="item t-pink" data-a="startWrite"><span class="ico">${L.doodle('pencil')}</span><span class="grow"><b>Write with your words</b><br><span class="small muted">Use a few of your notes in your own sentences. AI scores how natural it sounds and checks each word.${last ? ` Last score: ${last.score}.` : ''}</span></span><span class="pill">up to +74</span></button>`; };
 const rrow = it => `<div class="rrow"><div class="grow"><b>${esc(it.text)}</b><div class="small muted clamp">${esc(it.meaning || it.example || '')}</div></div>${SRS.diff(it.due, L.dayKey()) < 0 ? `<span class="pill warn">${esc(SRS.whenLabel(it.due, L.dayKey()))}</span>` : L.dots(it.stage)}</div>`;
 L.views.review = () => {
   const items = S().items, today = L.dayKey(), due = L.due(), up = SRS.upcoming(items, today, 21), cap = L.cap(), known = items.filter(i => i.stage >= 5).length;
@@ -49,7 +48,6 @@ L.views.review = () => {
   const days = up.map(g => `<div class="upday"><div class="updl"><b>${esc(L.dayLabel(g.day))}</b><span class="small muted">${plural(g.items.length, 'note')}</span></div><div class="bar"><i style="width:${pct(g.items.length, cap)}%"></i></div><div class="chips" style="margin-top:8px">${g.items.slice(0, 4).map(i => `<span class="chip">${esc(i.text.length > 22 ? i.text.slice(0, 21) + '…' : i.text)}</span>`).join('')}${g.items.length > 4 ? `<span class="chip">+${g.items.length - 4}</span>` : ''}</div></div>`).join('');
   return `<p class="brand">Review</p><h1>Spaced review</h1><p class="muted">New notes come back tomorrow, then in 3 days, a week, two weeks and beyond. No more than ${cap} notes per day, so reviews never pile up.</p>
     ${hero}
-    ${writeCard()}
     <div class="grid3"><div class="card stat"><b>${items.length}</b><span>notes</span></div><div class="card stat"><b>${items.filter(i => i.stage >= 1 && i.stage < 5).length}</b><span>learning</span></div><div class="card stat"><b>${known}</b><span>known</span></div></div>
     ${due.length ? `<h2 class="display">Due today</h2><div class="card rlist">${due.map(rrow).join('')}</div>` : ''}
     <h2 class="display">Coming up</h2>${up.length ? `<div class="updays">${days}</div>` : '<div class="card empty small">No reviews in the next 3 weeks.</div>'}`;
@@ -66,7 +64,7 @@ L.views.me = () => {
     <div class="grid3"><div class="card stat"><b>${items.length}</b><span>notes</span></div><div class="card stat"><b>${L.activeDays()}</b><span>days watered</span></div><div class="card stat"><b>${s.garden.done.length}</b><span>harvested</span></div></div>
     <div class="card"><h3>Review pace</h3><p class="small muted">The most notes that can come due on one day. Big batches are spread across several days.</p><div class="seg">${[5, 8, 10, 15, 20].map(n => `<button data-a="setCap" data-n="${n}" class="${L.cap() === n ? 'on' : ''}">${n}</button>`).join('')}</div></div>
     <div class="card"><h3>Garden weather</h3><div class="seg" style="margin:8px 0">${modes.map(([k, l]) => `<button data-a="wxMode" data-m="${k}" class="${w.mode === k ? 'on' : ''}">${l}</button>`).join('')}</div>${wxDetail}<p class="small muted" style="margin-top:10px">Weather comes from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Only coordinates are sent. Nothing else leaves your device.</p></div>
-    ${L.keyCard()}<div class="card"><h3>Your data</h3><p class="small muted">Everything lives on this device. Export a backup now and then, especially before clearing your browser.</p><div class="stack"><button class="btn ghost" data-a="exportData">Export backup</button><label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="importfile" accept="application/json,.json" hidden></label><button class="btn ghost" data-a="resetAsk" style="color:var(--bad)">Delete everything</button></div></div>
+    <div class="card"><h3>Your data</h3><p class="small muted">Everything lives on this device. Export a backup now and then, especially before clearing your browser.</p><div class="stack"><button class="btn ghost" data-a="exportData">Export backup</button><label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="importfile" accept="application/json,.json" hidden></label><button class="btn ghost" data-a="resetAsk" style="color:var(--bad)">Delete everything</button></div></div>
     <p class="small muted" style="text-align:center">Pronunciation: tap YouGlish on any note to hear real speakers.</p>`;
 };
 A.setCap = el => { S().settings.cap = +el.dataset.n; L.save(); L.render(true); };
