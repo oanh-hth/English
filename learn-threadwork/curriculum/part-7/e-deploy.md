@@ -56,4 +56,4 @@ This exercise has no automatic tests. Tick it when you've done it (change `[ ]` 
 
 ---
 
-[← 7d Offline and on the iPad](d-offline-and-ipad.md) · [Back to the course overview →](../../README.md)
+[← 7d Offline and on the iPad](d-offline-and-ipad.md) · [Part 8: Themes, stickers and folders →](../part-8/README.md)

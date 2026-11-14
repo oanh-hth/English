@@ -4,7 +4,8 @@ A self-paced course in **TypeScript, React and Node.js**, in the style of [Full 
 
 - every task is **simple** (just tick it) or **complex**;
 - when you finish a complex task you write down the **result** and your **decision**, and file it under a **web development category** (HTML, CSS, Layout, Accessibility, React, State management, Performance, Testing, Node.js, APIs, Deployment…);
-- the **decision log** lets you filter everything you've decided by group, category or text, and export it as Markdown.
+- the **decision log** lets you filter everything you've decided by group, category or text, and export it as Markdown;
+- it's a nice place to be: **animated backgrounds** (coffee shop, cozy room, library, rainy window, night city), **stickers** on decisions, and a shelf of **illustrated folders**, one per topic.
 
 The course is split into **parts**, and each part into **sections**. A section teaches the ideas you need, with examples from Threadwork, and ends with **exercises** that build the next piece of the app. Most exercises have tests that tell you when you're done. **When you finish the last exercise, Threadwork is finished**, deployed and on your iPad's home screen.
 
@@ -20,8 +21,9 @@ The course is split into **parts**, and each part into **sections**. A section t
 | **[Part 5: The decision log](curriculum/part-5/README.md)** | The decision log: filter by group, category and text, decision cards, the page that combines them, and an export to Markdown. | [5a](curriculum/part-5/a-filters.md) · [5b](curriculum/part-5/b-decision-cards.md) · [5c](curriculum/part-5/c-the-decision-log.md) · [5d](curriculum/part-5/d-export.md) | 5.1–5.4 |
 | **[Part 6: A Node.js server](curriculum/part-6/README.md)** | A Node.js server with Express: a REST API, accounts with safe passwords and tokens, and data saved in files with conflict checks. | [6a](curriculum/part-6/a-express.md) · [6b](curriculum/part-6/b-rest-api.md) · [6c](curriculum/part-6/c-accounts.md) · [6d](curriculum/part-6/d-storage.md) | 6.1–6.4 |
 | **[Part 7: Full stack and shipping](curriculum/part-7/README.md)** | Full stack and shipping: the API client, sync between devices, sign-in, offline support, installing on the iPad and deploying. | [7a](curriculum/part-7/a-api-client.md) · [7b](curriculum/part-7/b-sync.md) · [7c](curriculum/part-7/c-sign-in.md) · [7d](curriculum/part-7/d-offline-and-ipad.md) · [7e](curriculum/part-7/e-deploy.md) | 7.1–7.6 |
+| **[Part 8: Themes, stickers and folders](curriculum/part-8/README.md)** | Make it yours: animated SVG scenes behind the app, stickers on decisions, and a shelf of illustrated folders with paper notes inside. | [8a](curriculum/part-8/a-svg-scenes.md) · [8b](curriculum/part-8/b-stickers.md) · [8c](curriculum/part-8/c-folders.md) | 8.1–8.7 |
 
-33 exercises: 29 with automatic tests, 4 you tick yourself (like installing on the iPad). Plan on 25–40 hours if these tools are new to you.
+40 exercises: 35 with automatic tests, 5 you tick yourself (like installing on the iPad). Plan on 30–45 hours if these tools are new to you.
 
 ## Start
 

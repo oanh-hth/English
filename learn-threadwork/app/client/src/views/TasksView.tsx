@@ -1,9 +1,10 @@
-// Given: the Tasks page. Uses weekSummary (2.4), QuickCapture (3.2), TaskList (3.3) and OutcomeForm (3.4).
+// Given: the Tasks page. Uses weekSummary (2.4), QuickCapture (3.2), TaskList (3.3), OutcomeForm (3.4) and StickerPicker (8.4).
 import { useEffect, useState } from "react";
 import { useApp } from "@app/client/src/state/AppContext";
 import { QuickCapture } from "@app/client/src/components/QuickCapture";
 import { TaskList } from "@app/client/src/components/TaskList";
 import { OutcomeForm } from "@app/client/src/components/OutcomeForm";
+import { StickerPicker } from "@app/client/src/components/Stickers";
 import { ErrorBoundary } from "@app/client/src/components/ErrorBoundary";
 import { weekSummary } from "@app/shared/summary";
 import { categoryById } from "@app/shared/categories";
@@ -30,6 +31,8 @@ export function TasksView({ editId, onEdited }: { editId: string | null; onEdite
   useEffect(() => { if (editId) setRecording(editId); }, [editId]);
   const today = todayKey();
   const task = state.tasks.find(t => t.id === recording) ?? null;
+  const [sticker, setSticker] = useState<string | null>(null);
+  useEffect(() => { setSticker(task?.outcome?.sticker ?? null); }, [task?.id]);
   const close = () => { setRecording(null); onEdited(); };
   return (
     <div className="stack">
@@ -46,10 +49,17 @@ export function TasksView({ editId, onEdited }: { editId: string | null; onEdite
       </ErrorBoundary>
       {task && (
         <div className="overlay">
-          <ErrorBoundary area="The outcome form">
-            <OutcomeForm key={task.id} task={task} onCancel={close}
-              onSave={outcome => { dispatch({ type: "recordOutcome", id: task.id, outcome, today }); close(); }} />
-          </ErrorBoundary>
+          <div className="outcome-stack">
+            <ErrorBoundary area="The outcome form">
+              <OutcomeForm key={task.id} task={task} onCancel={close}
+                onSave={outcome => {
+                  dispatch({ type: "recordOutcome", id: task.id, outcome, today });
+                  dispatch({ type: "setSticker", id: task.id, sticker });   // stickers come from Part 8
+                  close();
+                }} />
+            </ErrorBoundary>
+            <ErrorBoundary area="Stickers"><StickerPicker value={sticker} onChange={setSticker} /></ErrorBoundary>
+          </div>
         </div>
       )}
     </div>

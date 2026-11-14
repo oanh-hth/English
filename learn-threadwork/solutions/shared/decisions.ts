@@ -1,7 +1,7 @@
 import type { Day, Task } from "@app/shared/types";
 import { categoryById, type Group } from "@app/shared/categories";
 
-export interface Decision { taskId: string; title: string; doneAt: Day; result: string; decision: string; category: string }
+export interface Decision { taskId: string; title: string; doneAt: Day; result: string; decision: string; category: string; sticker?: string | null }
 
 export function decisionsOf(tasks: readonly Task[]): Decision[] {
   return tasks

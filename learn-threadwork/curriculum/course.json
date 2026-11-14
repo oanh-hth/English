@@ -208,6 +208,29 @@
           "title": "Putting it online"
         }
       ]
+    },
+    {
+      "id": "8",
+      "folder": "part-8",
+      "slug": "themes",
+      "title": "Themes, stickers and folders",
+      "sections": [
+        {
+          "id": "a",
+          "file": "curriculum/part-8/a-svg-scenes.md",
+          "title": "Animated SVG scenes"
+        },
+        {
+          "id": "b",
+          "file": "curriculum/part-8/b-stickers.md",
+          "title": "Stickers"
+        },
+        {
+          "id": "c",
+          "file": "curriculum/part-8/c-folders.md",
+          "title": "Folders and paper notes"
+        }
+      ]
     }
   ],
   "exercises": [
@@ -598,6 +621,90 @@
       "files": [],
       "lesson": "curriculum/part-7/e-deploy.md",
       "manual": true
+    },
+    {
+      "id": "8.1",
+      "part": "8",
+      "section": "a",
+      "slug": "theme-picker",
+      "title": "ThemePicker",
+      "files": [
+        "app/client/src/components/ThemePicker.tsx"
+      ],
+      "lesson": "curriculum/part-8/a-svg-scenes.md",
+      "test": "tests/part-8/8.1-theme-picker.test.tsx"
+    },
+    {
+      "id": "8.2",
+      "part": "8",
+      "section": "a",
+      "slug": "own-scene",
+      "title": "Draw your own scene",
+      "files": [
+        "app/client/src/art/art.ts"
+      ],
+      "lesson": "curriculum/part-8/a-svg-scenes.md",
+      "manual": true
+    },
+    {
+      "id": "8.3",
+      "part": "8",
+      "section": "b",
+      "slug": "stickers",
+      "title": "Stickers on decisions",
+      "files": [
+        "app/shared/stickers.ts"
+      ],
+      "lesson": "curriculum/part-8/b-stickers.md",
+      "test": "tests/part-8/8.3-stickers.test.ts"
+    },
+    {
+      "id": "8.4",
+      "part": "8",
+      "section": "b",
+      "slug": "stickers-ui",
+      "title": "Sticker and StickerPicker",
+      "files": [
+        "app/client/src/components/Stickers.tsx"
+      ],
+      "lesson": "curriculum/part-8/b-stickers.md",
+      "test": "tests/part-8/8.4-stickers-ui.test.tsx"
+    },
+    {
+      "id": "8.5",
+      "part": "8",
+      "section": "c",
+      "slug": "folders",
+      "title": "One folder per category",
+      "files": [
+        "app/shared/folders.ts"
+      ],
+      "lesson": "curriculum/part-8/c-folders.md",
+      "test": "tests/part-8/8.5-folders.test.ts"
+    },
+    {
+      "id": "8.6",
+      "part": "8",
+      "section": "c",
+      "slug": "folder-shelf",
+      "title": "FolderShelf",
+      "files": [
+        "app/client/src/components/FolderShelf.tsx"
+      ],
+      "lesson": "curriculum/part-8/c-folders.md",
+      "test": "tests/part-8/8.6-folder-shelf.test.tsx"
+    },
+    {
+      "id": "8.7",
+      "part": "8",
+      "section": "c",
+      "slug": "folder-view",
+      "title": "FolderView: paper notes",
+      "files": [
+        "app/client/src/components/FolderView.tsx"
+      ],
+      "lesson": "curriculum/part-8/c-folders.md",
+      "test": "tests/part-8/8.7-folder-view.test.tsx"
     }
   ]
 }

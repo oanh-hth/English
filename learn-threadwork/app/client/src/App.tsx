@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch } from
 import { createApi, type Api } from "@app/client/src/api/client";
 import { AppProvider, useApp } from "@app/client/src/state/AppContext";
 import type { AppState } from "@app/shared/types";
-import type { TaskAction } from "@app/shared/tasks-reducer";
+import type { AppAction } from "@app/client/src/state/rootReducer";
+import { Backdrop, THEMES } from "@app/client/src/components/Art";
 import { useLocalStorage } from "@app/client/src/hooks/useLocalStorage";
 import { useHashRoute } from "@app/client/src/hooks/useHashRoute";
 import { useServerSync, type SyncStatus } from "@app/client/src/hooks/useServerSync";
@@ -47,7 +48,7 @@ function Main() {
 }
 
 function Synced({ api, onSignOut }: { api: Api | null; onSignOut: () => void }) {
-  const dispatchRef = useRef<Dispatch<TaskAction> | null>(null);
+  const dispatchRef = useRef<Dispatch<AppAction> | null>(null);
   const replace = useCallback((state: AppState) => dispatchRef.current?.({ type: "replace", state }), []);
   const sync = useServerSync(api, replace);
   return (
@@ -58,7 +59,7 @@ function Synced({ api, onSignOut }: { api: Api | null; onSignOut: () => void }) 
   );
 }
 
-function Bridge({ onReady }: { onReady: (d: Dispatch<TaskAction>, s: AppState) => void }) {
+function Bridge({ onReady }: { onReady: (d: Dispatch<AppAction>, s: AppState) => void }) {
   const { state, dispatch } = useApp();
   const once = useRef(false);
   useEffect(() => { if (!once.current) { once.current = true; onReady(dispatch, state); } });
@@ -73,8 +74,11 @@ function syncText(status: SyncStatus): string {
 function Shell({ status, onResolve, onSignOut }: { status: SyncStatus; onResolve: (k: "this" | "other") => void; onSignOut: () => void }) {
   const [route, navigate] = useHashRoute(ROUTES, "tasks");
   const [editId, setEditId] = useState<string | null>(null);
+  const [backdrop, setBackdrop] = useLocalStorage("threadwork.backdrop", "coffee");
+  useEffect(() => { document.documentElement.dataset.backdrop = backdrop; }, [backdrop]);
   return (
     <div className="shell">
+      <Backdrop id={backdrop} />
       <header className="top">
         <strong className="brand">Threadwork</strong>
         <nav aria-label="Main" className="tabs">
@@ -84,12 +88,16 @@ function Shell({ status, onResolve, onSignOut }: { status: SyncStatus; onResolve
           ? <div className="banner" role="alert">Changed on another device too. Keep{" "}
               <button onClick={() => onResolve("this")}>this device's copy</button> or <button onClick={() => onResolve("other")}>the other copy</button>?</div>
           : <span className="sync">{syncText(status)}</span>}
+        <label className="backdrop-pick"><span className="visually-hidden">Background</span>
+          <select aria-label="Background" value={backdrop} onChange={e => setBackdrop(e.target.value)}>
+            {THEMES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select></label>
       </header>
       <main className="view">
         <ErrorBoundary key={route} area={ROUTE_NAMES[route]}>
           {route === "tasks" && <TasksView editId={editId} onEdited={() => setEditId(null)} />}
           {route === "decisions" && <DecisionsView onEdit={id => { setEditId(id); navigate("tasks"); }} />}
-          {route === "settings" && <SettingsView onSignOut={onSignOut} syncText={syncText(status)} />}
+          {route === "settings" && <SettingsView onSignOut={onSignOut} syncText={syncText(status)} backdrop={backdrop} onBackdrop={setBackdrop} />}
         </ErrorBoundary>
       </main>
     </div>

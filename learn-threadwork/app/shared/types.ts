@@ -15,6 +15,7 @@ export interface Outcome {
   result: string;        // what happened, what you found out
   decision: string;      // what you decided, and why
   category: string;      // a category id from CATEGORIES (categories.ts)
+  sticker?: string | null;   // a sticker id from STICKERS (Part 8), or none
 }
 
 export interface Task {

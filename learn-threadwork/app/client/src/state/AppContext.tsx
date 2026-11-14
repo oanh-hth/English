@@ -1,9 +1,9 @@
 // Exercise 4.2: AppProvider and useApp. Read curriculum/part-4/b-reducer-and-context.md first.
 import { createContext, type Dispatch, type ReactElement, type ReactNode } from "react";
 import type { AppState } from "@app/shared/types";
-import type { TaskAction } from "@app/shared/tasks-reducer";
+import type { AppAction } from "@app/client/src/state/rootReducer";
 
-export interface AppContextValue { state: AppState; dispatch: Dispatch<TaskAction> }
+export interface AppContextValue { state: AppState; dispatch: Dispatch<AppAction> }
 
 export const AppContext = createContext<AppContextValue | null>(null);
 
@@ -16,7 +16,8 @@ export interface AppProviderProps {
 }
 
 /**
- * Holds the app state with useReducer(tasksReducer, ...) (your reducer from 2.2).
+ * Holds the app state with useReducer(rootReducer, ...). rootReducer (given, state/rootReducer.ts) runs your
+ * tasksReducer (2.2) and, from Part 8, your stickersReducer.
  * - Initial state: withDefaults(what is saved under storageKey (default "threadwork.state")), or withDefaults(null).
  *   withDefaults (given, in state/defaults.ts) fills in fields older saved data doesn't have. Read storage once
  *   with the lazy-init third argument of useReducer. Ignore invalid JSON.

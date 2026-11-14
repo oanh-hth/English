@@ -9,6 +9,7 @@ export interface Decision {
   result: string;
   decision: string;
   category: string;
+  sticker?: string | null;   // copied from the outcome (Part 8)
 }
 
 /** Every DONE task that has an outcome, as a Decision. Newest doneAt first; same day: keep the task order. */

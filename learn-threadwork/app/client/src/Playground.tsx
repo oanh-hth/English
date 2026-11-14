@@ -9,6 +9,8 @@ import { TaskList } from "@app/client/src/components/TaskList";
 import { OutcomeForm } from "@app/client/src/components/OutcomeForm";
 import { DecisionLog } from "@app/client/src/components/DecisionLog";
 import { LoginForm } from "@app/client/src/components/LoginForm";
+import { StickerPicker } from "@app/client/src/components/Stickers";
+import { ThemePicker } from "@app/client/src/components/ThemePicker";
 
 const base = (id: string, title: string, extra: Partial<Task> = {}): Task =>
   ({ id, title, complexity: "simple", status: "todo", due: null, createdAt: "2026-11-01", doneAt: null, outcome: null, ...extra });
@@ -24,6 +26,8 @@ export function Playground() {
   const [tasks, setTasks] = useState(SAMPLE);
   const [recording, setRecording] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
+  const [sticker, setSticker] = useState<string | null>("idea");
+  const [theme, setTheme] = useState("coffee");
   const say = (s: string) => setLog(l => [s, ...l].slice(0, 6));
   const today = "2026-11-14";
   const t = tasks.find(x => x.id === recording);
@@ -49,6 +53,10 @@ export function Playground() {
         onSave={o => { say(`onSave(${o.category})`); edit(t.id, x => ({ ...x, status: "done", doneAt: x.doneAt ?? today, outcome: o })); setRecording(null); }} /></ErrorBoundary></div>}
       <h2>5.3 DecisionLog</h2>
       <ErrorBoundary area="DecisionLog"><DecisionLog tasks={tasks} onEdit={id => { say(`onEdit(${id})`); setRecording(id); }} /></ErrorBoundary>
+      <h2>8.4 StickerPicker</h2>
+      <ErrorBoundary area="StickerPicker"><StickerPicker value={sticker} onChange={id => { say(`onChange(${id})`); setSticker(id); }} /></ErrorBoundary>
+      <h2>8.1 ThemePicker</h2>
+      <ErrorBoundary area="ThemePicker"><ThemePicker value={theme} onChange={id => { say(`onChange(${id})`); setTheme(id); }} /></ErrorBoundary>
       <h2>7.3 LoginForm</h2>
       <ErrorBoundary area="LoginForm"><LoginForm mode="register" onSwitchMode={() => say("onSwitchMode()")}
         onSubmit={email => new Promise((ok, no) => setTimeout(() => (email.startsWith("taken") ? no(new Error("An account with this email already exists")) : (say(`onSubmit(${email})`), ok())), 800))} /></ErrorBoundary>

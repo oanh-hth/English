@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useReducer, useRef, type Dispatch, type ReactNode } from "react";
 import type { AppState } from "@app/shared/types";
-import { tasksReducer, type TaskAction } from "@app/shared/tasks-reducer";
+import { rootReducer, type AppAction } from "@app/client/src/state/rootReducer";
 import { withDefaults } from "@app/client/src/state/defaults";
 
-export interface AppContextValue { state: AppState; dispatch: Dispatch<TaskAction> }
+export interface AppContextValue { state: AppState; dispatch: Dispatch<AppAction> }
 
 export const AppContext = createContext<AppContextValue | null>(null);
 
@@ -23,7 +23,7 @@ function load(key: string): AppState {
 }
 
 export function AppProvider({ children, storageKey = "threadwork.state", onChange }: AppProviderProps) {
-  const [state, dispatch] = useReducer(tasksReducer, storageKey, load);
+  const [state, dispatch] = useReducer(rootReducer, storageKey, load);
   const lastSaved = useRef(state);          // the state we already know about
   const changed = useRef(onChange);
   changed.current = onChange;
