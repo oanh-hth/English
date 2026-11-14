@@ -46,18 +46,38 @@ async function run(name, device) {
   const gp1 = await p.evaluate(() => L.S.garden.cur.gp); ok(gp1 - gp0 >= 8 * 4 + 10, `${name}: review grows the plant (${gp0} -> ${gp1})`);
   await shot('review-done');
   const dueAfter = await p.evaluate(() => L.due().length); ok(dueAfter === 0, `${name}: nothing due after review`);
-  // practice
-  await p.evaluate(() => L.go('practice')); await shot('practice'); await noOverflow('practice');
-  await p.click('[data-a=startPractice][data-t=""]');
-  let right = 0;
-  for (let i = 0; i < 10; i++) {
-    if (await p.locator('[data-a=pick]').count()) await p.locator('[data-a=pick]').first().click(); else { await p.fill('#ans', 'zzz'); await p.click('[data-a=check]'); }
-    if (i === 0) await shot('question');
-    await p.click('[data-a=next]');
-  }
-  ok(await p.locator('.bigpct').count() === 1, `${name}: practice results screen`);
-  await shot('practice-done');
-  const pts = await p.evaluate(() => L.S.pts); ok(pts > 0, `${name}: points awarded (${pts})`);
+  // writing exercise with a mocked Claude
+  let req = null;
+  await ctx.route('https://api.anthropic.com/**', async r => {
+    req = { headers: r.request().headers(), body: JSON.parse(r.request().postData()) };
+    const targets = [...req.body.messages[0].content.matchAll(/^\d+\. "(.+?)"/gm)].map(m => m[1]);
+    const out = { score: 82, level: 'B2', summary: 'Nice and clear.', words: targets.map((w, i) => ({ word: w, verdict: i === 0 ? 'natural' : 'okay', comment: 'Fine.' })), strengths: ['Clear'], corrected: 'A more natural text.', issues: [{ original: 'very much', better: 'a lot', why: 'More casual.' }], new_phrases: [{ text: 'catch up', meaning: 'talk after a while', example: 'Let us catch up.' }] };
+    await r.fulfill({ json: { content: [{ type: 'text', text: '```json\n' + JSON.stringify(out) + '\n```' }] } });
+  });
+  await p.evaluate(() => L.go('review'));
+  ok(await p.locator('#tabs button').count() === 4, `${name}: four tabs, no separate exercise tab`);
+  await shot('review-write');
+  await p.click('[data-a=startWrite]');
+  ok(await p.locator('.target').count() === 3, `${name}: three of your words are offered`);
+  const targetTexts = await p.locator('.target b').allTextContents();
+  await shot('write');
+  await p.fill('#w-text', 'I will get back to you soon. We hang out and figure out things. I run out of time, so it is a bummer. I am reluctant.');
+  await p.click('[data-a=writeSubmit]');
+  ok(await p.locator('#keyin').count() === 1, `${name}: asks for an API key when none is saved`);
+  await p.fill('#keyin', 'sk-ant-test-123'); await p.click('[data-a=keySave]');
+  await p.waitForSelector('.scorecard');
+  ok(req && req.headers['x-api-key'] === 'sk-ant-test-123' && req.headers['anthropic-dangerous-direct-browser-access'] === 'true', `${name}: request sent with the saved key`);
+  ok(req.body.messages[0].content.includes(targetTexts[0]), `${name}: request lists the practiced words`);
+  ok((await p.textContent('.ring-num b')) === '82', `${name}: score shown`);
+  ok(await p.locator('.wordchk').count() === 3, `${name}: per-word feedback`);
+  ok(await p.locator('.issue').count() === 1 && await p.locator('.savecard').count() === 1, `${name}: issues and suggested phrases shown`);
+  await shot('write-result'); await noOverflow('write result');
+  await p.click('[data-a=saveSug]'); ok(await p.evaluate(() => L.S.items.some(i => i.text === 'catch up')), `${name}: suggested phrase saved to notebook`);
+  const keyLeak = await p.evaluate(() => JSON.stringify(L.S).includes('sk-ant') || document.body.innerHTML.includes('sk-ant-test'));
+  ok(!keyLeak, `${name}: key is not in app data or the page`);
+  const pts = await p.evaluate(() => L.S.pts); ok(pts >= 41, `${name}: points awarded (${pts})`);
+  const wr = await p.evaluate(() => ({ n: L.S.writings.length, w: L.today().writes })); ok(wr.n === 1 && wr.w === 1, `${name}: writing recorded`);
+  await p.click('[data-a=writeLeave]');
   // weather
   await p.evaluate(() => L.go('garden'));
   await p.click('[data-a=wxLocate]'); await p.waitForSelector('.wxchip'); ok((await p.textContent('.wxchip')).includes('Rainy'), `${name}: live weather shows rain (${await p.textContent('.wxchip')})`);
@@ -70,7 +90,7 @@ async function run(name, device) {
   // thirsty
   await p.evaluate(() => { L.plant('chilli'); const old = SRS.addDays(L.dayKey(), -5); L.S.log = { [old]: { watered: 1, pts: 0, reviews: 0, practice: 0, added: 0 } }; L.render(); }); ok(await p.locator('.plant.thirsty').count() === 1, `${name}: plant looks thirsty after 5 idle days`); await shot('garden-thirsty');
   // reload persistence
-  await p.reload(); ok(await p.evaluate(() => L.S.items.length) === NOTES.length + 2, `${name}: data survives reload`);
+  await p.reload(); ok(await p.evaluate(() => L.S.items.length) === NOTES.length + 3, `${name}: data survives reload`);
   ok(errs.length === 0, `${name}: no console errors ${errs.join(' | ')}`);
   await b.close();
 }
