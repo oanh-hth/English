@@ -1,0 +1,122 @@
+[
+  {
+    "kind": "phrase",
+    "text": "I will get back to you",
+    "meaning": "reply later",
+    "example": "Let me check and I will get back to you."
+  },
+  {
+    "kind": "phrase",
+    "text": "run out of",
+    "meaning": "have none left",
+    "example": "We ran out of milk."
+  },
+  {
+    "kind": "phrase",
+    "text": "hang out",
+    "meaning": "spend time together",
+    "example": "Want to hang out later?"
+  },
+  {
+    "kind": "phrase",
+    "text": "figure out",
+    "meaning": "solve or understand",
+    "example": "I cannot figure out this puzzle."
+  },
+  {
+    "kind": "phrase",
+    "text": "catch up",
+    "meaning": "talk after a while apart",
+    "example": "Let us catch up this weekend."
+  },
+  {
+    "kind": "phrase",
+    "text": "wrap up",
+    "meaning": "finish",
+    "example": "Let us wrap up the meeting."
+  },
+  {
+    "kind": "phrase",
+    "text": "spill the beans",
+    "meaning": "tell a secret",
+    "example": "He spilled the beans about the party."
+  },
+  {
+    "kind": "phrase",
+    "text": "it is up to you",
+    "meaning": "you decide",
+    "example": "Pizza or tacos? It is up to you."
+  },
+  {
+    "kind": "phrase",
+    "text": "no worries",
+    "meaning": "it is fine, do not worry",
+    "example": "Sorry I am late. No worries."
+  },
+  {
+    "kind": "phrase",
+    "text": "sounds good",
+    "meaning": "I agree",
+    "example": "Meet at six? Sounds good."
+  },
+  {
+    "kind": "word",
+    "text": "reluctant",
+    "meaning": "not wanting to do something",
+    "example": "He was reluctant to leave."
+  },
+  {
+    "kind": "word",
+    "text": "bummer",
+    "meaning": "something disappointing",
+    "example": "Oh, bummer, it is closed."
+  },
+  {
+    "kind": "word",
+    "text": "overwhelmed",
+    "meaning": "too much to handle",
+    "example": "I feel overwhelmed with work."
+  },
+  {
+    "kind": "word",
+    "text": "subtle",
+    "meaning": "not obvious",
+    "example": "There is a subtle difference."
+  },
+  {
+    "kind": "word",
+    "text": "thrilled",
+    "meaning": "very happy and excited",
+    "example": "She was thrilled with the gift."
+  },
+  {
+    "kind": "word",
+    "text": "exhausted",
+    "meaning": "very tired",
+    "example": "I am exhausted after the trip."
+  },
+  {
+    "kind": "word",
+    "text": "awkward",
+    "meaning": "uncomfortable or embarrassing",
+    "example": "The silence got awkward."
+  },
+  {
+    "kind": "word",
+    "text": "grateful",
+    "meaning": "thankful",
+    "example": "I am grateful for your help."
+  },
+  {
+    "kind": "word",
+    "text": "stubborn",
+    "meaning": "refusing to change your mind",
+    "example": "My dad is stubborn."
+  },
+  {
+    "kind": "word",
+    "text": "hectic",
+    "meaning": "very busy and rushed",
+    "example": "It was a hectic morning."
+  }
+]

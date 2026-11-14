@@ -38,6 +38,10 @@ node tests/e2e.js                  # Playwright, needs the server above; weather
 
 Deploy by serving the repository root (GitHub Pages works). Back up your notes from Me > Export backup.
 
+## Learn to build it
+
+[`course/`](course/README.md) is a Full Stack Open style course that rebuilds this app as a full stack project: React and TypeScript, Node and Express, and PostgreSQL with Sequelize migrations. It has 13 parts with lessons and numbered exercises, a database schema with practice data, starter code with automated tests, and reference solutions. This folder is its behaviour reference.
+
 ## Secrets
 
 No API key or `.env` file belongs in this repository. `.gitignore` blocks them. The app needs no API key and sends nothing anywhere except rounded coordinates to the weather service, if you turn weather on.

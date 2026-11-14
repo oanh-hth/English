@@ -1,0 +1,20 @@
+# Part 4: a PostgreSQL you can throw away. `docker compose up -d` to start, `docker compose down -v` to wipe it.
+# These passwords are for your laptop only. Never reuse them anywhere real.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: garden
+      POSTGRES_PASSWORD: garden
+      POSTGRES_DB: wordgarden
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  db_test:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: garden
+      POSTGRES_PASSWORD: garden
+      POSTGRES_DB: wordgarden_test
+    ports: ["5433:5432"]
+volumes:
+  pgdata:
