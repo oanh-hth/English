@@ -1,53 +1,81 @@
-/* Core: state, storage, helpers, doodles, tabs, sheet, toast, confetti, speech. Exposes window.L. */
+/* Core: state, storage, growth, navigation, tabs, sheet, toast, confetti, speech. Exposes window.L. */
 (() => {
 'use strict';
 const L = window.L = { views: {}, A: {}, after: {} };
 const $ = L.$ = s => document.querySelector(s);
-L.esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+L.esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 L.shuffle = (a, rand = Math.random) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 L.uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 L.dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-L.fmtTime = sec => { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); };
+L.dayLabel = k => { const d = SRS.diff(k, L.dayKey()); if (d === 0) return 'Today'; if (d === 1) return 'Tomorrow'; const [y, m, dd] = k.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
 
 /* ---------- state ---------- */
-const KEY = 'listen-learn.v1';
-const defaults = () => ({ videos: [], notes: [], log: {}, settings: { dailyGoal: 20, speed: 1 } });
-let S = (() => {
-  try { const o = JSON.parse(localStorage.getItem(KEY)); if (o) { const d = defaults(); return { ...d, ...o, settings: { ...d.settings, ...(o.settings || {}) } }; } } catch (e) { /* ignore */ }
-  return defaults();
-})();
-Object.defineProperty(L, 'S', { get: () => S, set: v => { S = v; } });
-L.save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { L.toast('Storage is full. Delete a video or export your notebook.'); return false; } };
+const KEY = 'word-garden.v1';
+const defaults = () => ({ items: [], log: {}, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } });
+const merge = o => { const d = defaults(); return { ...d, ...o, garden: { ...d.garden, ...(o.garden || {}) }, settings: { ...d.settings, ...(o.settings || {}), weather: { ...d.settings.weather, ...((o.settings || {}).weather || {}) } } }; };
+let S = (() => { try { const o = JSON.parse(localStorage.getItem(KEY)); if (o && Array.isArray(o.items)) return merge(o); } catch (e) { /* ignore */ } return defaults(); })();
+Object.defineProperty(L, 'S', { get: () => S, set: v => { S = merge(v); } });
+L.save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { L.toast('Storage is full. Export your notes, then delete some.'); return false; } };
 L.reset = () => { S = defaults(); L.save(); };
-L.today = () => (S.log[L.dayKey()] ||= { lines: 0, ok: 0, saved: 0 });
-L.bump = (f, n = 1) => {
-  const t = L.today(), before = t.lines + t.saved, goal = S.settings.dailyGoal;
-  t[f] = (t[f] || 0) + n;
-  if (!t.g && before < goal && t.lines + t.saved >= goal) { t.g = 1; setTimeout(() => { L.confetti(); L.toast('Daily goal reached! Great listening.'); }, 400); }
-  L.save();
+L.cap = () => S.settings.cap || 10;
+L.today = () => (S.log[L.dayKey()] ||= { pts: 0, reviews: 0, practice: 0, added: 0, watered: 0 });
+L.due = () => SRS.dueItems(S.items, L.dayKey());
+L.item = id => S.items.find(i => i.id === id);
+
+/* ---------- notes ---------- */
+L.addItem = d => {
+  const it = { id: L.uid(), kind: d.kind === 'word' ? 'word' : 'phrase', text: d.text.trim(), meaning: (d.meaning || '').trim(), example: (d.example || '').trim(), note: (d.note || '').trim(), added: L.dayKey() };
+  SRS.schedule(S.items, it, L.dayKey(), L.cap()); S.items.unshift(it);
+  const t = L.today(); t.added++;
+  if ((t.addPts || 0) < 25) { t.addPts = (t.addPts || 0) + 5; L.award(5, true); }
+  L.water(); L.save(); return it;
 };
-L.active = l => !!l && (l.lines + l.saved) > 0;
-L.streak = () => {
-  let n = 0; const d = new Date();
-  if (!L.active(S.log[L.dayKey(d)])) d.setDate(d.getDate() - 1);
-  while (L.active(S.log[L.dayKey(d)])) { n++; d.setDate(d.getDate() - 1); }
-  return n;
+L.dupe = (text, exceptId) => S.items.find(i => i.id !== exceptId && i.text.toLowerCase() === text.trim().toLowerCase());
+
+/* ---------- points, growth, the plant ---------- */
+L.activeDays = () => Object.values(S.log).filter(l => l.watered).length;
+L.lastWatered = () => Object.keys(S.log).filter(k => S.log[k].watered).sort().pop() || null;
+L.daysSince = () => { const k = L.lastWatered(); return k ? SRS.diff(L.dayKey(), k) : 99; };
+L.thirsty = () => !!S.garden.cur && L.daysSince() >= 3;
+L.plantStage = () => { const c = S.garden.cur; return c ? plantStage(c.gp, PLANTS[c.type].need) : null; };
+L.ready = () => { const c = S.garden.cur; return !!c && c.gp >= PLANTS[c.type].need; };
+
+/* Add growth to the plant. Growth that arrives with no plant (or past ripe) is banked for the next seed. */
+L.grow = n => {
+  n = Math.round(n); if (n <= 0) return;
+  const g = S.garden, c = g.cur;
+  if (!c) { g.bank += n; return; }
+  const need = PLANTS[c.type].need, before = c.gp;
+  c.gp = Math.min(need, c.gp + n);
+  if (before + n > need) g.bank += before + n - need;
+  if (before < need && c.gp >= need) setTimeout(() => { L.confetti(); L.toast(`Your ${PLANTS[c.type].name.toLowerCase()} is ready to harvest!`); }, 600);
 };
-L.recall = () => { let ok = 0, n = 0; Object.values(S.log).forEach(l => { ok += l.ok || 0; n += l.lines || 0; }); return n >= 5 ? Math.round(ok / n * 100) : null; };
+/* Points from exercises and reviews. They also grow the plant, 1 point = 1 growth. */
+L.award = (pts, quiet) => { pts = Math.round(pts); if (pts <= 0) return; S.pts += pts; L.today().pts += pts; L.grow(pts); if (!quiet) L.save(); };
+/* First learning action of the day: the plant gets its daily drink. */
+L.water = () => { const t = L.today(); if (t.watered) return false; t.watered = 1; L.grow(20); return true; };
+L.plant = type => { if (!PLANTS[type]) return; const g = S.garden; g.cur = { type, gp: 0, started: L.dayKey() }; const b = g.bank; g.bank = 0; L.grow(b); L.save(); };
+L.harvest = () => { const g = S.garden; if (!L.ready()) return; g.done.unshift({ type: g.cur.type, day: L.dayKey(), started: g.cur.started }); g.cur = null; L.save(); L.confetti(); };
 
 /* ---------- navigation ---------- */
-let V = { name: 'home' };
+let V = { name: 'garden' };
 Object.defineProperty(L, 'V', { get: () => V });
 const IMMERSIVE = new Set(['session']);
-L.go = (name, extra = {}) => { L.speakStop(); if (L.player) L.player.destroy(); V = { name, ...extra }; L.render(); window.scrollTo(0, 0); };
+const TABS = [
+  ['garden', 'Garden', '<path d="M12 21v-8"/><path d="M12 13c0-4-3-6-7-6 0 4 3 6 7 6z"/><path d="M12 15c0-3.5 2.5-6 7-6 0 4-3 6-7 6z"/>'],
+  ['review', 'Review', '<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>'],
+  ['notebook', 'Notes', '<path d="M6 3h12v18l-6-4-6 4z"/>'],
+  ['practice', 'Practice', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/>'],
+  ['me', 'Me', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'],
+];
+L.go = (name, extra = {}) => { L.speakStop(); V = { name, ...extra }; L.render(); window.scrollTo(0, 0); };
 L.render = keepScroll => {
   const y = window.scrollY, view = $('#view');
-  view.className = IMMERSIVE.has(V.name) ? 'immersive' : '';
-  view.innerHTML = (L.views[V.name] || L.views.home)();
+  view.className = (IMMERSIVE.has(V.name) ? 'immersive ' : '') + 'v-' + V.name;
+  view.innerHTML = (L.views[V.name] || L.views.garden)();
   const t = $('#tabs'); t.className = IMMERSIVE.has(V.name) ? 'hidden' : '';
-  const cur = V.name === 'video' || V.name === 'add' ? 'home' : V.name;
-  const TABS = [['home', 'Listen', '<path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h3v6H4zM17 14h3v6h-3z"/>'], ['sources', 'Sources', '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>'], ['notebook', 'Notebook', '<path d="M6 3h12v18l-6-4-6 4z"/>'], ['me', 'Me', '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>']];
-  t.innerHTML = TABS.map(([k, label, svg]) => `<button data-a="tab" data-v="${k}" class="${cur === k ? 'on' : ''}" aria-label="${label}"><svg viewBox="0 0 24 24">${svg}</svg>${label}${k === 'notebook' && S.notes.length ? `<span class="badge">${S.notes.length > 99 ? '99+' : S.notes.length}</span>` : ''}</button>`).join('');
+  const due = L.due().length;
+  t.innerHTML = TABS.map(([k, label, svg]) => `<button data-a="tab" data-v="${k}" class="${V.name === k ? 'on' : ''}" aria-label="${label}"><svg viewBox="0 0 24 24">${svg}</svg>${label}${k === 'review' && due ? `<span class="badge">${due > 99 ? '99+' : due}</span>` : ''}</button>`).join('');
   if (keepScroll) window.scrollTo(0, y); else if (L.after[V.name]) L.after[V.name]();
 };
 L.A.tab = el => L.go(el.dataset.v);
@@ -69,7 +97,7 @@ L.confetti = () => {
   document.body.appendChild(box); setTimeout(() => box.remove(), 3000);
 };
 
-/* ---------- speech (used when a video has no playable audio, and for notebook words) ---------- */
+/* ---------- speech (browser text to speech, American English, started from a tap) ---------- */
 L.speak = (text, rate = 0.95, onend) => {
   if (!('speechSynthesis' in window)) { L.toast('Audio is not supported here.'); return; }
   speechSynthesis.cancel();
@@ -80,41 +108,27 @@ L.speak = (text, rate = 0.95, onend) => {
 };
 L.speakStop = () => { if ('speechSynthesis' in window) speechSynthesis.cancel(); };
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
+L.speakBtn = (text, cls = '') => `<button class="speak ${cls}" data-a="say" data-t="${L.esc(text)}" aria-label="Play audio"><svg class="spk" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>`;
+L.A.say = el => L.speak(el.dataset.t);
+L.youglish = q => `https://youglish.com/pronounce/${encodeURIComponent(String(q).trim())}/english/us`;
+L.ygLink = (text, cls = 'chip') => `<a class="${cls}" href="${L.youglish(text)}" target="_blank" rel="noopener noreferrer">YouGlish ↗</a>`;
 
-/* ---------- doodle art ---------- */
+/* ---------- doodles ---------- */
 const D = {
-  headphones: '<path d="M10 36v-6a22 22 0 0 1 44 0v6"/><rect x="8" y="34" width="12" height="20" rx="5"/><rect x="44" y="34" width="12" height="20" rx="5"/>',
-  wave: '<path d="M8 32h4M16 24v16M24 16v32M32 22v20M40 12v40M48 24v16M56 32h-4"/>',
-  play: '<circle cx="32" cy="32" r="22"/><path d="M27 22l16 10-16 10z"/>',
-  bookmark: '<path d="M16 8h32v48L32 44 16 56z"/>',
-  pencil: '<path d="M11 53l4-15L43 10l11 11-28 28z"/><path d="M36 17l11 11"/>',
-  face: '<path d="M20 31c0-9 5-17 12-17s12 8 12 17c0 10-5 18-12 18s-12-8-12-18z"/><path d="M18 31c-3-13 4-21 14-21s17 8 14 21"/><path d="M18 31c-4 4-2 10 2 12M46 31c4 4 2 10-2 12"/><circle cx="27" cy="32" r="1.4"/><circle cx="37" cy="32" r="1.4"/><path d="M28 40c2 2 6 2 8 0"/>',
-  smile: '<circle cx="32" cy="32" r="21"/><circle cx="25" cy="27" r="1.8"/><circle cx="39" cy="27" r="1.8"/><path d="M23 38c5 6 13 6 18 0"/>',
   bulb: '<path d="M23 39c-6-4-8-8-8-14a17 17 0 0 1 34 0c0 6-2 10-8 14v7H23z"/><path d="M25 52h14M28 58h8"/>',
-  sparkle: '<path d="M30 8c2 13 6 17 19 19-13 2-17 6-19 19-2-13-6-17-19-19 13-2 17-6 19-19z"/><path d="M49 40c1 5 3 7 8 8-5 1-7 3-8 8-1-5-3-7-8-8 5-1 7-3 8-8z"/>',
-  lips: '<path d="M8 32c8-10 14-12 24-6 10-6 16-4 24 6-8 12-16 16-24 16S16 44 8 32z"/><path d="M8 32c8 3 16 4 24 4s16-1 24-4"/>',
-  flower: '<path d="M32 56V35"/><path d="M32 44c-8 0-11-3-13-7M32 44c8 0 11-3 13-7"/><path d="M19 28c0-9 6-15 13-15s13 6 13 15c-4 5-8 6-13 6s-9-1-13-6z"/>',
   target: '<circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="12"/><circle cx="32" cy="32" r="2.6"/>',
-  star: '<path d="M32 8l7 17 18 2-14 12 5 18-16-10-16 10 5-18L7 27l18-2z"/>',
   book: '<path d="M7 13h21c4 0 6 2 6 6v36c0-4-2-6-6-6H7z"/><path d="M57 13H36c-4 0-6 2-6 6v36c0-4 2-6 6-6h21z"/>',
-  speech: '<path d="M10 13h44a4 4 0 0 1 4 4v24a4 4 0 0 1-4 4H31L18 56V45h-8a4 4 0 0 1-4-4V17a4 4 0 0 1 4-4z"/><path d="M20 27h24M20 35h14"/>',
-  link: '<path d="M27 38a8 8 0 0 1 0-11l6-6a8 8 0 0 1 11 11l-3 3"/><path d="M37 26a8 8 0 0 1 0 11l-6 6a8 8 0 0 1-11-11l3-3"/>',
+  drop: '<path d="M32 8C22 22 16 30 16 40a16 16 0 0 0 32 0c0-10-6-18-16-32z"/><path d="M24 42a8 8 0 0 0 8 8"/>',
+  sprout: '<path d="M32 56V34"/><path d="M32 36c0-10-7-15-18-15 0 10 7 15 18 15z"/><path d="M32 40c0-8 6-13 18-13 0 9-7 13-18 13z"/>',
+  star: '<path d="M32 8l7 17 18 2-14 12 5 18-16-10-16 10 5-18L7 27l18-2z"/>',
+  sun: '<circle cx="32" cy="32" r="11"/><path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4 4M45 45l4 4M49 15l-4 4M19 45l-4 4"/>',
+  pencil: '<path d="M11 53l4-15L43 10l11 11-28 28z"/><path d="M36 17l11 11"/>',
 };
-L.doodle = (name, cls = '') => `<svg class="doodle ${cls}" viewBox="0 0 64 64" aria-hidden="true">${D[name] || D.smile}</svg>`;
-const TINTS = ['sage', 'blue', 'pink', 'coral', 'olive'], ARTS = ['face', 'smile', 'bulb', 'lips', 'flower', 'sparkle', 'target', 'headphones'];
-L.artFor = key => { let h = 0; String(key).split('').forEach(c => { h = (h * 31 + c.charCodeAt(0)) >>> 0; }); return [ARTS[h % ARTS.length], TINTS[(h >> 3) % TINTS.length]]; };
+L.doodle = (name, cls = '') => `<svg class="doodle ${cls}" viewBox="0 0 64 64" aria-hidden="true">${D[name] || D.star}</svg>`;
 L.ring = (pct, size = 92, stroke = 9) => {
   const r = 36 - stroke / 2 + 4, C = 2 * Math.PI * r, p = Math.max(0, Math.min(1, pct)), ang = -Math.PI / 2 + 2 * Math.PI * p;
   return `<svg viewBox="0 0 80 80" width="${size}" height="${size}" aria-hidden="true"><circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--card-2)" stroke-width="${stroke}"/>${p > 0 ? `<circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--coral)" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${(C * p).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 40 40)"/>` : ''}<circle cx="${(40 + r * Math.cos(ang)).toFixed(1)}" cy="${(40 + r * Math.sin(ang)).toFixed(1)}" r="${stroke * 0.62}" fill="var(--coral)" stroke="var(--card)" stroke-width="2.5"/></svg>`;
 };
-L.calendar = () => {
-  const now = new Date(), y = now.getFullYear(), m = now.getMonth(), first = new Date(y, m, 1).getDay(), days = new Date(y, m + 1, 0).getDate();
-  const star = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3L3 9.5l6.4-.6z"/></svg>';
-  let cells = ['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => `<div class="dow">${d}</div>`).join('') + '<div></div>'.repeat(first);
-  for (let d = 1; d <= days; d++) { const on = L.active(S.log[L.dayKey(new Date(y, m, d))]); cells += `<div class="d${on ? ' on' : ''}${d === now.getDate() ? ' today' : ''}${d > now.getDate() ? ' future' : ''}"><span>${on ? star : d}</span></div>`; }
-  return `<div class="cal"><h4>${now.toLocaleString('en-US', { month: 'long' })} ${y}</h4><div class="cal-grid">${cells}</div></div>`;
-};
-L.youglish = q => `https://youglish.com/pronounce/${encodeURIComponent(String(q).trim())}/english/us`;
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
@@ -124,6 +138,7 @@ document.addEventListener('click', e => {
 });
 L.boot = () => {
   L.render();
+  L.refreshWeather();
   if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 };
 })();

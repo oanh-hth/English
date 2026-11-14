@@ -1,11 +1,10 @@
 {
-  "name": "Listen & Learn: practice English with YouTube",
-  "short_name": "Listen & Learn",
-  "description": "Turn any YouTube video into listening exercises and save the phrases and words you hear.",
+  "name": "Word Garden: grow your English",
+  "short_name": "Word Garden",
+  "description": "Take notes on English phrases and words, review them on a spaced schedule, practice, and grow a plant.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#ece0d3",
   "theme_color": "#df7550",
   "icons": [

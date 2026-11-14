@@ -1,66 +1,39 @@
-# Listen & Learn
+# Word Garden
 
-Practice English listening with any YouTube video. Add a link and its transcript, and the app turns it into exercises, recommends the phrases and words worth learning, and gives you a notebook to save them. A **Hear it on YouGlish** link sits next to every phrase and word.
+A notebook for the English you pick up, with spaced review, exercises built from your own notes, and a plant that grows as you study. Works on iPhone and iPad, installs to the home screen, runs offline, and keeps everything on your device.
 
-A mobile-first web app with no build step and no backend. It installs on your iPhone (Share, then Add to Home Screen) and keeps everything on your device.
+## What it does
 
-## How it works
+- **Notes.** Save phrases and words with a meaning, an example and a note. Search, edit, delete, or add many at once (`phrase = meaning | example`, one per line). Every note has audio (the browser's American English voice) and a **YouGlish** link to hear real speakers.
+- **Spaced review.** New notes come back tomorrow, then after 3, 7, 14, 30, 60 and 120 days. No more than a set number of notes (default 10, change it in Me) fall on one day, so a big batch is spread over several days instead of piling up. The Review tab shows what is due today and a day-by-day schedule for the next 3 weeks. Grade each note Again, Hard, Good or Easy.
+- **Exercises from your notes.** Meaning match, word match, type it, fill the gap (uses your example sentence) and listening. More notes means more questions. Right answers earn points, streaks earn bonuses, and a miss brings that note back sooner.
+- **A plant to grow.** Choose a seed: tomato, chilli, strawberry, sunflower, pumpkin, sugarcane or bamboo. Studying on a day waters it (+20 growth). Points, reviews and new notes add growth, so more practice grows it faster. When it is ripe, harvest it into your collection and plant another. A plant that is neglected for 3 days looks thirsty, and recovers as soon as you study.
+- **Weather in the garden.** Optional. The scene shows the real sky (clear, cloudy, fog, drizzle, rain, snow, thunderstorm, day or night) from [Open-Meteo](https://open-meteo.com/), which is free and needs no API key. Only rounded coordinates are sent. "Preview" mode lets you see every weather without waiting for it.
 
-1. **Add a video.** Paste the YouTube link and the transcript (copy it from YouTube: **…more → Show transcript**, or upload an `.srt` / `.vtt` file). Timestamps are kept, so the video plays exactly the line you are practicing. Without a link, or without timestamps, lines are read aloud by your phone.
-2. **Practice.** Exercises are generated from the real lines:
-   - **Dictation:** type what you hear, with a word-by-word diff.
-   - **Fill the gaps:** catch the missing words.
-   - **Pick the word:** multiple choice for a hidden word.
-   - **Word order:** rebuild the sentence from tiles.
-   - **Shadowing:** listen, say it out loud, rate yourself.
-   - **Comprehension** (optional, with Claude): questions about the video.
-3. **Recommended for you.** Natural phrases found in the video (matched against a library of about 1,000 American phrases and 950 everyday words), chunks the speaker repeats, and frequent words you may not know yet. One tap saves them.
-4. **Sources.** A tab of sites that publish copyable transcripts (VOA, BBC, TED, ELLLO, NPR, LibriVox) and a yt-dlp tip. Edit `sources.js` to add your own.
-5. **Notebook.** Tap a word in any line, tap another to select a phrase, and save it with a meaning and a note. Every item links to YouGlish.
-
-## Run it
-
-```bash
-python3 -m http.server 8000   # open http://localhost:8000
-```
-
-Host the folder on any static host. For GitHub Pages: **Settings → Pages → Deploy from a branch**, pick the branch and `/ (root)`.
-
-## Tests
-
-```bash
-node tests/run.js                              # parser, segmentation, analysis and exercise tests (no dependencies)
-python3 -m http.server 8123 &                  # then, with Playwright installed:
-node tests/e2e.js                              # iPhone-sized end-to-end test with YouTube and Claude mocked
-```
-
-## Optional: Claude picks
-
-In **Me**, paste your own Claude API key to get hand-picked phrases and words and comprehension questions for a video. The key is stored only in your browser and sent only to Anthropic (the official SDK is bundled in `vendor/`). Set a spend limit on the key. **Never commit a key or `.env` file** (see `.gitignore`).
-
-## Limits to know
-
-- **Transcripts are pasted, not fetched.** YouTube does not let web pages download transcripts, so you copy them. A small server could automate this later.
-- **Some videos cannot be embedded.** If the owner disallows it, the app falls back to your phone's voice for the lines.
-- **The phrase library is AI-written** and has not been reviewed by a native speaker. Use YouGlish to check anything that sounds odd.
-- Data lives in `localStorage` on one device. A long transcript or many videos can fill it; delete old videos if the app says storage is full.
-- The video player loads YouTube's embedded player, which sets YouTube cookies.
-
-## Layout
+## Files
 
 | File | Role |
 |---|---|
-| `core.js` | State, navigation, doodles, toast, confetti |
-| `transcript.js` | Link, transcript and caption parsing; segmentation |
-| `analyze.js`, `lexicon.js` | Finds phrases and words worth learning |
-| `exercises.js` | Exercise generators and answer checking |
-| `player.js` | YouTube player with "play this line", plus voice fallback |
-| `views.js`, `session.js`, `notes.js` | Screens: home, video, practice, notebook, settings |
-| `claude.js` | Optional Claude picks |
-| `legacy-v1/` | The earlier phrase trainer (topics, spaced repetition, role-plays), kept as a reference |
+| `srs.js` | Spaced-repetition scheduler (pure, unit tested) |
+| `exercises.js` | Question generators and scoring (pure, unit tested) |
+| `plants.js` | Plant catalogue and the SVG drawings for every growth stage |
+| `weather.js` | Open-Meteo client and the animated weather scene |
+| `core.js` | State in localStorage, growth and points, tabs, sheets, speech |
+| `notebook.js`, `views.js`, `session.js` | Screens |
+| `sw.js`, `manifest.webmanifest` | Offline and install |
+| `legacy-v1/`, `learning/` | The earlier phrase trainer and the course that teaches how to build it |
 
-The design follows a warm "easy language" look: beige canvas, colour-blocked cards, Syne headlines (self-hosted in `fonts/`, SIL OFL licence), hand-drawn doodles, a streak calendar and a daily-goal ring.
+## Run and test
 
-## Learning to build it
+```bash
+python3 -m http.server 8123        # then open http://localhost:8123
+node tests/srs.test.js             # scheduler
+node tests/exercises.test.js       # exercise generator
+node tests/e2e.js                  # Playwright, needs the server above; weather is mocked
+```
 
-`learning/` is a Full Stack Open style course (Node, TypeScript, React) built around the original phrase trainer, which now lives in `legacy-v1/`. File names in the course refer to that app.
+Deploy by serving the repository root (GitHub Pages works). Back up your notes from Me > Export backup.
+
+## Secrets
+
+No API key or `.env` file belongs in this repository. `.gitignore` blocks them. Features that need a key keep it in the browser's localStorage on your device only.

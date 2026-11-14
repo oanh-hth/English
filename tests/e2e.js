@@ -1,105 +1,77 @@
-// End-to-end test on an iPhone-sized screen. Needs Playwright and a static server on :8123 (python3 -m http.server 8123).
-// YouTube and Anthropic are mocked, so no network is used.
+/* End-to-end: run `python3 -m http.server 8123` in the repo root, then `node tests/e2e.js`. Open-Meteo is mocked. */
 const { chromium, devices } = require('playwright');
-const FX = require('./fixtures.js');
-const SHOT = process.env.SHOT_DIR || '';
+const URL = 'http://localhost:8123/index.html', OUT = process.env.SHOTS || '';
+let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log('FAIL ' + m); } else console.log('ok   ' + m); };
+const NOTES = [['I will get back to you', 'reply later', 'Let me check and I will get back to you.'], ['run out of', 'have none left', 'We run out of milk every week.'], ['hang out', 'spend time together', 'Do you want to hang out later?'], ['figure out', 'solve or understand', 'I cannot figure out this puzzle.'], ['bummer', 'something disappointing', 'Oh, bummer, it is closed.'], ['reluctant', 'not wanting to do something', '']];
 
-const FAKE_YT = `
-window.__yt = { calls: [], players: 0 };
-window.YT = { Player: class {
-  constructor(id, o) { window.__yt.players++; this.t = 0; this.playing = false; this.at = 0; const el = document.getElementById(id);
-    if (el) { const f = document.createElement('iframe'); f.src = 'about:blank'; f.title = 'fake player'; el.replaceWith(f); f.id = id; }
-    setTimeout(() => o.events.onReady({}), 20); }
-  seekTo(s) { window.__yt.calls.push(['seek', s]); this.t = s; this.at = Date.now(); }
-  playVideo() { window.__yt.calls.push(['play']); this.playing = true; this.at = Date.now(); this.base = this.t; }
-  pauseVideo() { window.__yt.calls.push(['pause']); this.playing = false; }
-  getCurrentTime() { return this.playing ? this.base + (Date.now() - this.at) / 1000 * (this.rate || 1) * 8 : this.t; }
-  setPlaybackRate(r) { this.rate = r; window.__yt.calls.push(['rate', r]); }
-  destroy() { window.__yt.calls.push(['destroy']); }
-} };
-setTimeout(() => window.onYouTubeIframeAPIReady && window.onYouTubeIframeAPIReady(), 10);`;
-
-const AI = { phrases: [{ text: 'keep the change', meaning: 'let the cashier keep the extra money' }, { text: 'to go please', meaning: 'take the order away' }, { text: 'invented phrase not in video', meaning: 'x' }],
-  words: [{ text: 'barista', pos: 'n', meaning: 'a person who makes coffee' }], quiz: [{ q: 'What does the speaker say about paying cash?', options: ['Keep the change', 'Use a card', 'Pay later', 'Ask for a bill'], answer: 0 }, { q: 'Who asks "here or to go"?', options: ['The barista', 'The cashier', 'A friend', 'The manager'], answer: 0 }] };
-
-(async () => {
-  const b = await chromium.launch();
-  const ctx = await b.newContext({ ...devices['iPhone 13'], reducedMotion: 'reduce' }); const p = await ctx.newPage(); const errs = [];
-  p.on('pageerror', e => errs.push('pageerror: ' + e.message)); p.on('console', m => m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text()) && errs.push('console: ' + m.text()));
-  await p.route('https://www.youtube.com/iframe_api', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_YT }));
-  await p.route('https://i.ytimg.com/**', r => r.fulfill({ contentType: 'image/gif', body: Buffer.from('R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==', 'base64') }));
-  let aiReq = null;
-  await p.route('https://api.anthropic.com/**', async r => {
-    const q = r.request(); if (q.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
-    aiReq = JSON.parse(q.postData());
-    r.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'content-type': 'application/json' }, body: JSON.stringify({ id: 'm', type: 'message', role: 'assistant', model: 'x', content: [{ type: 'text', text: 'Here you go:\n' + JSON.stringify(AI) }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 } }) });
-  });
-  const out = {}; const shot = n => SHOT && p.screenshot({ path: `${SHOT}/${n}.png` });
-  await p.goto('http://localhost:8123/index.html');
-  await shot('home-empty');
-  // --- add a video with a link and a timed transcript
-  await p.click('[data-a=openAdd]');
-  await p.fill('#a-link', 'https://youtu.be/dQw4w9WgXcQ?si=abc'); await p.fill('#a-title', 'Coffee English');
-  await p.fill('#a-text', FX.YT_COPY);
-  out.preview = (await p.textContent('#a-prev')).slice(0, 60);
-  await shot('add');
-  await p.click('[data-a=createVideo]');
-  await p.waitForSelector('#ytslot'); await p.waitForFunction(() => /Tap/.test(document.getElementById('pstat').textContent));
-  out.title = await p.textContent('h1'); await shot('video');
-  out.recs = await p.locator('.rec b').allTextContents();
-  // --- play a transcript line: video seeks and then pauses at the end of the segment
-  await p.click('.tbtn >> nth=1'); await p.waitForFunction(() => window.__yt.calls.some(c => c[0] === 'pause'), null, { timeout: 8000 });
-  out.ytCalls = await p.evaluate(() => window.__yt.calls.map(c => c[0]).join(','));
-  // --- quick-save a recommendation
-  await p.click('.rec .btn.coral >> nth=0'); out.savedLabel = (await p.locator('.rec .btn[disabled]').first().textContent()).trim();
-  // --- dictation session
-  await p.click('[data-a=startEx][data-t=dictation]'); await p.waitForSelector('#ex-in');
-  await p.click('[data-a=exPlay]'); await p.waitForFunction(() => window.__yt.calls.filter(c => c[0] === 'seek').length >= 2);
-  let x = await p.evaluate(() => { const q = L.debugX().list[0]; return q.text; });
-  await p.fill('#ex-in', x); await p.click('[data-a=exCheck]'); out.dictOk = await p.textContent('.tip');
-  // select two words in the line and save
-  await p.click('.selline .w >> nth=1'); await p.click('.selline .w >> nth=2'); out.selbar = (await p.textContent('.selbar')).replace(/\s+/g, ' ').trim().slice(0, 60);
-  await shot('feedback');
-  await p.click('[data-a=saveSel]'); await p.click('[data-a=commitSave]');
-  out.notesAfter = await p.evaluate(() => L.S.notes.length);
-  // finish the rest of the dictation session with wrong answers
-  for (let k = 0; k < 20; k++) { if (await p.locator('.bigpct').count()) break; await p.click('[data-a=exNext]'); if (await p.locator('.bigpct').count()) break; if (await p.locator('#ex-in').count()) { await p.fill('#ex-in', 'hello'); await p.click('[data-a=exCheck]'); } }
-  out.done = (await p.textContent('.bigpct')).trim(); await shot('results');
-  // --- each other type
-  for (const t of ['gap', 'choice', 'order', 'shadow', 'mixed']) {
-    await p.click('[data-a=exitEx]'); await p.click(`[data-a=startEx][data-t=${t}]`); await p.waitForSelector('#qarea .label');
-    for (let k = 0; k < 12; k++) {
-      if (await p.locator('.bigpct').count()) break;
-      const q = await p.evaluate(() => { const X = L.debugX(); const q = X.list[X.i]; return { type: q.type, answer: q.answer, tiles: q.tiles, target: q.target, gaps: q.gaps }; });
-      if (q.type === 'choice') await p.click(`[data-a=exPick][data-n="${q.answer}"]`);
-      else if (q.type === 'gap') { const ins = p.locator('.gi'); for (let g = 0; g < q.gaps.length; g++) await ins.nth(g).fill(q.gaps[g].answer); await p.click('[data-a=exCheck]'); }
-      else if (q.type === 'order') { for (const w of q.target.split(' ')) { await p.locator('.bank .tile:not(.used)', { hasText: new RegExp('^' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$') }).first().click(); } await p.click('[data-a=exCheck]'); }
-      else if (q.type === 'shadow') { await p.click('[data-a=exReveal]'); await p.click('[data-a=exRate][data-ok="1"]'); continue; }
-      else { await p.fill('#ex-in', 'x'); await p.click('[data-a=exCheck]'); }
-      await p.click('[data-a=exNext]');
-    }
-    out['t_' + t] = (await p.textContent('.bigpct')).trim();
+async function run(name, device) {
+  const b = await chromium.launch(); const ctx = await b.newContext({ ...device, geolocation: { latitude: 21.03, longitude: 105.85 }, permissions: ['geolocation'] });
+  await ctx.route('https://api.open-meteo.com/**', r => r.fulfill({ json: { current: { weather_code: 63, is_day: 1, temperature_2m: 22.4 } } }));
+  await ctx.route('https://geocoding-api.open-meteo.com/**', r => r.fulfill({ json: { results: [{ name: 'Hanoi', admin1: 'Hanoi', country: 'Vietnam', latitude: 21.03, longitude: 105.85 }] } }));
+  const p = await ctx.newPage(), errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+  const shot = async n => { if (OUT) await p.screenshot({ path: `${OUT}/${name}-${n}.png` }); };
+  const noOverflow = async n => { const w = await p.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); ok(w[0] <= w[1], `${name}: no horizontal overflow on ${n} (${w})`); };
+  await p.goto(URL);
+  ok(await p.locator('.seed').count() === 7, `${name}: seed picker shows 7 plants`);
+  await shot('seeds'); await noOverflow('seeds');
+  await p.click('[data-a=plant][data-t=tomato]');
+  ok(await p.locator('.scene .plant').count() === 1, `${name}: plant is drawn in the scene`);
+  await noOverflow('garden');
+  // add notes
+  for (const [t, m, e] of NOTES) { await p.click('[data-a=tab][data-v=notebook]'); await p.click('[data-a=noteAdd]'); await p.fill('#f-text', t); await p.fill('#f-mean', m); await p.fill('#f-ex', e); await p.click('[data-a=noteSave]'); }
+  ok(await p.locator('.note').count() === NOTES.length, `${name}: ${NOTES.length} notes saved`);
+  await p.click('[data-a=noteAdd]'); await p.fill('#f-text', 'Hang Out'); await p.click('[data-a=noteSave]');
+  ok(await p.locator('.note').count() === NOTES.length, `${name}: duplicate is rejected`);
+  await p.click('[data-a=closeSheet]', { force: true }).catch(() => {}); await p.evaluate(() => L.closeSheet());
+  ok((await p.getAttribute('.note a.chip', 'href')).startsWith('https://youglish.com/pronounce/'), `${name}: YouGlish link-out present`);
+  await p.fill('#nq', 'reluc'); ok(await p.locator('.note').count() === 1, `${name}: search filters`); await p.fill('#nq', '');
+  await shot('notebook'); await noOverflow('notebook');
+  // edit
+  await p.locator('[data-a=noteEdit]').first().click(); await p.fill('#f-note', 'casual'); await p.click('[data-a=noteSave]'); ok((await p.locator('.nnote').count()) === 1, `${name}: edit saved`);
+  // bulk
+  await p.click('[data-a=bulkOpen]'); await p.fill('#b-text', 'wrap up = finish\nspill the beans = tell a secret | He spilled the beans.'); await p.click('[data-a=bulkSave]');
+  ok(await p.locator('.note').count() === NOTES.length + 2, `${name}: bulk add`);
+  // schedule: 8 notes added today, due tomorrow, none today
+  await p.click('[data-a=tab][data-v=review]'); ok(await p.locator('.upday').count() >= 1, `${name}: upcoming schedule listed`); await shot('review-empty'); await noOverflow('review');
+  // spread over days when the cap is small
+  const spread = await p.evaluate(() => { L.S.settings.cap = 3; const items = L.S.items; items.forEach(i => i.due = null); items.slice().reverse().forEach(i => SRS.schedule(items, i, L.dayKey(), 3)); const m = {}; items.forEach(i => m[i.due] = (m[i.due] || 0) + 1); L.S.settings.cap = 10; return Object.values(m).sort(); });
+  ok(JSON.stringify(spread) === '[2,3,3]', `${name}: 8 notes spread across days with cap 3 (${spread})`);
+  // make everything due, review
+  await p.evaluate(() => { L.S.items.forEach(i => i.due = L.dayKey()); L.save(); L.go('review'); });
+  ok((await p.textContent('.hero .big')) === '8', `${name}: 8 due today`);
+  const gp0 = await p.evaluate(() => L.S.garden.cur.gp);
+  await p.click('[data-a=startReview]');
+  for (let i = 0; i < 8; i++) { await p.click('[data-a=reveal]'); if (i === 0) await shot('review-card'); await p.click('[data-a=grade][data-g="2"]'); }
+  ok(await p.locator('.huge').textContent() === 'Review done', `${name}: review finishes`);
+  const gp1 = await p.evaluate(() => L.S.garden.cur.gp); ok(gp1 - gp0 >= 8 * 4 + 10, `${name}: review grows the plant (${gp0} -> ${gp1})`);
+  await shot('review-done');
+  const dueAfter = await p.evaluate(() => L.due().length); ok(dueAfter === 0, `${name}: nothing due after review`);
+  // practice
+  await p.evaluate(() => L.go('practice')); await shot('practice'); await noOverflow('practice');
+  await p.click('[data-a=startPractice][data-t=""]');
+  let right = 0;
+  for (let i = 0; i < 10; i++) {
+    if (await p.locator('[data-a=pick]').count()) await p.locator('[data-a=pick]').first().click(); else { await p.fill('#ans', 'zzz'); await p.click('[data-a=check]'); }
+    if (i === 0) await shot('question');
+    await p.click('[data-a=next]');
   }
-  // --- sources tab
-  await p.click('[data-a=exitEx]'); await p.click('[data-a=tab][data-v=sources]'); out.sources = await p.locator('.src').count();
-  out.srcLinks = await p.evaluate(() => [...document.querySelectorAll('.src a')].every(a => a.target === '_blank' && /noopener/.test(a.rel) && /^https:/.test(a.href)));
-  await shot('sources');
-  // --- notebook
-  await p.click('[data-a=tab][data-v=notebook]');
-  out.noteCount = await p.locator('.note').count(); out.yg = await p.getAttribute('.note a[href*="youglish"]', 'href'); await shot('notebook');
-  await p.fill('#nsearch', 'zzzz'); out.search = await p.locator('.note').count(); await p.fill('#nsearch', '');
-  // --- Claude picks (mocked)
-  await p.click('[data-a=tab][data-v=me]'); await p.fill('#ai-key', 'sk-ant-test'); await p.click('[data-a=aiSave]');
-  await p.click('[data-a=tab][data-v=home]'); await p.click('.vcard'); await p.waitForSelector('[data-a=askClaude]'); await p.click('[data-a=askClaude]');
-  await p.waitForSelector('text=Claude\'s picks');
-  out.aiRecs = await p.locator('.rec b').allTextContents(); out.aiModel = aiReq.model; out.aiFallbacks = aiReq.fallbacks; out.hasQuiz = await p.locator('[data-t=quiz]').count();
-  await p.click('[data-t=quiz]'); await p.click('[data-a=exPick][data-n="0"]'); out.quizOk = (await p.textContent('.tip')).trim().length > 0;
-  // --- sample + untimed text mode (voice)
-  await p.click('[data-a=exitEx]'); await p.click('[data-a=tab][data-v=home]');
-  await p.evaluate(() => { window.__spoken = []; speechSynthesis.speak = u => window.__spoken.push(u.text); });
-  await p.click('[data-a=openAdd]'); await p.fill('#a-text', 'I really love this song. It makes me feel happy every morning. We should go to the concert together next month.'); await p.click('[data-a=createVideo]');
-  await p.click('[data-a=startEx][data-t=dictation]'); out.voiceSpoke = await p.evaluate(() => window.__spoken.length);
-  await shot('voice');
-  out.errs = errs; out.w = await p.evaluate(() => document.documentElement.scrollWidth);
-  console.log(JSON.stringify(out, null, 1)); await b.close();
-})().catch(e => { console.error('E2E FAILED:', e.message); process.exit(1); });
+  ok(await p.locator('.bigpct').count() === 1, `${name}: practice results screen`);
+  await shot('practice-done');
+  const pts = await p.evaluate(() => L.S.pts); ok(pts > 0, `${name}: points awarded (${pts})`);
+  // weather
+  await p.evaluate(() => L.go('garden'));
+  await p.click('[data-a=wxLocate]'); await p.waitForSelector('.wxchip'); ok((await p.textContent('.wxchip')).includes('Rainy'), `${name}: live weather shows rain (${await p.textContent('.wxchip')})`);
+  ok(await p.locator('.scene .drop').count() > 10, `${name}: rain animation drawn`); await shot('garden-rain'); await noOverflow('garden');
+  await p.evaluate(() => L.go('me')); await p.click('[data-a=wxMode][data-m=demo]'); await p.click('[data-a=wxDemo][data-c=snow]'); await p.click('[data-a=wxNight]'); await p.evaluate(() => L.go('garden')); ok(await p.locator('.sc-snow.is-night .flake').count() > 5, `${name}: preview snow at night`); await shot('garden-snow-night');
+  for (const c of ['clear', 'storm', 'fog']) { await p.evaluate(c => { L.S.settings.weather.demo = c; L.S.settings.weather.night = false; L.render(); }, c); if (c === 'clear') await shot('garden-clear'); }
+  // harvest
+  await p.evaluate(() => { L.S.garden.cur.gp = PLANTS.tomato.need - 1; L.grow(5); L.render(); });
+  await shot('garden-ready'); await p.click('[data-a=harvest]'); ok(await p.locator('.seed').count() === 7 && await p.locator('.shelfitem').count() === 1, `${name}: harvest -> collection and new seed picker`);
+  // thirsty
+  await p.evaluate(() => { L.plant('chilli'); const old = SRS.addDays(L.dayKey(), -5); L.S.log = { [old]: { watered: 1, pts: 0, reviews: 0, practice: 0, added: 0 } }; L.render(); }); ok(await p.locator('.plant.thirsty').count() === 1, `${name}: plant looks thirsty after 5 idle days`); await shot('garden-thirsty');
+  // reload persistence
+  await p.reload(); ok(await p.evaluate(() => L.S.items.length) === NOTES.length + 2, `${name}: data survives reload`);
+  ok(errs.length === 0, `${name}: no console errors ${errs.join(' | ')}`);
+  await b.close();
+}
+(async () => { await run('iphone', devices['iPhone 13']); await run('ipad', devices['iPad (gen 7)']); await run('ipad-land', devices['iPad Pro 11 landscape']); console.log(fails ? `${fails} FAILED` : 'all passed'); process.exit(fails ? 1 : 0); })();

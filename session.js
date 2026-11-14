@@ -1,123 +1,110 @@
-/* Practice sessions: dictation, gaps, pick-the-word, word order, shadowing, comprehension quiz. */
+/* Review sessions (self-graded flashcards) and practice sessions (generated exercises). */
 (() => {
-const L = window.L, esc = L.esc, A = L.A, $ = L.$;
-let X = null;
-L.debugX = () => X;
-const CHEERS = ['Nice ear!', 'Nailed it!', 'You got it!', 'Sharp listening!', 'Boom!', 'Spot on!'];
-const cheer = () => CHEERS[Math.floor(Math.random() * CHEERS.length)];
+const L = window.L, esc = L.esc, A = L.A, S = () => L.S;
+let R = null; // current session
 
-L.startSession = (vid, type) => {
-  const v = L.S.videos.find(x => x.id === vid); if (!v) return;
-  const list = type === 'quiz' ? ((v.ai && v.ai.quiz) || []).map(q => ({ type: 'quiz', ...q })) : LT.makeSession(v.segs, type, 10);
-  if (!list.length) { L.toast('Not enough lines for this exercise.'); return; }
-  X = { v, type, list, i: 0, status: 'ask', correct: 0, missed: [], got: [], combo: 0, built: [], rate: 1, res: null };
-  L.go('session', { id: vid });
-};
-L.views.session = () => X ? `<div class="topbar"><button class="back" data-a="exitEx" aria-label="Close">✕</button><div class="progress"><i id="prog" style="width:0%"></i></div><span class="counter" id="cnt">1/${X.list.length}</span></div>
-  ${X.v.ytId ? '<div class="player-slot"><div id="ytslot"></div></div><p id="pstat" class="small muted" style="margin:8px 0 0"></p>' : ''}
-  <div id="qarea"></div>` : '<div class="empty">Nothing to practice.</div>';
-L.after.session = async () => {
-  if (!X) return;
-  paintQ(true);
-  if (X.v.ytId) { const ok = await L.player.mount('ytslot', X.v.ytId), p = $('#pstat'); if (p) p.textContent = ok ? 'Tap Play to hear the line.' : L.player.error + ' Using your phone voice instead.'; }
+const top = (i, n, extra = '') => `<div class="topbar"><button class="back" data-a="exitSession" aria-label="Close">✕</button><div class="progress"><i style="width:${Math.round(i / Math.max(1, n) * 100)}%"></i></div><span class="counter">${Math.min(i + 1, n)}/${n}${extra}</span></div>`;
+A.exitSession = () => { if (R && R.done) { L.go(R.mode === 'review' ? 'review' : 'practice'); return; } L.openSheet(`<h2 style="margin-top:0">Leave this session?</h2><p class="muted">Your progress so far is saved.</p><div class="stack"><button class="btn" data-a="leaveYes">Leave</button><button class="btn ghost" data-a="closeSheet">Keep going</button></div>`); };
+A.leaveYes = () => { L.closeSheet(); const m = R && R.mode; R = null; L.go(m === 'review' ? 'review' : 'practice'); };
+
+const plantBlock = gain => {
+  const g = S().garden, c = g.cur;
+  if (!c) return `<div class="card small">Your ${gain} growth is saved for your next seed.</div>`;
+  const P = PLANTS[c.type], st = L.plantStage();
+  return `<div class="card row plantres"><div class="miniplant">${plantSvg(c.type, st.t, { still: 1 })}</div><div class="grow"><h3>${P.name} <span class="pill ${L.ready() ? 'good' : ''}">${st.label}</span></h3><div class="bar xp"><i style="width:${Math.round(st.t * 100)}%"></i></div><span class="small muted">${c.gp} / ${P.need} growth${L.ready() ? '. Ready to harvest!' : ''}</span></div></div>`;
 };
 
-const seg = q => X.v.segs[q.seg];
-const play = (rate = X.rate) => { const q = X.list[X.i]; if (q && q.type !== 'quiz') L.playLine(seg(q), { rate }); };
-A.exPlay = () => { X.rate = 1; play(1); };
-A.exSlow = () => { X.rate = 0.75; play(0.75); };
-A.exitEx = () => L.go('video', { id: X.v.id });
-const TYPE = k => (LT.TYPES.find(t => t.key === k) || { name: 'Comprehension' }).name;
+/* ================= review ================= */
+L.startReview = ids => {
+  const q = ids.filter(id => L.item(id));
+  if (!q.length) return;
+  R = { mode: 'review', q, i: 0, shown: false, stats: [0, 0, 0, 0], gp: 0, retries: {}, total: q.length, done: false };
+  L.go('session');
+};
+const reviewView = () => {
+  if (R.done) return reviewDone();
+  const it = L.item(R.q[R.i]);
+  const cue = it.meaning ? `<div class="label" style="margin-top:0">What is the ${it.kind}?</div><div class="flash-cue">${esc(it.meaning)}</div>` : it.example ? `<div class="label" style="margin-top:0">Complete the sentence</div><div class="flash-cue">${esc(LX.gapOf(it) || it.example)}</div>` : `<div class="label" style="margin-top:0">Say it out loud</div><div class="flash-cue">Do you remember what “${esc(it.text)}” means?</div>`;
+  const prev = SRS.preview(it), lab = d => d < 30 ? d + 'd' : Math.round(d / 30) + 'mo';
+  const back = `<div class="reveal"><div class="row"><div class="phrase grow">${esc(it.text)}</div>${L.speakBtn(LX.plain(it.text), '')}</div>${it.example ? `<p class="nex">“${esc(it.example)}”</p>` : ''}${it.note ? `<p class="nnote">${esc(it.note)}</p>` : ''}<div style="margin-top:8px">${L.ygLink(it.text)}</div></div>`;
+  return `${top(R.i, R.q.length)}<div class="flash-wrap"><div class="flash t-${it.kind === 'word' ? 'blue' : 'sage'}">${cue}${R.shown ? back : ''}</div></div>
+    ${R.shown ? `<div class="rates">${['Again', 'Hard', 'Good', 'Easy'].map((l, g) => `<button class="r${g}" data-a="grade" data-g="${g}">${l}<small>${lab(prev[g])}</small></button>`).join('')}</div>` : `<button class="btn" data-a="reveal">Show answer</button>`}`;
+};
+A.reveal = () => { R.shown = true; L.render(true); window.scrollTo(0, 0); };
+A.grade = el => {
+  const g = +el.dataset.g, it = L.item(R.q[R.i]); if (!it) return;
+  SRS.review(S().items, it, g, L.dayKey(), L.cap());
+  R.stats[g]++; const pts = [0, 2, 4, 6][g]; R.gp += pts + 0; L.award(pts, true);
+  const t = L.today(); t.reviews++; L.water();
+  if (g === 0 && (R.retries[it.id] = (R.retries[it.id] || 0) + 1) <= 1) R.q.push(it.id);
+  R.i++; R.shown = false; L.save();
+  if (R.i >= R.q.length) { R.done = true; L.award(10, true); R.gp += 10; L.save(); if (R.stats[0] < R.total / 2) L.confetti(); }
+  L.render(); window.scrollTo(0, 0);
+};
+const reviewDone = () => {
+  const [a, h, g, e] = R.stats, next = SRS.nextAfter(S().items, L.dayKey());
+  return `<div class="topbar"><button class="back" data-a="exitSession">✕</button></div><div class="huge">Review done</div><p class="congrats">${R.total} ${R.total === 1 ? 'note' : 'notes'} reviewed</p>
+    <div class="grid3"><div class="card stat"><b>${g + e}</b><span>got it</span></div><div class="card stat"><b>${h}</b><span>hard</span></div><div class="card stat"><b>${a}</b><span>again</span></div></div>
+    <div class="center"><span class="xp-pill">+${R.gp} growth</span></div>${plantBlock(R.gp)}
+    <p class="small muted">${next ? 'Next review ' + esc(L.dayLabel(next).toLowerCase()) + '.' : ''}</p>
+    <div class="stack"><button class="btn" data-a="doneBack">Back to garden</button>${S().items.length >= 1 ? '<button class="btn ghost" data-a="goPractice">Practice now</button>' : ''}</div>`;
+};
+A.doneBack = () => { R = null; L.go('garden'); };
 
-function ctrl() { return `<div class="row" style="gap:10px;margin:12px 0"><button class="btn coral" data-a="exPlay">Play</button><button class="btn ghost" data-a="exSlow">Slower</button></div>`; }
-function sentence(q, fill) {
-  const w = q.text.split(/\s+/);
-  return `<p class="sent">${w.map((x, i) => { const g = q.gaps ? q.gaps.findIndex(g => g.i === i) : (q.at === i ? 0 : -1); return g >= 0 ? (fill ? fill(g, x) : `<span class="gapw">_____</span>`) : esc(x); }).join(' ')}</p>`;
-}
-function paintQ(auto) {
-  const q = X.list[X.i]; if (!q) return paintDone();
-  const area = $('#qarea'); if (!area) return;
-  $('#prog').style.width = Math.round(X.i / X.list.length * 100) + '%'; $('#cnt').textContent = `${X.i + 1}/${X.list.length}`;
-  const head = `<div class="label" style="margin-top:6px">${TYPE(q.type)}</div>`;
+/* ================= practice ================= */
+L.startPractice = type => {
+  const qs = LX.makeSession(S().items, { n: 10, type });
+  if (!qs.length) { L.toast('Add a few more notes to unlock this.'); return; }
+  R = { mode: 'practice', type, q: qs, i: 0, combo: 0, best: 0, right: 0, pts: 0, answered: null, missed: [], done: false };
+  L.go('session');
+};
+const practiceView = () => {
+  if (R.done) return practiceDone();
+  const q = R.q[R.i], a = R.answered;
   let body = '';
-  if (X.status === 'ask') {
-    if (q.type === 'dictation') body = `${ctrl()}<textarea id="ex-in" class="type" rows="3" placeholder="Type what you hear…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea><p id="hint" class="muted small"></p>
-      <div class="stack"><button class="btn" data-a="exCheck">Check</button><div class="row"><button class="btn plain sm" data-a="exHint">First letters</button><button class="btn plain sm" data-a="exGiveUp">I don't know</button></div></div>`;
-    else if (q.type === 'gap') body = `${ctrl()}${sentence(q)}${q.gaps.map((g, k) => `<input class="type gi" data-k="${k}" placeholder="Gap ${k + 1}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="margin:6px 0">`).join('')}
-      <div class="stack"><button class="btn" data-a="exCheck">Check</button><button class="btn plain sm" data-a="exGiveUp">I don't know</button></div>`;
-    else if (q.type === 'choice') body = `${ctrl()}${sentence(q)}${q.options.map((o, n) => `<button class="item opt" data-a="exPick" data-n="${n}"><span class="grow">${esc(o)}</span></button>`).join('')}`;
-    else if (q.type === 'order') body = `${ctrl()}<div class="answer">${X.built.map((ti, k) => `<button class="tile" data-a="exUntile" data-k="${k}">${esc(q.tiles[ti])}</button>`).join('')}</div>
-      <div class="bank">${q.tiles.map((w, i) => `<button class="tile ${X.built.includes(i) ? 'used' : ''}" data-a="exTile" data-i="${i}">${esc(w)}</button>`).join('')}</div>
-      <div class="stack"><button class="btn" data-a="exCheck">Check</button><div class="row"><button class="btn plain sm" data-a="exClear">Clear</button><button class="btn plain sm" data-a="exGiveUp">I don't know</button></div></div>`;
-    else if (q.type === 'shadow') body = `${ctrl()}<p class="muted">Listen, then say the line out loud. Try to copy the rhythm and stress.</p>
-      <div class="stack"><button class="btn" data-a="exReveal">Show the text</button></div>`;
-    else if (q.type === 'quiz') body = `<p class="muted small">Watch the video first (use the player above), then answer.</p><p class="sent">${esc(q.q)}</p>${q.options.map((o, n) => `<button class="item opt" data-a="exPick" data-n="${n}"><span class="grow">${esc(o)}</span></button>`).join('')}`;
-  } else body = feedback(q);
-  area.innerHTML = head + body;
-  if (auto && X.status === 'ask' && q.type !== 'quiz') play(1);
-  const inp = $('#ex-in') || $('.gi'); if (inp && X.status === 'ask' && !auto) inp.focus();
-}
-
-function feedback(q) {
-  const r = X.res, s = q.type === 'quiz' ? null : seg(q);
-  let detail = '';
-  if (q.type === 'dictation') detail = `<p class="small muted" style="margin:8px 0 4px">Your answer: ${esc(r.typed || '(nothing)')}</p><p class="sent diff">${r.d.marks.map(m => `<span class="${m.ok ? 'okw' : 'missw'}">${esc(m.w)}</span>`).join(' ')}</p><p class="small muted">${r.d.hit} of ${r.d.total} words right${r.d.pct >= 85 ? '' : '. Red words were missed.'}</p>`;
-  else if (q.type === 'gap') detail = sentence(q, (g, x) => `<span class="${r.right[g] ? 'okw' : 'missw'}">${esc(x)}</span>`) + (r.right.every(Boolean) ? '' : `<p class="small muted">You typed: ${q.gaps.map((g, k) => esc(r.typed[k] || '—')).join(', ')}</p>`);
-  else if (q.type === 'choice') detail = sentence(q, (g, x) => `<span class="${r.ok ? 'okw' : 'missw'}">${esc(x)}</span>`);
-  else if (q.type === 'quiz') detail = `<p class="small muted">Answer: <b>${esc(q.options[q.answer])}</b></p>`;
-  return `<div class="tip ${r.ok ? '' : 'bad-tip'}"><b>${r.ok ? (X.combo >= 3 ? cheer() + ' ' + X.combo + ' in a row' : cheer()) : r.skip ? 'No worries. Here it is:' : 'So close!'}</b></div>${detail}
-    ${s ? `<div class="card"><div class="label" style="margin-top:0">The line</div>${L.selectable(s, 'q' + X.i)}<p class="muted small" style="margin:8px 0 0">Tap words to save them.</p>
-      <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sm ghost" data-a="exPlay">Replay</button><button class="btn sm ghost" data-a="exSaveLine">Save the line</button></div></div>` : ''}
-    <button class="btn" data-a="exNext">${X.i + 1 >= X.list.length ? 'See results' : 'Continue'}</button>`;
-}
-
-function finish(q, ok, extra = {}) {
-  X.status = 'done'; X.res = { ok, ...extra };
-  if (q.type !== 'quiz') { L.bump('lines'); if (ok) L.bump('ok'); }
-  if (ok) { X.correct++; X.combo++; X.got.push(q); } else { X.combo = 0; X.missed.push(q); }
-  paintQ(false);
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-A.exCheck = () => {
-  const q = X.list[X.i]; if (X.status !== 'ask') return;
-  if (q.type === 'dictation') { const typed = $('#ex-in').value; if (!typed.trim()) { L.toast('Type what you heard first.'); return; } const d = LT.diffWords(q.text, typed); finish(q, d.pct >= 85, { typed, d }); }
-  else if (q.type === 'gap') {
-    const typed = [...document.querySelectorAll('.gi')].map(i => i.value.trim());
-    if (typed.every(t => !t)) { L.toast('Type the missing words first.'); return; }
-    const right = q.gaps.map((g, k) => LT.closeEnough(LT.norm(typed[k] || ''), g.answer));
-    finish(q, right.every(Boolean), { typed, right });
-  } else if (q.type === 'order') {
-    if (!X.built.length) { L.toast('Tap the words in order first.'); return; }
-    const attempt = X.built.map(i => q.tiles[i]).join(' ');
-    finish(q, LT.norm(attempt) === LT.norm(q.target), { typed: [attempt] });
+  const cue = q.cue ? `<div class="flash-cue">${esc(q.cue)}</div>` : '';
+  if (q.kind === 'choice') {
+    body = `<div class="qcard"><div class="label" style="margin-top:0">${esc(q.prompt)}</div>${cue}${q.say ? `<div style="margin-top:10px">${L.speakBtn(q.say)}</div>` : ''}</div><div class="stack">${q.options.map((o, i) => `<button class="btn plain opt${a ? ' locked' : ''}${a && i === q.correct ? ' ok' : ''}${a && i === a.pick && i !== q.correct ? ' bad' : ''}" data-a="pick" data-i="${i}">${esc(o)}</button>`).join('')}</div>`;
+  } else {
+    body = `<div class="qcard"><div class="label" style="margin-top:0">${esc(q.prompt)}</div>${cue}${q.sub ? `<p class="small muted" style="margin-top:8px">Meaning: ${esc(q.sub)}</p>` : ''}${q.hint && !a ? `<p class="hint">${esc(q.hint)}</p>` : ''}
+      ${q.listen ? `<div class="row" style="gap:10px;margin-top:6px">${L.speakBtn(q.say, '')}<button class="chip" data-a="slow" data-t="${esc(q.say)}">Slower</button></div>` : ''}</div>
+      <input class="type${a ? (a.result === 'no' ? ' bad' : ' okin') : ''}" id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Type your answer" ${a ? 'readonly' : ''} value="${a ? esc(a.text) : ''}">
+      ${a ? '' : '<button class="btn" data-a="check">Check</button>'}`;
   }
+  let fb = '';
+  if (a) {
+    const ok = a.result !== 'no';
+    fb = `<div class="tip ${ok ? '' : 'bad-tip'}"><b>${a.result === 'ok' ? 'Correct!' : a.result === 'close' ? 'Almost, watch the spelling.' : 'Not quite.'}</b>${a.pts ? ` <span class="combo">+${a.pts}</span>` : ''}<div style="margin-top:4px">${ok && a.result === 'ok' ? '' : `Answer: <b>${esc(q.answer)}</b>`}</div>${q.sayFull ? `<div style="margin-top:6px">${L.speakBtn(q.sayFull, 'sm')}</div>` : ''}</div><button class="btn" data-a="next" id="nextbtn">${R.i + 1 >= R.q.length ? 'Finish' : 'Continue'}</button>`;
+  }
+  return `${top(R.i, R.q.length, R.combo > 1 ? `<span class="combo">x${R.combo}</span>` : '')}${body}${fb}`;
 };
-A.exGiveUp = () => { const q = X.list[X.i]; if (X.status !== 'ask') return; const typed = q.gaps ? q.gaps.map(() => '') : ['']; finish(q, false, { skip: true, typed, right: q.gaps ? q.gaps.map(() => false) : [], d: LT.diffWords(q.text || '', '') }); };
-A.exPick = el => { const q = X.list[X.i]; if (X.status !== 'ask') return; const n = +el.dataset.n; finish(q, n === q.answer, { pick: n }); };
-A.exHint = () => { const q = X.list[X.i]; $('#hint').textContent = q.text.split(/\s+/).map(w => w[0] + '·'.repeat(Math.min(5, Math.max(0, w.length - 1)))).join('  '); };
-A.exTile = el => { X.built.push(+el.dataset.i); paintQ(false); };
-A.exUntile = el => { X.built.splice(+el.dataset.k, 1); paintQ(false); };
-A.exClear = () => { X.built = []; paintQ(false); };
-A.exReveal = () => {
-  const q = X.list[X.i], s = seg(q);
-  $('#qarea').innerHTML = `<div class="label" style="margin-top:6px">Shadowing</div>${ctrl()}<div class="card"><div class="label" style="margin-top:0">The line</div>${L.selectable(s, 'q' + X.i)}</div>
-    <p class="muted" style="text-align:center">Say it out loud. How did that go?</p>
-    <div class="grid2"><button class="btn coral" data-a="exRate" data-ok="1">Nailed it</button><button class="btn ghost" data-a="exRate" data-ok="0">Again later</button></div>`;
+const answer = (result, extra) => {
+  const q = R.q[R.i]; if (R.answered) return;
+  const pts = LX.score(q, result, R.combo);
+  if (result === 'no') { R.combo = 0; R.missed.push(q); const it = L.item(q.id); if (it) SRS.slip(S().items, it, L.dayKey(), L.cap()); }
+  else { R.combo++; R.best = Math.max(R.best, R.combo); R.right++; }
+  R.pts += pts; L.award(pts, true); L.today().practice++; L.water(); L.save();
+  R.answered = { result, pts, ...extra }; L.render(true);
+  const nb = document.getElementById('nextbtn'); if (nb) nb.scrollIntoView({ block: 'nearest' });
 };
-A.exRate = el => { const q = X.list[X.i]; X.status = 'done'; const ok = el.dataset.ok === '1'; L.bump('lines'); if (ok) L.bump('ok'); if (ok) { X.correct++; X.combo++; X.got.push(q); } else { X.combo = 0; X.missed.push(q); } A.exNext(); };
-A.exNext = () => { X.i++; X.status = 'ask'; X.built = []; X.res = null; paintQ(true); window.scrollTo(0, 0); };
-A.exSaveLine = () => { const q = X.list[X.i]; L.openSave({ text: seg(q).t, vid: X.v.id, seg: q.seg }); };
+A.pick = el => { const q = R.q[R.i], i = +el.dataset.i; answer(i === q.correct ? 'ok' : 'no', { pick: i }); };
+A.check = () => { const inp = document.getElementById('ans'), q = R.q[R.i]; if (!inp || !inp.value.trim()) { L.toast('Type an answer first.'); return; } answer(LX.check(inp.value, q.answer), { text: inp.value }); };
+A.slow = el => L.speak(el.dataset.t, .6);
+A.next = () => {
+  R.i++; R.answered = null;
+  if (R.i >= R.q.length) { const bonus = 10 + (R.right === R.q.length ? 20 : 0); R.bonus = bonus; R.pts += bonus; L.award(bonus, true); R.done = true; L.save(); if (R.right / R.q.length >= .8) L.confetti(); }
+  L.render(); window.scrollTo(0, 0);
+  const inp = document.getElementById('ans'); if (inp && !R.done && !('ontouchstart' in window)) inp.focus();
+};
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && R && R.mode === 'practice' && L.V.name === 'session' && !R.done) { if (R.answered) A.next(); else if (document.getElementById('ans')) A.check(); } });
+const practiceDone = () => {
+  const n = R.q.length, acc = Math.round(R.right / n * 100);
+  return `<div class="topbar"><button class="back" data-a="exitSession">✕</button></div><div class="bigpct">${acc}<small>%</small></div><div class="huge">${acc === 100 ? 'Perfect round!' : acc >= 70 ? 'Nice work!' : 'Good effort!'}</div>
+    <p class="congrats">${R.right} of ${n} right · best streak ${R.best}</p><div class="center"><span class="xp-pill">+${R.pts} points · +${R.pts} growth</span></div><p class="small muted center">Includes +${R.bonus} for finishing${R.right === n ? ' a perfect round' : ''}.</p>
+    ${plantBlock(R.pts)}
+    ${R.missed.length ? `<h2 class="display">Worth another look</h2><div class="card rlist">${R.missed.map(q => { const it = L.item(q.id); return it ? `<div class="rrow"><div class="grow"><b>${esc(it.text)}</b><div class="small muted clamp">${esc(it.meaning)}</div></div>${L.speakBtn(LX.plain(it.text), 'sm')}</div>` : ''; }).join('')}</div><p class="small muted">These notes will come back sooner in your review.</p>` : ''}
+    <div class="stack"><button class="btn" data-a="startPractice" data-t="${R.type || ''}">Practice again</button><button class="btn ghost" data-a="doneBack">Back to garden</button></div>`;
+};
 
-function paintDone() {
-  const n = X.list.length, pct = Math.round(X.correct / n * 100), area = $('#qarea');
-  $('#prog').style.width = '100%'; if (pct >= 60) L.confetti();
-  const line = q => { const s = q.type === 'quiz' ? null : seg(q); return s ? `<div class="row" style="margin:8px 0"><span class="grow">${esc(s.t.length > 80 ? s.t.slice(0, 79) + '…' : s.t)}</span><button class="speak sm" data-a="doneHear" data-i="${s.i}" aria-label="Play"><svg viewBox="0 0 24 24" class="spk" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button></div>` : `<p>${esc(q.q)}</p>`; };
-  area.innerHTML = `<div class="bigpct">${pct}<small>%</small></div><div class="congrats">${pct === 100 ? 'Perfect ears!' : pct >= 80 ? 'Great listening!' : pct >= 60 ? 'Congratulations!' : 'Good practice!'}</div>
-    <span class="xp-pill">${X.correct} of ${n} right</span>
-    ${X.got.length ? `<h3 style="margin:16px 0 4px">Got it!</h3>${X.got.slice(0, 5).map(line).join('')}` : ''}
-    ${X.missed.length ? `<h3 style="margin:18px 0 4px">Listen again</h3>${X.missed.map(line).join('')}` : '<p class="muted" style="margin-top:16px">Not a single slip!</p>'}
-    <div class="stack" style="margin-top:20px"><button class="btn" data-a="exAgain">Practice again</button><button class="btn plain" data-a="exitEx">Back to the video</button></div>`;
-}
-A.doneHear = el => L.playLine(X.v.segs[+el.dataset.i], { rate: 1 });
-A.exAgain = () => L.startSession(X.v.id, X.type);
+L.views.session = () => !R ? L.views.practice() : R.mode === 'review' ? reviewView() : practiceView();
 })();
