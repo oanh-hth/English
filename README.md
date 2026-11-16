@@ -1,6 +1,6 @@
 # Speak Natural – American English
 
-> **Threadwork**, a todo list that records the result and decision of complex tasks, filed by web development topic, now lives in its own repository: [oanh-hth/work](https://github.com/oanh-hth/work).
+> **Whybook** (formerly Threadwork), a todo list that records the result and decision of complex tasks, filed by web development topic, now lives in its own repository: [oanh-hth/work](https://github.com/oanh-hth/work).
 >
 > **Learn to build it yourself:** [`learn-threadwork/`](learn-threadwork/README.md) is a self-paced TypeScript, React and Node.js course that builds Threadwork part by part, with lessons, tested exercises and a progress checklist.
 
