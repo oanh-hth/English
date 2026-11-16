@@ -1,9 +1,5 @@
 # Speak Natural – American English
 
-> **Whybook** (formerly Threadwork), a todo list that records the result and decision of complex tasks, filed by web development topic, now lives in its own repository: [oanh-hth/work](https://github.com/oanh-hth/work).
->
-> **Learn to build it yourself:** [`learn-threadwork/`](learn-threadwork/README.md) is a self-paced TypeScript, React and Node.js course that builds Threadwork part by part, with lessons, tested exercises and a progress checklist.
-
 A mobile-first web app (installable on iPhone as a PWA) for learning the phrases native American speakers really use.
 
 - **Learn**: 1,024 phrases in 92 topics, plus 953 daily-life words in 30 topics (Learn → Words), each with audio (normal + slow), meaning, when to use it, a mini dialogue, tone and a sound tip.
