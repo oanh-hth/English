@@ -19,9 +19,10 @@ t('good moves up a stage and uses the longer interval', () => {
   assert.equal(S.review(items, a, 2, '2026-11-18', 10), 7); assert.equal(a.stage, 2);
 });
 t('easy skips a stage', () => { const items = [], a = mk('a'); items.push(a); S.schedule(items, a, TODAY, 10); S.review(items, a, 3, '2026-11-15', 10); assert.equal(a.stage, 2); });
-t('again resets to stage 0, due tomorrow, counts a lapse', () => {
+t('again drops two stages, due tomorrow, counts a lapse', () => {
   const items = [], a = mk('a'); items.push(a); S.schedule(items, a, TODAY, 10); a.stage = 4;
-  assert.equal(S.review(items, a, 0, TODAY, 10), 1); assert.equal(a.stage, 0); assert.equal(a.lapses, 1);
+  assert.equal(S.review(items, a, 0, TODAY, 10), 1); assert.equal(a.stage, 2); assert.equal(a.lapses, 1);
+  a.stage = 1; S.review(items, a, 0, TODAY, 10); assert.equal(a.stage, 0);
 });
 t('stage is capped', () => { const items = [], a = mk('a'); items.push(a); S.schedule(items, a, TODAY, 10); a.stage = 6; S.review(items, a, 3, TODAY, 10); assert.equal(a.stage, 6); });
 t('reviews are spread when a day is full', () => {

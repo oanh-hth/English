@@ -11,25 +11,41 @@ L.dayLabel = k => { const d = SRS.diff(k, L.dayKey()); if (d === 0) return 'Toda
 
 /* ---------- state ---------- */
 const KEY = 'lexigrow.v1', OLD_KEY = 'word-garden.v1';   // OLD_KEY: data saved under the app's earlier name is carried over
-const defaults = () => ({ items: [], log: {}, mission: null, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } });
-const merge = o => { const d = defaults(); return { ...d, ...o, garden: { ...d.garden, ...(o.garden || {}) }, settings: { ...d.settings, ...(o.settings || {}), weather: { ...d.settings.weather, ...((o.settings || {}).weather || {}) } } }; };
+const defaults = () => ({ items: [], log: {}, mission: null, dead: {}, epoch: 0, backup: { last: null, snooze: null }, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } });
+const merge = o => { const d = defaults(); return { ...d, ...o, dead: { ...(o.dead || {}) }, backup: { ...d.backup, ...(o.backup || {}) }, garden: { ...d.garden, ...(o.garden || {}) }, settings: { ...d.settings, ...(o.settings || {}), weather: { ...d.settings.weather, ...((o.settings || {}).weather || {}) } } }; };
 let S = (() => { try { const o = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem(OLD_KEY)); if (o && Array.isArray(o.items)) return merge(o); } catch (e) { /* ignore */ } return defaults(); })();
-Object.defineProperty(L, 'S', { get: () => S, set: v => { S = merge(v); } });
-L.save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { L.toast('Storage is full. Export your notes, then delete some.'); return false; } };
-L.reset = () => { S = defaults(); L.save(); };
+/* Every note carries `u`, the time it last changed, so two devices can merge note by note (see sync.js). */
+const snap = new Map(), sig = it => JSON.stringify({ ...it, u: 0 });
+const resnap = () => { snap.clear(); S.items.forEach(it => snap.set(it.id, sig(it))); };
+const stamp = () => { const now = Date.now(); S.items.forEach(it => { const j = sig(it); if (snap.get(it.id) !== j) { it.u = now; snap.set(it.id, j); } }); };
+resnap();
+Object.defineProperty(L, 'S', { get: () => S, set: v => { S = merge(v); resnap(); } });
+L.save = () => { stamp(); S.t = Date.now(); if (L.syncSoon) L.syncSoon(); try { localStorage.setItem(KEY, JSON.stringify(S)); return true; } catch (e) { L.toast('Storage is full. Export your notes, then delete some.'); return false; } };
+L.reset = () => { S = { ...defaults(), epoch: Date.now() }; resnap(); L.save(); };   // a newer epoch replaces every other device's data on sync
 L.cap = () => S.settings.cap || 10;
 L.today = () => (S.log[L.dayKey()] ||= { pts: 0, reviews: 0, writes: 0, added: 0, watered: 0 });
 L.due = () => SRS.dueItems(S.items, L.dayKey());
+/* After time away everything is due at once. Do twice the daily pace today and let the rest roll over. */
+L.allowance = () => Math.max(0, L.cap() * 2 - (L.today().reviewed || 0));
+L.todayDue = () => L.due().slice(0, L.allowance());
+L.live = () => S.items.filter(i => !i.draft);          // notes that are finished and in the schedule
+L.drafts = () => S.items.filter(i => i.draft);
+L.hard = () => S.items.filter(i => (i.lapses || 0) >= 3 && i.stage < 5);
+L.PTS = { review: 3, sentence: 5, speak: 3 };          // the same for every honest answer, so there is no reason to overrate yourself
 L.item = id => S.items.find(i => i.id === id);
 
 /* ---------- notes ---------- */
 L.addItem = d => {
-  const it = { id: L.uid(), kind: d.kind === 'word' ? 'word' : 'phrase', text: d.text.trim(), meaning: (d.meaning || '').trim(), example: (d.example || '').trim(), note: (d.note || '').trim(), added: L.dayKey() };
-  SRS.schedule(S.items, it, L.dayKey(), L.cap()); S.items.unshift(it);
+  const it = { id: L.uid(), kind: d.kind === 'word' ? 'word' : 'phrase', text: d.text.trim(), meaning: (d.meaning || '').trim(), example: (d.example || '').trim(), note: (d.note || '').trim(), added: L.dayKey(), c: Date.now() };
+  // A note with no meaning and no example is a draft: saved now, finished later, and kept out of reviews until then.
+  if (!it.meaning && !it.example) Object.assign(it, { draft: true, stage: 0, lapses: 0, reps: 0, last: null, due: SRS.FAR }); else SRS.schedule(S.items, it, L.dayKey(), L.cap());
+  S.items.unshift(it);
   const t = L.today(); t.added++;
   if ((t.addPts || 0) < 25) { t.addPts = (t.addPts || 0) + 5; L.award(5, true); }
   L.water(); L.save(); return it;
 };
+L.finishDraft = it => { if (!it.draft || (!it.meaning && !it.example)) return false; delete it.draft; SRS.schedule(S.items, it, L.dayKey(), L.cap()); return true; };
+L.removeItem = id => { S.items = S.items.filter(i => i.id !== id); S.dead[id] = Date.now(); };
 L.dupe = (text, exceptId) => S.items.find(i => i.id !== exceptId && i.text.toLowerCase() === text.trim().toLowerCase());
 
 /* ---------- points, growth, the plant ---------- */
@@ -73,7 +89,7 @@ L.render = keepScroll => {
   view.className = (IMMERSIVE.has(V.name) ? 'immersive ' : '') + 'v-' + V.name;
   view.innerHTML = (L.views[V.name] || L.views.garden)();
   const t = $('#tabs'); t.className = IMMERSIVE.has(V.name) ? 'hidden' : '';
-  const due = L.due().length;
+  const due = L.todayDue().length;
   t.innerHTML = TABS.map(([k, label, svg]) => `<button data-a="tab" data-v="${k}" class="${V.name === k ? 'on' : ''}" aria-label="${label}"><svg viewBox="0 0 24 24">${svg}</svg>${label}${k === 'review' && due ? `<span class="badge">${due > 99 ? '99+' : due}</span>` : ''}</button>`).join('');
   if (keepScroll) window.scrollTo(0, y); else if (L.after[V.name]) L.after[V.name]();
 };
@@ -109,6 +125,7 @@ L.speakStop = () => { if ('speechSynthesis' in window) speechSynthesis.cancel();
 if ('speechSynthesis' in window) speechSynthesis.getVoices();
 L.speakBtn = (text, cls = '') => `<button class="speak ${cls}" data-a="say" data-t="${L.esc(text)}" aria-label="Play audio"><svg class="spk" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>`;
 L.A.say = el => L.speak(el.dataset.t);
+L.A.saySlow = el => L.speak(el.dataset.t, .6);
 L.youglish = q => `https://youglish.com/pronounce/${encodeURIComponent(String(q).trim())}/english/us`;
 L.ygLink = (text, cls = 'chip') => `<a class="${cls}" href="${L.youglish(text)}" target="_blank" rel="noopener noreferrer">YouGlish ↗</a>`;
 

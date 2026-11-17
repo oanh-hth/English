@@ -304,3 +304,13 @@ a.item { text-decoration: none; color: inherit; }
 @keyframes recpulse { 50% { box-shadow: 0 0 0 10px rgba(184, 63, 54, .2); } }
 .mission .btn.sm { width: auto; }
 #view.v-drill { max-width: 680px; }
+
+/* ----- today's session, quick capture, reminders, sync ----- */
+.today-card.tinted .btn { background: var(--ink); color: var(--on-ink); } .today-card .cardart { width: 48px; height: 48px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.step { font-size: 13px; font-weight: 800; padding: 4px 12px; border-radius: 99px; background: rgba(255, 255, 255, .45); color: #1e1b15; } .step.on { background: #1e1b15; color: #f5ede4; }
+.today-card:not(.tinted) .step { background: var(--card-2); color: var(--text); } .today-card:not(.tinted) .step.on { background: var(--good); color: #fff; }
+.quick { display: flex; gap: 8px; align-items: center; margin: 8px 0 4px; } .quick input.type { margin: 0; flex: 1; min-width: 0; } .quick .btn.sm { flex: none; min-height: 54px; }
+.remind { background: var(--sand); border-color: transparent; color: #1e1b15; } .remind .btn.sm { width: auto; }
+.note.t-sand { border: 2px dashed rgba(30, 27, 21, .25); }
+.syncdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); margin-right: 6px; } .syncdot.ok { background: var(--good); } .syncdot.err { background: var(--bad); }

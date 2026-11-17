@@ -26,9 +26,10 @@ function schedule(items, item, today, cap) {
 }
 
 /* grade: 0 again, 1 hard, 2 good, 3 easy. Returns the number of days until the next review. */
+const FAR = '9999-12-31';   // drafts (notes not finished yet) are parked here, outside every schedule
 function review(items, item, grade, today, cap) {
   let days;
-  if (grade === 0) { item.stage = 0; item.lapses = (item.lapses || 0) + 1; days = 1; }
+  if (grade === 0) { item.stage = Math.max(0, item.stage - 2); item.lapses = (item.lapses || 0) + 1; days = 1; }   // a slip costs two stages, not everything
   else if (grade === 1) { days = Math.max(1, Math.round(INTERVALS[item.stage] * 0.7)); }
   else { item.stage = Math.min(MAX_STAGE, item.stage + (grade === 3 ? 2 : 1)); days = INTERVALS[item.stage]; }
   item.reps = (item.reps || 0) + 1; item.last = today;
@@ -65,5 +66,5 @@ const whenLabel = (dueKey, today) => {
   if (d === 0) return 'Today'; if (d === 1) return 'Tomorrow'; if (d < 7) return `In ${d} days`; if (d < 30) return `In ${Math.round(d / 7)} wk`; return `In ${Math.round(d / 30)} mo`;
 };
 
-globalThis.SRS = { INTERVALS, MAX_STAGE, num, key, addDays, diff, place, schedule, review, slip, preview, dueItems, upcoming, nextAfter, level, whenLabel };
+globalThis.SRS = { FAR, INTERVALS, MAX_STAGE, num, key, addDays, diff, place, schedule, review, slip, preview, dueItems, upcoming, nextAfter, level, whenLabel };
 })();

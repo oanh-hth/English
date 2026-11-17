@@ -12,6 +12,8 @@ async function run(name, device) {
   const shot = async n => { if (OUT) await p.screenshot({ path: `${OUT}/${name}-${n}.png` }); };
   const noOverflow = async n => { const w = await p.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); ok(w[0] <= w[1], `${name}: no horizontal overflow on ${n} (${w})`); };
   await p.goto(URL);
+  const answerCard = async g => { if (await p.locator('#rv-ans').count()) { await p.click('[data-a=rvSkip]'); await p.click('[data-a=grade][data-g="1"]'); } else { await p.click('[data-a=reveal]'); await p.click(`[data-a=grade][data-g="${g}"]`); } };
+  const record = async () => { await p.click('[data-a=dRec]'); await p.waitForSelector('.recbtn.on'); await p.waitForTimeout(300); await p.click('[data-a=dRec]'); await p.waitForSelector('[data-a=dSaid]'); };
   ok(await p.locator('.seed').count() === 7, `${name}: seed picker shows 7 plants`);
   await shot('seeds'); await noOverflow('seeds');
   await p.click('[data-a=plant][data-t=tomato]');
@@ -41,9 +43,9 @@ async function run(name, device) {
   ok((await p.textContent('.hero .big')) === '8', `${name}: 8 due today`);
   const gp0 = await p.evaluate(() => L.S.garden.cur.gp);
   await p.click('[data-a=startReview]');
-  for (let i = 0; i < 8; i++) { await p.click('[data-a=reveal]'); if (i === 0) await shot('review-card'); await p.click('[data-a=grade][data-g="2"]'); }
+  for (let i = 0; i < 8; i++) { if (i === 0) await shot('review-card'); await answerCard(2); }
   ok(await p.locator('.huge').textContent() === 'Review done', `${name}: review finishes`);
-  const gp1 = await p.evaluate(() => L.S.garden.cur.gp); ok(gp1 - gp0 >= 8 * 4 + 10, `${name}: review grows the plant (${gp0} -> ${gp1})`);
+  const gp1 = await p.evaluate(() => L.S.garden.cur.gp); ok(gp1 - gp0 >= 8 * 3 + 10, `${name}: review grows the plant (${gp0} -> ${gp1})`);
   await shot('review-done');
   const dueAfter = await p.evaluate(() => L.due().length); ok(dueAfter === 0, `${name}: nothing due after review`);
   await p.evaluate(() => L.go('review'));
@@ -90,6 +92,52 @@ async function run(name, device) {
   ok((await p.locator('.mission').textContent()).includes('Used today'), `${name}: mission shows done`);
   await p.evaluate(() => L.go('notebook')); ok(await p.locator('.nnote', { hasText: 'My sentence' }).count() >= 1 && await p.locator('.nnote', { hasText: 'Used for real' }).count() === 1, `${name}: notes show my sentence and real use`);
   await p.evaluate(() => L.go('garden'));
+  // quick capture makes a draft that stays out of reviews until it is finished
+  await p.fill('#qc-g', 'on the fence'); await p.click('[data-a=quickAdd][data-i=qc-g]');
+  const d1 = await p.evaluate(() => { const it = L.S.items.find(i => i.text === 'on the fence'); return { draft: !!it.draft, due: L.due().some(i => i.id === it.id), up: SRS.upcoming(L.S.items, L.dayKey(), 21).some(g => g.items.includes(it)), todo: L.drafts().length }; });
+  ok(d1.draft && !d1.due && !d1.up && d1.todo === 1, `${name}: quick capture saves a draft outside the schedule (${JSON.stringify(d1)})`);
+  await shot('garden-today');
+  await p.click('[data-a=goTodo]'); ok(await p.locator('.note').count() === 1, `${name}: "to finish" list shows the draft`);
+  await p.click('[data-a=noteEdit]'); await p.fill('#f-mean', 'undecided'); await p.click('[data-a=noteSave]');
+  const d2 = await p.evaluate(() => { const it = L.S.items.find(i => i.text === 'on the fence'); return !it.draft && it.due === SRS.addDays(L.dayKey(), 1); });
+  ok(d2, `${name}: finishing a draft schedules its first review`);
+  // a typed, auto-checked card: right answer, then wrong answer
+  const answer = await p.evaluate(() => { const it = L.S.items.find(i => i.example && LX.gapOf(i) !== null); for (let r = 0; r < 60; r++) { it.reps = r; if (L.cardType(it) === 'gap') break; } it.due = L.dayKey(); L.save(); L.startReview([it.id]); return LX.plain(it.text); });
+  ok(await p.locator('#rv-ans').count() === 1, `${name}: fill-the-gap card asks for a typed answer`);
+  await shot('review-typed');
+  await p.fill('#rv-ans', answer.toUpperCase() + '!'); await p.click('[data-a=rvCheck]');
+  ok((await p.textContent('.tip')).includes('Correct') && await p.locator('.rates.three [data-a=grade]').count() === 3, `${name}: a correct typed answer is recognised`);
+  await p.click('[data-a=grade][data-g="2"]');
+  await p.evaluate(() => { const it = L.S.items.find(i => i.example && LX.gapOf(i) !== null); for (let r = it.reps; r < it.reps + 60; r++) { it.reps = r; if (L.cardType(it) === 'gap') break; } it.due = L.dayKey(); it.stage = 4; L.save(); L.startReview([it.id]); });
+  await p.fill('#rv-ans', 'zzz'); await p.click('[data-a=rvCheck]');
+  ok((await p.textContent('.tip')).includes('Not quite') && await p.locator('.rates.two [data-a=grade]').count() === 2, `${name}: a wrong typed answer offers Again`);
+  await p.click('[data-a=grade][data-g="0"]');
+  ok(await p.evaluate(() => L.S.items.find(i => i.example && LX.gapOf(i) !== null && i.lapses > 0).stage) === 2, `${name}: Again drops two stages instead of resetting`);
+  await p.click('[data-a=reveal]'); await p.click('[data-a=grade][data-g="2"]'); await p.evaluate(() => L.go('garden'));
+  ok(await p.evaluate(() => L.PTS.review === 3 && L.PTS.sentence === 5 && L.PTS.speak === 3), `${name}: points are flat per answer`);
+  // after a break: twice the daily pace today, the rest rolls over
+  const bl = await p.evaluate(() => { L.S.settings.cap = 5; L.today().reviewed = 0; for (let i = 0; i < 30; i++) L.S.items.push({ id: 'zz' + i, kind: 'word', text: 'bulk' + i, meaning: 'm' + i, example: '', note: '', stage: 1, due: SRS.addDays(L.dayKey(), -3), lapses: 0, reps: 1, c: i }); L.save(); L.go('review'); return [L.due().length, L.todayDue().length]; });
+  ok(bl[0] >= 30 && bl[1] === 10 && (await p.textContent('.hero .big')) === '10' && (await p.textContent('.hero')).includes('roll over'), `${name}: backlog is limited to twice the daily pace (${bl})`);
+  await shot('review-backlog');
+  // today's session chains review, writing and speaking
+  await p.evaluate(() => { const t = L.today(); t.writes = 0; t.speaks = 0; t.reviewed = 0; L.S.items = L.S.items.filter(i => !i.id.startsWith('zz') || +i.id.slice(2) < 2); L.S.settings.cap = 10; L.save(); L.go('garden'); });
+  const nDue = await p.evaluate(() => L.todayDue().length);
+  ok(nDue >= 2 && (await p.textContent('.today-card')).includes(`${nDue} reviews`), `${name}: today's card describes the session (${nDue} reviews)`);
+  await p.click('[data-a=startToday]');
+  for (let i = 0; i < nDue; i++) await answerCard(2);
+  ok((await p.textContent('[data-a=flowNext]')).includes('write sentences'), `${name}: review hands over to writing`);
+  await p.click('[data-a=flowNext]');
+  const nSent = await p.evaluate(() => document.querySelector('.counter').textContent.split('/')[1]);
+  for (let i = 0; i < +nSent; i++) { const w = (await p.locator('.drillcard .phrase').textContent()); await p.fill('#d-text', `Today I used ${w} in a sentence`); await p.click('[data-a=dSubmit]'); await p.click('[data-a=dRate][data-r=unsure]'); }
+  ok((await p.textContent('[data-a=flowNext]')).includes('say them'), `${name}: writing hands over to speaking`);
+  await p.click('[data-a=flowNext]');
+  for (let i = 0; i < +nSent; i++) { await record(); await p.click('[data-a=dSaid][data-r=good]'); }
+  await p.click('[data-a=flowNext]');
+  ok((await p.textContent('.today-card')).includes('All done for today'), `${name}: today's session finishes on the garden with every step ticked`);
+  await shot('garden-done');
+  // reminders
+  ok((await p.locator('.remind', { hasText: 'Back up' }).count()) === 1, `${name}: backup reminder appears once there are notes worth losing`);
+  await p.click('[data-a=backupLater]'); ok((await p.locator('.remind', { hasText: 'Back up' }).count()) === 0, `${name}: backup reminder can be snoozed`);
   // weather
   await p.evaluate(() => L.go('garden'));
   await p.click('[data-a=wxLocate]'); await p.waitForSelector('.wxchip'); ok((await p.textContent('.wxchip')).includes('Rainy'), `${name}: live weather shows rain (${await p.textContent('.wxchip')})`);
@@ -102,7 +150,7 @@ async function run(name, device) {
   // thirsty
   await p.evaluate(() => { L.plant('chilli'); const old = SRS.addDays(L.dayKey(), -5); L.S.log = { [old]: { watered: 1, pts: 0, reviews: 0, practice: 0, added: 0 } }; L.render(); }); ok(await p.locator('.plant.thirsty').count() === 1, `${name}: plant looks thirsty after 5 idle days`); await shot('garden-thirsty');
   // reload persistence
-  await p.reload(); ok(await p.evaluate(() => L.S.items.length) === NOTES.length + 2, `${name}: data survives reload`);
+  const total = await p.evaluate(() => L.S.items.length); await p.reload(); ok(await p.evaluate(() => L.S.items.length) === total && total > NOTES.length, `${name}: data survives reload`);
   // data saved under the app's earlier name is carried over
   { const c2 = await b.newContext({ ...device }); const p2 = await c2.newPage(); await p2.addInitScript(() => { if (!localStorage.getItem('lexigrow.v1') && !localStorage.getItem('word-garden.v1')) localStorage.setItem('word-garden.v1', JSON.stringify({ items: [{ id: 'a', kind: 'word', text: 'legacy', meaning: '', example: '', note: '', stage: 0, due: '2026-11-15', added: '2026-11-14' }], log: {}, pts: 0, garden: { cur: null, done: [], bank: 0 }, settings: { cap: 10, weather: { mode: 'off' } } })); });
     await p2.goto(URL); ok(await p2.evaluate(() => L.S.items.length === 1 && L.S.items[0].text === 'legacy'), `${name}: notes saved under the old name are loaded`);

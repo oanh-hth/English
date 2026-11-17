@@ -1,0 +1,18 @@
+# Try the sync server on your own computer: docker compose up --build
+# Needs a .env file next to this one with JWT_SECRET (see .env.example). The database password here is for local use only.
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: lexigrow, POSTGRES_PASSWORD: lexigrow, POSTGRES_DB: lexigrow_sync }
+    volumes: [syncdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U lexigrow -d lexigrow_sync"], interval: 3s, retries: 20 }
+  server:
+    build: .
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      DATABASE_URL: postgres://lexigrow:lexigrow@db:5432/lexigrow_sync
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8123}
+    ports: ["8787:8787"]
+volumes:
+  syncdata:

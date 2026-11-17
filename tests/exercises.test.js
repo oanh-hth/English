@@ -8,4 +8,5 @@ t('gapOf blanks the phrase', () => { assert.equal(X.gapOf({ text: 'hang out', ex
 t('used: exact phrase, any case and punctuation', () => { assert.ok(X.used('We should Hang out, soon!', 'hang out')); assert.ok(X.used("I'll get back to you.", 'get back to (someone)')); });
 t('used: simple endings', () => { assert.ok(X.used('We are hanging out now', 'hang out')); assert.ok(X.used('She figured out the answer', 'figure out')); assert.ok(X.used('Stop running out of ideas', 'run out of')); });
 t('used: not when absent', () => { assert.ok(!X.used('Nothing to see here', 'hang out')); assert.ok(!X.used('backup plan', 'back')); });
+t('check: exact, one typo in longer answers, wrong', () => { assert.equal(X.check('Hang out!', 'hang out'), 'ok'); assert.equal(X.check('get back to', 'get back to (someone)'), 'ok'); assert.equal(X.check('figure ot', 'figure out'), 'close'); assert.equal(X.check('hung', 'hang'), 'no'); assert.equal(X.check('', 'hang'), 'no'); });
 console.log(`${n} passed`);

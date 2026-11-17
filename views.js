@@ -27,34 +27,52 @@ L.views.garden = () => {
     <div class="gmeta"><div class="row" style="justify-content:space-between;align-items:baseline"><h2 class="display" style="margin:0;font-size:24px">${P.name}</h2><span class="pill ${ready ? 'good' : ''}">${st.label}</span></div>
     <div class="bar xp"><i style="width:${pct(cur.gp, P.need)}%"></i></div><p class="small muted" style="margin:6px 0 0">${cur.gp} / ${P.need} growth · ${thirsty ? 'Your plant is thirsty. Any study brings it back.' : esc(L.wxNote(wx))}</p>
     ${ready ? `<button class="btn coral" style="margin-top:12px" data-a="harvest">Harvest your ${P.name.toLowerCase()}</button>` : ''}</div></div>`;
-  const right = `<div class="card review-card ${due ? 't-coral tinted' : ''}"><div class="row"><div class="grow"><h3>${due ? plural(due, 'note') + ' to review' : 'All caught up'}</h3><span class="small" style="opacity:.8">${due ? 'Quick review, a few minutes' : (SRS.nextAfter(S().items, L.dayKey()) ? 'Next review ' + L.dayLabel(SRS.nextAfter(S().items, L.dayKey())).toLowerCase() : 'Notes you add will show up here')}</span></div>${L.doodle('drop', 'cardart')}</div>${due ? '<button class="btn" style="margin-top:12px" data-a="startReview">Start review</button>' : ''}</div>
+  const steps = L.todaySteps(), allDone = steps.every(x => x[1]), started = steps.some(x => x[1]), live = L.live().length, todo = L.drafts().length, todayDue = L.todayDue().length;
+  const right = `<div class="card today-card ${allDone ? '' : 't-coral tinted'}"><div class="row"><div class="grow"><h3>${allDone ? 'All done for today' : "Today's session"}</h3><span class="small" style="opacity:.8">${allDone ? 'Come back tomorrow, or practice more.' : live ? `${todayDue ? plural(todayDue, 'review') + ', then ' : ''}write and say 3 of your words` : 'Finish a note to start practising'}</span></div>${L.doodle('drop', 'cardart')}</div>
+      <div class="steps">${steps.map(([l, d]) => `<span class="step${d ? ' on' : ''}">${d ? '✓ ' : ''}${l}</span>`).join('')}</div>
+      ${allDone ? '<button class="btn ghost" style="margin-top:12px" data-a="tab" data-v="review">Practice more</button>' : `<button class="btn" style="margin-top:12px" data-a="startToday" ${live ? '' : 'disabled'}>${started ? 'Continue' : "Start today's session"}</button>`}</div>
     ${L.missionCard()}
-    <div class="grid2"><button class="card act" data-a="noteAdd">${L.doodle('pencil')}<b>Add a note</b><span class="small muted">+5 growth</span></button><button class="card act" data-a="bulkOpen">${L.doodle('book')}<b>Add many</b><span class="small muted">Paste a list</span></button></div>
+    <div class="card"><h3>Heard something new?</h3>${L.quickBar('qc-g')}<div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="chip" data-a="noteAdd">Full note</button><button class="chip" data-a="bulkOpen">Add many</button>${todo ? `<button class="chip on" data-a="goTodo">${todo} to finish</button>` : ''}</div></div>
+    ${reminders()}
     <div class="card"><div class="row" style="justify-content:space-between"><h3>This week</h3><span class="small muted">Today: ${t.pts + (t.watered ? 20 : 0)} growth</span></div>${weekStrip()}</div>
     ${S().settings.weather.mode === 'off' ? `<div class="card cheer-card"><b>Match your garden to the sky</b><p style="margin:6px 0 12px">Show the real weather outside, from rain to snow. Only your rough location is used.</p><div class="row" style="gap:8px"><button class="btn coral sm" data-a="wxLocate">Use my location</button><button class="btn ghost sm" data-a="wxCity">Pick a city</button></div></div>` : ''}`;
   return head + `<p class="muted">${mot}</p><div class="home-grid"><div>${scene}</div><div>${right}</div></div>${shelf()}`;
 };
+/* Gentle nudges: keep a backup, and install to the home screen so Safari does not clear the data. */
+const daysSince = k => (k ? SRS.diff(L.dayKey(), k) : 999);
+const reminders = () => {
+  const b = S().backup, n = S().items.length, synced = L.syncOn && L.syncOn();
+  const needBackup = !synced && n >= 10 && daysSince(b.last) >= 14 && daysSince(b.snooze) >= 7;
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  const needInstall = ios && !standalone && n >= 3 && !b.installTip;
+  return (needBackup ? `<div class="card remind"><b>Back up your ${n} notes</b><p class="small" style="margin:4px 0 10px">${b.last ? `Your last backup was ${daysSince(b.last)} days ago.` : 'You have not made a backup yet.'} Your notes live only in this browser.</p><div class="row" style="gap:8px"><button class="btn sm" data-a="exportData">Export backup</button><button class="chip" data-a="backupLater">Later</button></div></div>` : '')
+    + (needInstall ? `<div class="card remind"><b>Add Lexigrow to your Home Screen</b><p class="small" style="margin:4px 0 10px">Safari can clear a website's data after a week without visits. Tap Share, then "Add to Home Screen", and your notes stay.</p><button class="chip" data-a="installOk">Got it</button></div>` : '');
+};
+A.backupLater = () => { S().backup.snooze = L.dayKey(); L.save(); L.render(true); };
+A.installOk = () => { S().backup.installTip = 1; L.save(); L.render(true); };
 const shelf = () => { const d = S().garden.done; return d.length ? `<h2 class="display">Your collection</h2><div class="shelf">${d.map(x => `<div class="shelfitem">${plantSvg(x.type, 1, { still: 1 })}<b>${PLANTS[x.type].name}</b><span class="small muted">${L.dayLabel(x.day)}</span></div>`).join('')}</div>` : ''; };
 A.plant = el => { L.plant(el.dataset.t); L.render(); window.scrollTo(0, 0); L.toast(`Planted a ${PLANTS[el.dataset.t].name.toLowerCase()}.`); };
 A.harvest = () => { const n = PLANTS[S().garden.cur.type].name; L.harvest(); L.render(); window.scrollTo(0, 0); L.toast(`${n} added to your collection. Pick a new seed!`); };
-A.startReview = () => L.startReview(L.due().slice(0, 30).map(i => i.id));
+A.startReview = () => L.startReview(L.todayDue().map(i => i.id));
+A.reviewMore = () => L.startReview(L.due().slice(0, L.cap()).map(i => i.id));
 
 /* ---------- Review overview ---------- */
 const rrow = it => `<div class="rrow"><div class="grow"><b>${esc(it.text)}</b><div class="small muted clamp">${esc(it.meaning || it.example || '')}</div></div>${SRS.diff(it.due, L.dayKey()) < 0 ? `<span class="pill warn">${esc(SRS.whenLabel(it.due, L.dayKey()))}</span>` : L.dots(it.stage)}</div>`;
 L.views.review = () => {
-  const items = S().items, today = L.dayKey(), due = L.due(), up = SRS.upcoming(items, today, 21), cap = L.cap(), known = items.filter(i => i.stage >= 5).length;
+  const items = S().items, today = L.dayKey(), all = L.due(), due = L.todayDue(), later = all.length - due.length, up = SRS.upcoming(items, today, 21), cap = L.cap(), known = items.filter(i => i.stage >= 5).length;
   if (!items.length) return `<p class="brand">Review</p><h1>Nothing to review yet</h1><div class="card empty-card">${L.doodle('book')}<p class="muted">Add notes and they will come back here at the right moments: tomorrow, then in 3 days, a week, and so on.</p><button class="btn coral sm" data-a="noteAdd">Add a note</button></div>`;
-  const next = SRS.nextAfter(items, today);
-  const hero = `<div class="card hero"><div class="big">${due.length}</div><p style="margin:4px 0 0">${due.length ? (due.length === 1 ? 'note is' : 'notes are') + ' ready to review today.' : 'Nothing due today.'}</p>${due.length ? `<button class="btn" data-a="startReview">Start review${due.length > 30 ? ' (30 at a time)' : ''}</button>` : `<p class="small" style="opacity:.85">${next ? 'Next review ' + esc(L.dayLabel(next).toLowerCase()) + '.' : ''}</p><button class="btn" data-a="reviewAhead" ${up.length ? '' : 'disabled'}>Review ahead</button>`}</div>`;
+  const next = SRS.nextAfter(L.live(), today);
+  const hero = `<div class="card hero"><div class="big">${due.length}</div><p style="margin:4px 0 0">${due.length ? (due.length === 1 ? 'note' : 'notes') + ' to review today.' : all.length ? "You have done today's share." : 'Nothing due today.'}</p>${later ? `<p class="small" style="opacity:.85;margin:4px 0 0">${later} more ${later === 1 ? 'is' : 'are'} waiting and will roll over, so a break never becomes a wall.</p>` : ''}
+    ${due.length ? '<button class="btn" data-a="startReview">Start review</button>' : all.length ? '<button class="btn" data-a="reviewMore">Review more anyway</button>' : `<p class="small" style="opacity:.85">${next ? 'Next review ' + esc(L.dayLabel(next).toLowerCase()) + '.' : ''}</p><button class="btn" data-a="reviewAhead" ${up.length ? '' : 'disabled'}>Review ahead</button>`}</div>`;
   const days = up.map(g => `<div class="upday"><div class="updl"><b>${esc(L.dayLabel(g.day))}</b><span class="small muted">${plural(g.items.length, 'note')}</span></div><div class="bar"><i style="width:${pct(g.items.length, cap)}%"></i></div><div class="chips" style="margin-top:8px">${g.items.slice(0, 4).map(i => `<span class="chip">${esc(i.text.length > 22 ? i.text.slice(0, 21) + '…' : i.text)}</span>`).join('')}${g.items.length > 4 ? `<span class="chip">+${g.items.length - 4}</span>` : ''}</div></div>`).join('');
-  return `<p class="brand">Review</p><h1>Spaced review</h1><p class="muted">New notes come back tomorrow, then in 3 days, a week, two weeks and beyond. No more than ${cap} notes per day, so reviews never pile up.</p>
+  return `<p class="brand">Review</p><h1>Spaced review</h1><p class="muted">New notes come back tomorrow, then in 3 days, a week, two weeks and beyond. No more than ${cap} new reviews land on one day, and after a break you catch up at ${cap * 2} a day.</p>
     ${hero}
     <h2 class="display">Practice</h2><div class="typelist"><button class="item t-pink" data-a="startSentences"><span class="ico">${L.doodle('pencil')}</span><span class="grow"><b>Write your own sentences</b><br><span class="small muted">Make up a sentence with each word, then judge it yourself.</span></span></button><button class="item t-blue" data-a="startSpeak"><span class="ico">${L.doodle('sun')}</span><span class="grow"><b>Say it out loud</b><br><span class="small muted">Listen, record yourself and compare.</span></span></button></div>
-    <div class="grid3"><div class="card stat"><b>${items.length}</b><span>notes</span></div><div class="card stat"><b>${items.filter(i => i.stage >= 1 && i.stage < 5).length}</b><span>learning</span></div><div class="card stat"><b>${known}</b><span>known</span></div></div>
+    <div class="grid3"><div class="card stat"><b>${L.live().length}</b><span>in review</span></div><div class="card stat"><b>${items.filter(i => i.stage >= 1 && i.stage < 5).length}</b><span>learning</span></div><div class="card stat"><b>${known}</b><span>known</span></div></div>
     ${due.length ? `<h2 class="display">Due today</h2><div class="card rlist">${due.map(rrow).join('')}</div>` : ''}
     <h2 class="display">Coming up</h2>${up.length ? `<div class="updays">${days}</div>` : '<div class="card empty small">No reviews in the next 3 weeks.</div>'}`;
 };
-A.reviewAhead = () => { const q = S().items.filter(i => SRS.diff(i.due, L.dayKey()) > 0).sort((a, b) => SRS.num(a.due) - SRS.num(b.due)).slice(0, 10).map(i => i.id); if (q.length) L.startReview(q); };
+A.reviewAhead = () => { const q = L.live().filter(i => SRS.diff(i.due, L.dayKey()) > 0).sort((a, b) => SRS.num(a.due) - SRS.num(b.due)).slice(0, 10).map(i => i.id); if (q.length) L.startReview(q); };
 
 /* ---------- Me ---------- */
 L.views.me = () => {
@@ -66,12 +84,13 @@ L.views.me = () => {
     <div class="grid3"><div class="card stat"><b>${items.length}</b><span>notes</span></div><div class="card stat"><b>${L.activeDays()}</b><span>days watered</span></div><div class="card stat"><b>${s.garden.done.length}</b><span>harvested</span></div></div>
     <div class="card"><h3>Review pace</h3><p class="small muted">The most notes that can come due on one day. Big batches are spread across several days.</p><div class="seg">${[5, 8, 10, 15, 20].map(n => `<button data-a="setCap" data-n="${n}" class="${L.cap() === n ? 'on' : ''}">${n}</button>`).join('')}</div></div>
     <div class="card"><h3>Garden weather</h3><div class="seg" style="margin:8px 0">${modes.map(([k, l]) => `<button data-a="wxMode" data-m="${k}" class="${w.mode === k ? 'on' : ''}">${l}</button>`).join('')}</div>${wxDetail}<p class="small muted" style="margin-top:10px">Weather comes from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>. Only coordinates are sent. Nothing else leaves your device.</p></div>
-    <div class="card"><h3>Your data</h3><p class="small muted">Everything lives on this device. Export a backup now and then, especially before clearing your browser.</p><div class="stack"><button class="btn ghost" data-a="exportData">Export backup</button><label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="importfile" accept="application/json,.json" hidden></label><button class="btn ghost" data-a="resetAsk" style="color:var(--bad)">Delete everything</button></div></div>
+    ${L.syncCard ? L.syncCard() : ''}<div class="card"><h3>Your data</h3><p class="small muted">Everything lives on this device. Export a backup now and then, especially before clearing your browser.</p><div class="stack"><button class="btn ghost" data-a="exportData">Export backup</button><label class="btn ghost" style="cursor:pointer">Import backup<input type="file" id="importfile" accept="application/json,.json" hidden></label><button class="btn ghost" data-a="resetAsk" style="color:var(--bad)">Delete everything</button></div></div>
     <p class="small muted" style="text-align:center">Pronunciation: tap YouGlish on any note to hear real speakers.</p>`;
 };
 A.setCap = el => { S().settings.cap = +el.dataset.n; L.save(); L.render(true); };
 A.wxRefresh = () => { L.toast('Updating...'); L.refreshWeather(true); };
 A.exportData = () => {
+  S().backup.last = L.dayKey(); L.save();
   const blob = new Blob([JSON.stringify(S(), null, 2)], { type: 'application/json' }), a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = `lexigrow-backup-${L.dayKey()}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 };
@@ -81,7 +100,7 @@ document.addEventListener('change', e => {
   r.onload = () => { try { const o = JSON.parse(r.result); if (!o || !Array.isArray(o.items)) throw 0; L._import = o; L.openSheet(`<h2 style="margin-top:0">Replace your data?</h2><p>This backup has <b>${plural(o.items.length, 'note')}</b>. It replaces what is on this device now.</p><div class="stack"><button class="btn" data-a="importYes">Replace</button><button class="btn ghost" data-a="closeSheet">Cancel</button></div>`); } catch (x) { L.toast('That file is not a Lexigrow backup.'); } e.target.value = ''; };
   r.readAsText(e.target.files[0]);
 });
-A.importYes = () => { L.S = L._import; L.save(); L.closeSheet(); L.go('garden'); L.toast('Backup restored.'); L.refreshWeather(); };
+A.importYes = () => { L.S = { ...L._import, epoch: Date.now() }; L.save(); L.closeSheet(); L.go('garden'); L.toast('Backup restored.'); L.refreshWeather(); };
 A.resetAsk = () => L.openSheet(`<h2 style="margin-top:0">Delete everything?</h2><p>All notes, points and plants on this device will be erased. Export a backup first if you might want them back.</p><div class="stack"><button class="btn" style="background:var(--bad);color:#fff" data-a="resetYes">Delete everything</button><button class="btn ghost" data-a="closeSheet">Cancel</button></div>`);
 A.resetYes = () => { L.reset(); L.closeSheet(); L.go('garden'); };
 })();
