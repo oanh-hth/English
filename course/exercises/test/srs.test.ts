@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, diffDays, dueNotes, place, review, schedule, slip, upcoming, type Note } from '../src/srs';
+import { addDays, diffDays, dueNotes, place, review, schedule, slip, todaysShare, upcoming, type Note } from '../src/srs';
 
 const TODAY = '2026-11-14';
 const mk = (id: number, over: Partial<Note> = {}): Note => ({ id, stage: 0, due: TODAY, lapses: 0, reps: 0, last: null, ...over });
@@ -29,7 +29,7 @@ describe('review', () => {
   it('good twice', () => { const a = mk(1); review([a], a, 2, TODAY, 10); expect(review([a], a, 2, '2026-11-17', 10)).toBe(7); expect(a.stage).toBe(2); });
   it('easy skips a stage', () => { const a = mk(1); review([a], a, 3, TODAY, 10); expect(a.stage).toBe(2); });
   it('hard keeps the stage and waits 70% as long, at least a day', () => { const a = mk(1, { stage: 3 }); expect(review([a], a, 1, TODAY, 10)).toBe(10); expect(a.stage).toBe(3); const b = mk(2); expect(review([b], b, 1, TODAY, 10)).toBe(1); });
-  it('again resets, tomorrow, counts a lapse', () => { const a = mk(1, { stage: 4 }); expect(review([a], a, 0, TODAY, 10)).toBe(1); expect(a.stage).toBe(0); expect(a.lapses).toBe(1); });
+  it('again drops two stages, tomorrow, counts a lapse', () => { const a = mk(1, { stage: 4 }); expect(review([a], a, 0, TODAY, 10)).toBe(1); expect(a.stage).toBe(2); expect(a.lapses).toBe(1); const b = mk(2, { stage: 1 }); review([b], b, 0, TODAY, 10); expect(b.stage).toBe(0); });
   it('the stage is capped', () => { const a = mk(1, { stage: 6 }); review([a], a, 3, TODAY, 10); expect(a.stage).toBe(6); });
   it('moves to the next day with room when the target is full', () => {
     const full = Array.from({ length: 12 }, (_, i) => mk(100 + i, { due: '2026-11-17' })); const a = mk(1); review([...full, a], a, 2, TODAY, 12); expect(a.due).toBe('2026-11-18');
@@ -44,6 +44,11 @@ describe('lists', () => {
     const ns = [mk(1, { due: '2026-11-14', stage: 2 }), mk(2, { due: '2026-11-10' }), mk(3, { due: '2026-11-15' }), mk(4, { due: '2026-11-14', stage: 0 })];
     expect(dueNotes(ns, TODAY).map(n => n.id)).toEqual([2, 4, 1]);
   });
+  it('todaysShare: twice the cap, minus what is done, never negative', () => {
+    const due = Array.from({ length: 30 }, (_, i) => mk(i));
+    expect(todaysShare(due, 5, 0).map(n => n.id)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]); expect(todaysShare(due, 5, 7).length).toBe(3); expect(todaysShare(due, 5, 40)).toEqual([]);
+  });
+  it('todaysShare returns everything when the backlog is small', () => expect(todaysShare([mk(1), mk(2)], 10, 0).length).toBe(2));
   it('upcoming groups by day and skips today, overdue and far-off notes', () => {
     const ns = [mk(1, { due: '2026-11-16' }), mk(2, { due: '2026-11-15' }), mk(3, { due: '2026-11-16' }), mk(4, { due: '2026-12-30' }), mk(5, { due: TODAY }), mk(6, { due: '2026-11-01' })];
     const u = upcoming(ns, TODAY, 14); expect(u.map(g => [g.day, g.notes.length])).toEqual([['2026-11-15', 1], ['2026-11-16', 2]]);

@@ -10,3 +10,4 @@ secrets.*
 # Local tooling
 node_modules/
 .DS_Store
+!.env.example

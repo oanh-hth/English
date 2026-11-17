@@ -17,7 +17,7 @@ Tick a lesson when its exercises are done and committed. Tick the part when its 
 ## Part 2: Forms, state and talking to a server
 - [ ] 2a Effects and fetching (2.1 to 2.4)
 - [ ] 2b Editing, sheets and bulk add (2.5 to 2.9)
-- [ ] 2c TanStack Query (2.10 to 2.14)
+- [ ] 2c TanStack Query and quick capture (2.10 to 2.15)
 - [ ] **Checkpoint 2** (`part2`)
 
 ## Part 3: Node, Express and REST
@@ -36,7 +36,7 @@ Tick a lesson when its exercises are done and committed. Tick the part when its 
 - [ ] 5a Connecting and modelling (5.1 to 5.4)
 - [ ] 5b Migrations (5.5 to 5.10)
 - [ ] 5c The scheduler, tests green (5.11 to 5.18)
-- [ ] 5d Review endpoints with transactions (5.19 to 5.26)
+- [ ] 5d Review endpoints with transactions, drafts, today's share (5.19 to 5.28)
 - [ ] **Checkpoint 5** (`part5`)
 
 ## Part 6: Users and authentication
@@ -48,7 +48,7 @@ Tick a lesson when its exercises are done and committed. Tick the part when its 
 ## Part 7: The full stack front end
 - [ ] 7a Routing and layout (7.1 to 7.5)
 - [ ] 7b Auth in the browser (7.6 to 7.11)
-- [ ] 7c The review session (7.12 to 7.20)
+- [ ] 7c The review session, typed cards, today's session (7.12 to 7.23)
 - [ ] **Checkpoint 7** (`part7`)
 
 ## Part 8: The garden
@@ -72,7 +72,7 @@ Tick a lesson when its exercises are done and committed. Tick the part when its 
 ## Part 11: CI/CD, deployment and security
 - [ ] 11a Docker (11.1 to 11.5)
 - [ ] 11b GitHub Actions (11.6 to 11.10)
-- [ ] 11c Deploy and harden (11.11 to 11.18)
+- [ ] 11c Deploy and harden (11.11 to 11.19)
 - [ ] **Checkpoint 11** (`part11`)
 
 ## Part 12: Going further

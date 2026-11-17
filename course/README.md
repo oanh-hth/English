@@ -42,7 +42,7 @@ Plan on **14 to 18 weeks at about 6 hours a week**. Parts 0 to 5 give you a work
 
 1. **Read the lessons in order.** Type the code yourself, do not paste it.
 2. **Do the exercises as you go.** They are numbered by part (`5.3`, `5.4`, ...). Commit after each one with a clear message.
-3. **Run the automated tests where the course gives you some.** `exercises/` holds starter code with failing tests for the pure logic (text helpers, scheduler, growth). Make them pass, then use that code in your app.
+3. **Run the automated tests where the course gives you some.** `exercises/` holds starter code with failing tests for the pure logic (text helpers, scheduler, typed answers, growth). Make them pass, then use that code in your app.
 4. **Finish the checkpoint.** Each part ends with a checklist and a git tag (`git tag part5`). The app should run at every checkpoint.
 5. **Compare with the reference.** Only after your own version works, read the matching files in the reference app listed in the part.
 
@@ -61,12 +61,12 @@ If an exercise is stuck for more than 30 minutes: re-read the lesson, then read 
 - [`PROGRESS.md`](PROGRESS.md): tick off exercises and checkpoints.
 - `sample-data/`: `schema.sql` (the reference database design), `seed.sql` (demo rows for Part 4) and `notes.json` (20 real phrases and words).
 - `docker-compose.yml`: a throwaway PostgreSQL for development (port 5432) and one for tests (port 5433).
-- `exercises/`: starter code with **49 automated tests** for Parts 1, 5 and 8. Run `npm install && npm test` inside it.
+- `exercises/`: starter code with **55 automated tests** for Parts 1, 5, 7 and 8. Run `npm install && npm test` inside it.
 - `solutions/`: reference answers for those. Look only after you have tried.
 
 ## The reference app
 
-The repository root holds a finished **vanilla JavaScript** version of Lexigrow that keeps everything in the browser (`index.html`, `core.js`, `srs.js`, `plants.js`, `weather.js`, `notebook.js`, `views.js`, `session.js`, `practice.js`). Run it with `python3 -m http.server 8123` and open `http://localhost:8123`. It is your **behaviour reference**, not your starting point. You build a new version with a real server and database in your own folder, so what you learn is how the pieces fit together.
+The repository root holds a finished **vanilla JavaScript** version of Lexigrow that keeps everything in the browser (`index.html`, `core.js`, `srs.js`, `plants.js`, `weather.js`, `notebook.js`, `views.js`, `session.js`, `practice.js`, plus `merge.js`, `sync.js` and `server/` for its optional device sync). Run it with `python3 -m http.server 8123` and open `http://localhost:8123`. It is your **behaviour reference**, not your starting point. You build a new version with a real server and database in your own folder, so what you learn is how the pieces fit together.
 
 ## Ground rules
 

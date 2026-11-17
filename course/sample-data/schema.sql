@@ -22,7 +22,7 @@ CREATE TABLE notes (
   example       TEXT NOT NULL DEFAULT '',
   note          TEXT NOT NULL DEFAULT '',
   stage         SMALLINT NOT NULL DEFAULT 0 CHECK (stage BETWEEN 0 AND 6),
-  due           DATE NOT NULL,
+  due           DATE,                 -- NULL while the note is a draft (no meaning and no example yet)
   last_reviewed DATE,
   reps          INTEGER NOT NULL DEFAULT 0,
   lapses        INTEGER NOT NULL DEFAULT 0,
@@ -32,6 +32,8 @@ CREATE TABLE notes (
 CREATE UNIQUE INDEX notes_user_text_unique ON notes (user_id, lower(text));
 -- the due list and the schedule both filter by user and date
 CREATE INDEX notes_user_due ON notes (user_id, due);
+-- a note is a draft exactly when it has neither a meaning nor an example
+ALTER TABLE notes ADD CONSTRAINT notes_draft_has_no_due CHECK ((due IS NULL) = (meaning = '' AND example = ''));
 
 CREATE TABLE reviews (            -- history: one row per graded review
   id           SERIAL PRIMARY KEY,

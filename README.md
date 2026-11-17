@@ -4,14 +4,14 @@ A notebook for the English you pick up, with spaced review, exercises built from
 
 ## What it does
 
-- **Notes.** Save phrases and words with a meaning, an example and a note. Search, edit, delete, or add many at once (`phrase = meaning | example`, one per line). Every note has audio (the browser's American English voice) and a **YouGlish** link to hear real speakers.
-- **Spaced review.** New notes come back tomorrow, then after 3, 7, 14, 30, 60 and 120 days. No more than a set number of notes (default 10, change it in Me) fall on one day, so a big batch is spread over several days instead of piling up. The Review tab shows what is due today and a day-by-day schedule for the next 3 weeks. Grade each note Again, Hard, Good or Easy.
-- **Practice that needs no AI.** In the Review tab:
-  - **Write your own sentences.** Five notes (due and weaker first). You make up a sentence with each word, then judge it yourself: Natural, Not sure or Feels off. The app checks you actually used the word, shows your saved example for comparison, and keeps your sentence on the note. Your rating feeds the review schedule like a flashcard grade.
-  - **Say it out loud.** Listen to the phrase, record yourself with the microphone, play yours back next to the model, then rate it. Recordings stay in the browser and are never saved or sent.
-  - **Use it today.** On the Garden screen, one word of the day with a small real-life mission (text a friend, use it in a conversation...). Tick it off for +10 growth and note where you used it.
-- **A plant to grow.** Choose a seed: tomato, chilli, strawberry, sunflower, pumpkin, sugarcane or bamboo. Studying on a day waters it (+20 growth). Reviews (more for answers you remember well), practice and new notes add growth, so more study grows it faster. When it is ripe, harvest it into your collection and plant another. A plant that is neglected for 3 days looks thirsty, and recovers as soon as you study.
-- **Weather in the garden.** Optional. The scene shows the real sky (clear, cloudy, fog, drizzle, rain, snow, thunderstorm, day or night) from [Open-Meteo](https://open-meteo.com/), which is free and needs no API key. Only rounded coordinates are sent. "Preview" mode lets you see every weather without waiting for it.
+- **Notes.** Save phrases and words with a meaning, an example and a note. **Quick add** takes just the phrase, so you can capture it mid-video and finish it later: unfinished notes wait in a "To finish" list and stay out of reviews until they have a meaning or an example. Search, edit, delete, or add many at once (`phrase = meaning | example`, one per line). Every note has audio (the browser's American English voice) and a **YouGlish** link to hear real speakers.
+- **Today's session.** One button on the Garden screen chains the day's work: review what is due, write sentences with three of those words, say them out loud, then the real-life mission. The card ticks off each step.
+- **Spaced review.** New notes come back tomorrow, then after 3, 7, 14, 30, 60 and 120 days. No more than a set number (default 10, change it in Me) land on one day. After a break you catch up at twice that pace and the rest rolls over. Cards come in three kinds: recall (you grade yourself), fill the gap in your own example, and listen and type. The last two are **checked by the app**. "Again" costs two stages, not all of them. Notes you keep forgetting are flagged as **hard words** with a prompt to rewrite them.
+- **Honest points.** Every answer earns the same growth whatever you rate it (3 per review, 5 per sentence, 3 per spoken note), so there is nothing to gain from overrating yourself.
+- **Practice that needs no AI.** Write your own sentence with each word and judge it (with a one-tap "copy to ask someone" for a tutor or a friend), record yourself saying it and compare with the model, and a daily "use it today" mission.
+- **A plant to grow.** Choose a seed: tomato, chilli, strawberry, sunflower, pumpkin, sugarcane or bamboo. Studying on a day waters it (+20 growth) and everything you do adds growth. Harvest ripe plants into your collection. A plant neglected for 3 days looks thirsty and recovers as soon as you study.
+- **Weather in the garden.** Optional. The scene shows the real sky from [Open-Meteo](https://open-meteo.com/) (free, no API key). Only rounded coordinates are sent.
+- **Keeping your notes safe.** Everything lives in your browser. The app reminds you to export a backup, and to add it to the Home Screen on iPhone and iPad so Safari does not clear its data. For real syncing between devices there is an optional server in [`server/`](server/README.md).
 
 ## Files
 
@@ -22,6 +22,8 @@ A notebook for the English you pick up, with spaced review, exercises built from
 | `plants.js` | Plant catalogue and the SVG drawings for every growth stage |
 | `weather.js` | Open-Meteo client and the animated weather scene |
 | `core.js` | State in localStorage, growth and points, tabs, sheets, speech |
+| `merge.js`, `sync.js` | Merging two copies of your data (unit tested) and the optional sync client |
+| `server/` | The optional sync server: Node, Express, PostgreSQL, with tests |
 | `notebook.js`, `views.js`, `session.js` | Notes, Garden, Review and Me screens, flashcard review |
 | `practice.js` | Write-your-sentences, say-it-out-loud and the daily mission |
 | `sw.js`, `manifest.webmanifest` | Offline and install |
@@ -32,6 +34,7 @@ A notebook for the English you pick up, with spaced review, exercises built from
 python3 -m http.server 8123        # then open http://localhost:8123
 node tests/srs.test.js             # scheduler
 node tests/exercises.test.js       # text helpers
+node tests/merge.test.js           # merging two devices' data
 node tests/e2e.js                  # Playwright, needs the server above; weather is mocked
 ```
 
@@ -43,4 +46,4 @@ Deploy by serving the repository root (GitHub Pages works). Back up your notes f
 
 ## Secrets
 
-No API key or `.env` file belongs in this repository. `.gitignore` blocks them. The app needs no API key and sends nothing anywhere except rounded coordinates to the weather service, if you turn weather on.
+No API key or `.env` file belongs in this repository. `.gitignore` blocks them. The app needs no API key. It sends nothing anywhere except rounded coordinates to the weather service if you turn weather on, and your data to your own sync server if you sign in to one. The sync server reads its secrets from environment variables (`server/.env` is ignored by git).

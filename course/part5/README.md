@@ -113,7 +113,7 @@ Add a tiny command-line runner (`src/migrate.ts`) that calls `migrator.up()` or 
 
 **5.5.** Write the migrator and runner above. Run `npm run migration:up` with no migrations to confirm it works, and look at the `migrations` table it creates.
 
-**5.6.** Write migrations that create `users` and `notes` exactly as in `schema.sql` (including the `CHECK`s, the case-insensitive unique index on `(user_id, lower(text))` and the `(user_id, due)` index, as raw SQL).
+**5.6.** Write migrations that create `users` and `notes` as in `schema.sql`, except keep `due NOT NULL` and leave out the draft `CHECK` for now (exercise 5.27 adds drafts with a new migration, the way real schemas evolve) (including the `CHECK`s, the case-insensitive unique index on `(user_id, lower(text))` and the `(user_id, due)` index, as raw SQL).
 
 **5.7.** Run them up, then `migration:down` one step, then up again. Verify with `psql` each time.
 
@@ -135,6 +135,7 @@ Open `exercises/src/srs.ts`. Read `test/srs.test.ts` first: **the tests are the 
 
 - **Dates.** Local-time date maths breaks at daylight saving changes. Count whole days since 1970 using `Date.UTC`, and format back with the UTC getters.
 - **Capacity.** `place` finds the first day with room. A big batch spreads over days, and a review never lands earlier than its interval.
+- **Kindness.** *Again* costs two stages, not all of them: one bad day should not erase months of progress. And `todaysShare` caps a backlog at twice the daily pace, so coming back after a holiday is never a wall of 200 cards.
 
 ### Exercises
 
@@ -150,9 +151,9 @@ Open `exercises/src/srs.ts`. Read `test/srs.test.ts` first: **the tests are the 
 
 **5.16.** Implement `dueNotes`.
 
-**5.17.** Implement `upcoming`. All **21 tests** in `srs.test.ts` must pass.
+**5.17.** Implement `upcoming`.
 
-**5.18.** Copy `srs.ts` into `backend/src/srs.ts` (and later into the front end if you want previews). Add one test of your own: five notes added on one day with `cap = 2` end up on three different days.
+**5.18.** Implement `todaysShare`. All **23 tests** in `srs.test.ts` must pass. Then copy `srs.ts` into `backend/src/srs.ts` and add one test of your own: five notes added on one day with `cap = 2` end up on three different days.
 
 ## d. Review endpoints with transactions
 
@@ -209,10 +210,14 @@ const result = await sequelize.transaction(async t => {
 
 **5.26.** Add `ON DELETE CASCADE` behaviour tests by hand: delete a user and show with `psql` that their notes, reviews and plants are gone.
 
+**5.27.** **Drafts.** Make `due` nullable in a new migration, with the `CHECK` from `schema.sql` that ties `due IS NULL` to "no meaning and no example". `POST /api/notes` with only a text creates a draft (no scheduling, no load query). `PUT /api/notes/:id` that adds a meaning or an example to a draft schedules it in the same transaction. Removing both from a scheduled note is refused with `400`. Check that your due and schedule queries need no change (why do `NULL` dates drop out of `due <= :today`?).
+
+**5.28.** Make `GET /api/reviews/due` return **today's share**: `{ notes: [...], waiting: <total due> }`, limited in SQL to `2 * daily_cap` minus the reviews this user already did today (count today's rows in `reviews` through a join). Add `?all=1` for "review more anyway".
+
 ## Checkpoint 5
 
 - [ ] The server stores notes in PostgreSQL. The schema comes from migrations that go up and down.
-- [ ] `srs.test.ts` passes (21 tests) and the endpoints use the same logic.
+- [ ] `srs.test.ts` passes (23 tests) and the endpoints use the same logic.
 - [ ] Reviews use a transaction and a row lock. You can explain what would go wrong without them.
 - [ ] No endpoint loads whole tables to filter in JavaScript.
 

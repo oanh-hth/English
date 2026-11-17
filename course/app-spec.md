@@ -7,10 +7,10 @@ A mobile-first web app for taking notes on the English you pick up, reviewing th
 | Screen | What it does |
 |---|---|
 | **Sign up / Log in** | Create an account, get a token |
-| **Garden** (home) | The plant under today's weather, progress, today's review count, the word of the day, the week's watering |
+| **Garden** (home) | The plant under today's weather, **today's session** (one button that chains review, writing and speaking, with a tick per step), quick add, the word of the day, the week's watering |
 | **Review** | What is due today, practice shortcuts, a day-by-day schedule for the next 3 weeks |
-| **Review session** | Flashcards: see the meaning, recall the phrase, reveal, grade Again / Hard / Good / Easy |
-| **Notes** | Search and filter, add, edit, delete, add many at once, audio and a YouGlish link on each note |
+| **Review session** | Three card types: recall (reveal and grade yourself), fill the gap in your own example, listen and type. The typed ones are checked by the app |
+| **Notes** | Quick add (just the phrase), a "To finish" list for drafts, a hard-words filter, search, add, edit, delete, add many at once, audio and a YouGlish link on each note |
 | **Practice sessions** | Write your own sentences, say it out loud and compare with a recording |
 | **Me** | Review pace, weather location, export and import, delete account |
 
@@ -32,6 +32,7 @@ erDiagram
 The full definition is in [`sample-data/schema.sql`](sample-data/schema.sql). Key ideas:
 
 - A **note** holds the spaced-repetition state: `stage` (0 to 6), `due` (a date), `lapses`, `reps`.
+- A note with **no meaning and no example is a draft**: it is saved (quick capture) but has `due = NULL` and is in no schedule. The moment it gets a meaning or an example it is scheduled like a new note.
 - **reviews** is a history table: one row per graded review, never updated.
 - A plant's growth is **not stored**. It is the `SUM` of its `point_events` (a ledger). Points earned when no plant is growing have `plant_id = NULL` and wait in the bank for the next seed.
 - Two rules live in the database, not only in code: **one growing plant per user** and **one daily watering per user per day** (partial unique indexes).
@@ -44,7 +45,7 @@ Intervals after reaching each stage, in days: `[1, 3, 7, 14, 30, 60, 120]`. Leve
 | Event | Stage | Next review |
 |---|---|---|
 | New note | 0 | tomorrow, or the next day with room |
-| Again | back to 0, lapses + 1 | tomorrow |
+| Again | - 2 (not below 0), lapses + 1 | tomorrow |
 | Hard | unchanged | `max(1, round(interval[stage] x 0.7))` days |
 | Good | + 1 (max 6) | `interval[new stage]` |
 | Easy | + 2 (max 6) | `interval[new stage]` |
@@ -52,17 +53,25 @@ Intervals after reaching each stage, in days: `[1, 3, 7, 14, 30, 60, 120]`. Leve
 
 **Room** means: no more than the user's `daily_cap` notes (default 10) are due on one day. A bigger batch spreads over consecutive days. A review never schedules earlier than its interval.
 
+**Today's share.** After a break everything is due at once. The app offers at most `2 x daily_cap` reviews a day (minus those already done today), oldest first. The rest stay overdue and roll over. The user may ask for more.
+
+**Card types.** Each review picks one: *recall* (see the meaning, reveal, grade Again/Hard/Good/Easy), *gap* (the note's example with the phrase blanked, typed) or *listen* (hear it, type it). A typed answer is `ok`, `close` (one typo in an answer of 6+ characters) or `no`. After `ok`/`close` the user picks Hard, Good or Easy. After `no`, Again or "I knew it" (Hard). A note re-queued by Again comes back as recall.
+
+**Hard words.** A note with 3 or more lapses that is not yet Known (stage < 5) is flagged, with a prompt to rewrite its meaning.
+
 ## Points and growth
 
 | Source | Points |
 |---|---|
 | First learning action of the day (`water`) | 20, once per day |
 | New note (`note`) | 5, up to 25 a day |
-| Review Again / Hard / Good / Easy | 0 / 2 / 4 / 6 |
+| Any review grade | 3 (only when the note was due) |
 | Finish a review session | +10 |
-| Sentence rated Natural / Not sure / Off | 6 / 3 / 1, finishing a round +10 |
-| Spoken note rated Good / Needs work | 4 / 1, finishing a round +5 |
+| Any sentence rating | 5, finishing a round +10 |
+| Any spoken rating | 3, finishing a round +5 |
 | Mission done (`mission`) | 10, once per day |
+
+**Points never depend on how well you say you did.** If Easy paid more than Good, learners would be nudged to overrate themselves, and inflated grades push reviews too far apart. Effort is rewarded, honesty is free.
 
 Plants and the growth they need: tomato 600, chilli 450, strawberry 500, sunflower 750, pumpkin 900, sugarcane 1100, bamboo 1300. Stages by progress: Seed (< 8%), Sprout (< 25%), Seedling (< 50%), Growing (< 75%), Budding (< 100%), Ready to harvest (100%). Growth is capped at the need. Extra points go to the bank. A plant with no studying for 3 days looks **thirsty** and never dies.
 
@@ -80,7 +89,8 @@ All routes are under `/api`. Everything except sign up, log in and health needs 
 | `POST /users`, `POST /login` | sign up, log in |
 | `GET /notes?q=&kind=`, `POST /notes`, `PUT /notes/:id`, `DELETE /notes/:id` | notes |
 | `POST /notes/bulk` | add many |
-| `GET /reviews/due`, `GET /reviews/schedule` | what to review, the next 3 weeks |
+| `GET /reviews/due`, `GET /reviews/schedule` | today's share of due notes (with the total waiting), the next 3 weeks |
+| `GET /today` | the steps of today's session and which are done |
 | `POST /notes/:id/reviews` `{ grade }` | grade a review |
 | `POST /notes/:id/sentences`, `POST /notes/:id/uses` | practice records |
 | `GET /garden`, `POST /garden/plant`, `POST /garden/harvest` | the plant |
@@ -97,7 +107,7 @@ All routes are under `/api`. Everything except sign up, log in and health needs 
 ```ts
 type Kind = 'phrase' | 'word';
 type Note = { id: number; kind: Kind; text: string; meaning: string; example: string; note: string;
-  stage: number; due: string; lastReviewed: string | null; reps: number; lapses: number; createdAt: string };
+  stage: number; due: string | null /* null while a draft */; lastReviewed: string | null; reps: number; lapses: number; createdAt: string };
 type Grade = 0 | 1 | 2 | 3;
 type Garden = { plant: { id: number; type: PlantType; growth: number; need: number; stage: string; t: number } | null;
   bank: number; thirsty: boolean; week: boolean[]; collection: { type: PlantType; harvestedOn: string }[] };

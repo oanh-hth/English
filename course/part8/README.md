@@ -37,7 +37,9 @@ const [, inserted] = await sequelize.query(
 
 (Check the affected row count to know whether you watered or the day was already done.)
 
-**The server is the referee.** A client that says "give me 500 points" is trying to cheat. There is **no endpoint that accepts a points value**. Each action computes its own points: grading a review earns 0 / 2 / 4 / 6, a Natural sentence earns 6, and so on. Add simple **anti-farming rules**: review points only when the note was actually due; note-creation points cap at 25 a day; the mission pays once a day.
+**The server is the referee.** A client that says "give me 500 points" is trying to cheat. There is **no endpoint that accepts a points value**. Each action computes its own points: any review grade earns 3, any sentence 5, any spoken answer 3. Add simple **anti-farming rules**: review points only when the note was actually due; note-creation points cap at 25 a day; the mission pays once a day.
+
+**Design incentives on purpose.** An earlier version of this app paid 0 / 2 / 4 / 6 for Again / Hard / Good / Easy. That quietly pays people to overrate themselves, and inflated grades push reviews too far apart, so the reward system was damaging the learning system. Points now reward the effort and are the same for every honest answer. Whenever you attach a reward to a self-reported number, ask what behaviour you are buying.
 
 ### Exercises
 
@@ -53,7 +55,7 @@ const [, inserted] = await sequelize.query(
 
 **8.6.** Write `awardPoints` as above and the `water(userId, day, t)` function using `ON CONFLICT DO NOTHING`. Call `water` from every learning action (adding a note, grading a review). Test by firing 10 simultaneous requests: exactly one `water` row must exist.
 
-**8.7.** Give points inside your existing endpoints (note created +5 up to 25 a day, review +0/2/4/6 only if due, session bonus +10 once per finished session). Verify with `psql` that no route accepts a points number from the client.
+**8.7.** Give points inside your existing endpoints (note created +5 up to 25 a day, review +3 for any grade and only if due, session bonus +10 once per finished session). Verify with `psql` that no route accepts a points number from the client.
 
 **8.8.** Build `GET /api/garden` (the current plant, its `growth`, `need`, `stage`, `t`, the bank, `thirsty`, `week`, the collection), `POST /api/garden/plant { type }` (a transaction: insert the plant, move banked events onto it) and `POST /api/garden/harvest` (only when ripe; set `harvested_on`; write the leftover as a banked `bonus`). Write a test replaying a list of events through `addPoints` and comparing with what the endpoint reports.
 

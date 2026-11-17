@@ -31,7 +31,7 @@ export function schedule(notes: Note[], note: Note, today: Day, cap: number): No
 /** Grade a review. Returns the number of days until the next one. */
 export function review(notes: Note[], note: Note, grade: Grade, today: Day, cap: number): number {
   let days: number;
-  if (grade === 0) { note.stage = 0; note.lapses += 1; days = 1; }
+  if (grade === 0) { note.stage = Math.max(0, note.stage - 2); note.lapses += 1; days = 1; }   // a slip costs two stages, not everything
   else if (grade === 1) days = Math.max(1, Math.round(INTERVALS[note.stage]! * 0.7));
   else { note.stage = Math.min(MAX_STAGE, note.stage + (grade === 3 ? 2 : 1)); days = INTERVALS[note.stage]!; }
   note.reps += 1; note.last = today;
@@ -49,6 +49,9 @@ export function slip(notes: Note[], note: Note, today: Day, cap: number): void {
 /** Due today or overdue, oldest first, then the weakest first. */
 export const dueNotes = (notes: Note[], today: Day): Note[] =>
   notes.filter(n => diffDays(n.due, today) <= 0).sort((a, b) => dayNum(a.due) - dayNum(b.due) || a.stage - b.stage);
+
+/** After a break everything is due at once. Today's share is at most twice the daily cap, counting what was already reviewed today. */
+export const todaysShare = (due: Note[], cap: number, reviewedToday: number): Note[] => due.slice(0, Math.max(0, cap * 2 - reviewedToday));
 
 /** Notes due after today, within `span` days, grouped by day, soonest first. */
 export function upcoming(notes: Note[], today: Day, span = 14): { day: Day; notes: Note[] }[] {

@@ -112,7 +112,7 @@ A reducer is a **pure function**, so it gets unit tests without rendering anythi
 
 **7.13.** Build the `ReviewSession` screen: progress bar, the card (meaning, or the gapped example when there is no meaning), **Show answer**, then the four grade buttons.
 
-**7.14.** Add `GET /api/reviews/due` previews on the server (the days each grade would give) and show them on the buttons: `Again 1d, Hard 2d, Good 7d, Easy 14d`.
+**7.14.** Add previews to `GET /api/reviews/due` on the server (the days each grade would give) and show them on the buttons: `Again 1d, Hard 2d, Good 7d, Easy 14d`. Show intervals, never points: every grade earns the same, so the buttons carry no temptation.
 
 **7.15.** Send each grade with a mutation. If one fails (offline), keep the card in the queue and show a retry, so a review is never lost silently.
 
@@ -126,11 +126,18 @@ A reducer is a **pure function**, so it gets unit tests without rendering anythi
 
 **7.20.** Check the whole front end at 390 px, 810 px and 1194 px wide. Fix overflow. Notes become two columns on an iPad portrait and three in landscape.
 
+**7.21.** **Typed cards.** Self-grading alone is weak evidence: nobody checks the answer. In `exercises/src/typed.ts` implement `distance` (edit distance) until its test passes.
+
+**7.22.** Implement `check` there (`ok`, `close`, `no`). All 4 tests in `typed.test.ts` pass. Then add two card types to the review session, following *Card types* in the spec: **gap** (the note's example from `gapOf`, typed) and **listen** (a Listen button, typed). Choose the type with a small pure function `cardType(note, isRetry)` that is deterministic (a hash of the note id and `reps`), so a re-render never changes the card, and test it. After a typed answer show "Correct!", "Almost" or "Not quite" and the allowed grade buttons.
+
+**7.23.** **Today's session.** Add `GET /api/today` and a Garden card with one button that chains the steps: review today's share, write sentences with three of those notes, say them out loud (the last two arrive in Part 9, so stub them for now). Model the chain as data (`{ steps: ['review', 'sentence', 'speak'], i: 0 }`) and let each finished screen show "Continue: ...". Tick each step on the card. Why is one obvious next action better than four entry points? Add the **hard words** filter to Notes (3+ lapses, stage below 5) with a prompt to rewrite the meaning.
+
 ## Checkpoint 7
 
 - [ ] Sign up, log in, add notes, review them, see the schedule, log out, all against your server.
 - [ ] The token is never logged. A `401` always lands on the login screen with a clean cache.
 - [ ] The review reducer has tests. A failed grade is never lost.
+- [ ] Typed cards are checked by `check` (4 tests green). One button runs today's session.
 - [ ] It looks right on a phone and an iPad in both orientations, and works by keyboard.
 
 Tag it: `git tag part7`. This is a usable app: use it daily for a week.

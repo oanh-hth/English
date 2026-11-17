@@ -17,7 +17,7 @@ Use SQL to answer: which notes keep lapsing (hard words), retention rate per sta
 Re-implement the data layer with **Prisma** or **Drizzle** against the same PostgreSQL and keep all API tests green. Compare: migrations, type safety, raw SQL escape hatches, transactions, the generated queries. Write a one-page recommendation.
 
 ### E. Offline first
-Queue reviews and new notes in **IndexedDB** when offline and sync when back online. Decide the **conflict rules** (what if the same note is graded on two devices?). Make every endpoint you sync **idempotent** with a client-generated id. Test with the browser's offline mode and with a flaky network.
+The repository root has a small worked example to study first: `merge.js` (merging two copies of the data note by note, with deletions and a "newer epoch wins" rule, unit tested) and `server/` (optimistic concurrency: a save must name the revision it was built on, or it gets `409`). Queue reviews and new notes in **IndexedDB** when offline and sync when back online. Decide the **conflict rules** (what if the same note is graded on two devices?). Make every endpoint you sync **idempotent** with a client-generated id. Test with the browser's offline mode and with a flaky network.
 
 ### F. Friends and a shared garden
 Add friendships (a many-to-many table with a status), a friends' garden view and a weekly leaderboard of growth. The hard parts are privacy and authorisation: who may see what, and how you test it.

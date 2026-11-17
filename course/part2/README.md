@@ -105,6 +105,8 @@ const add = useMutation({
 
 **2.14.** Add the Query Devtools in development only. Use them to watch a query go fresh, stale and refetching, and describe what you see in `NOTES.md`.
 
+**2.15.** Add **quick capture**: one input and an Add button at the top of the notes screen that saves a note with only its text (Enter submits, the field keeps focus for the next one). A note with no meaning and no example is a **draft**: show it with a "To finish" pill and a dashed border, and add a "To finish N" filter chip. Why is a 2-second capture worth more than a perfect form? Write two sentences in `NOTES.md`.
+
 ## Checkpoint 2
 
 - [ ] The notes screen works end to end against json-server: list, search, add, add many, edit, delete.

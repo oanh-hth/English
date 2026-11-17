@@ -17,7 +17,7 @@ await sequelize.transaction(async t => {
   await Sentence.create({ noteId: note.id, body, rating }, { transaction: t });
   if (isDue(note, today)) await gradeNote(note, { natural: 2, unsure: 1, off: 0 }[rating], today, t);   // reuse the Part 5 code
   else if (rating === 'off') await slipNote(note, today, t);
-  await awardPoints(userId, 'sentence', { natural: 6, unsure: 3, off: 1 }[rating], today, t);
+  await awardPoints(userId, 'sentence', 5, today, t);          // the same for every rating: honesty is free
   await water(userId, today, t);
 });
 ```
@@ -36,7 +36,7 @@ To choose the five notes in SQL: `ORDER BY (due <= :today) DESC, stage ASC, rand
 
 **9.3.** Show the latest sentence on each note card, using one query for the whole list (`DISTINCT ON (note_id)` or a lateral join), not one query per note. Explain the **N+1 query problem** in `NOTES.md`.
 
-**9.4.** Build the sentence round in React: write, **Done**, see your sentence (with a Hear button), your saved example, the three rating buttons, then the next note. Use a reducer.
+**9.4.** Build the sentence round in React: write, **Done**, see your sentence (with a Hear button), your saved example, the three rating buttons, then the next note. Use a reducer. A learner cannot reliably judge their own naturalness, so add **Copy to ask someone**: it puts the sentence and the practised word on the clipboard (`navigator.clipboard.writeText`, inside the tap handler) ready to paste to a tutor or a friend. Plug the round into today's session from 7.23.
 
 **9.5.** Add the `used()` hint ("I can't find 'hang out' in your sentence") on the rating screen.
 
@@ -74,7 +74,7 @@ Wrap this in a `useRecorder()` hook returning `{ state, url, start, stop, reset,
 
 **9.8.** Build the speaking screen: the phrase, **Listen** and **Slower** (Part 1's `speak`), a big record button that pulses while recording, **Play mine**, **Play model**, **Try again**.
 
-**9.9.** Add the two rating buttons (Sounded good, Needs work) and `POST /api/notes/:id/speak { rating }` awarding 4 or 1 points, at most 20 spoken answers a day.
+**9.9.** Add the two rating buttons (Sounded good, Needs work) and `POST /api/notes/:id/speak { rating }` awarding 3 points whatever the rating, at most 20 spoken answers a day.
 
 **9.10.** Show a friendly message when the microphone is denied, and allow rating anyway.
 

@@ -175,8 +175,8 @@ COMMIT;
 **4.21.** Fill `notes` with 100,000 rows:
 
 ```sql
-INSERT INTO notes (user_id, kind, text, due)
-SELECT 1, 'word', 'bulk ' || g, DATE '2026-11-14' + (g % 90) FROM generate_series(1, 100000) g;
+INSERT INTO notes (user_id, kind, text, meaning, due)
+SELECT 1, 'word', 'bulk ' || g, 'filler', DATE '2026-11-14' + (g % 90) FROM generate_series(1, 100000) g;
 ```
 
 Run `EXPLAIN ANALYZE SELECT * FROM notes WHERE user_id = 1 AND due <= DATE '2026-11-14';`. Then `DROP INDEX notes_user_due;` and run it again. Compare the plans and times, and explain.

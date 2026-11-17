@@ -159,6 +159,8 @@ Go through it for your own app and tick each with evidence:
 
 **11.18.** Write `docs/RUNBOOK.md`: how to deploy, roll back, rotate the JWT secret (and what that does to logged-in users), restore a backup, and where the logs are.
 
+**11.19.** People lose data they never backed up. On the Garden screen show a gentle reminder when the user has 10 or more notes and has not exported for 14 days (store `last_export_at` on the user, set it in `GET /api/export`), with **Export** and **Later** (snooze 7 days). On iPhone and iPad in Safari (not installed), show a one-time tip to add the app to the Home Screen. Detect installed mode with `matchMedia('(display-mode: standalone)')`.
+
 ## Checkpoint 11
 
 - [ ] Every pull request runs lint, typecheck, tests and E2E automatically.

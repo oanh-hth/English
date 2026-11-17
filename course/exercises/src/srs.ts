@@ -1,4 +1,4 @@
-// Part 5 exercises 5.11 to 5.17. Make `npm test` pass for test/srs.test.ts.
+// Part 5 exercises 5.11 to 5.18. Make `npm test` pass for test/srs.test.ts.
 export const INTERVALS = [1, 3, 7, 14, 30, 60, 120] as const;
 export const MAX_STAGE = INTERVALS.length - 1;
 
@@ -26,6 +26,9 @@ export function slip(notes: Note[], note: Note, today: Day, cap: number): void {
 
 /** Due today or overdue. Oldest due date first, then lowest stage first. */
 export const dueNotes = (notes: Note[], today: Day): Note[] => { throw new Error('TODO 5.16'); };
+
+/** After a break everything is due at once. Return at most `cap * 2 - reviewedToday` notes from the front of `due` (never fewer than zero). */
+export const todaysShare = (due: Note[], cap: number, reviewedToday: number): Note[] => { throw new Error('TODO 5.18'); };
 
 /** Notes due after today and within `span` days, grouped by day, soonest first. */
 export function upcoming(notes: Note[], today: Day, span = 14): { day: Day; notes: Note[] }[] { throw new Error('TODO 5.17'); }
